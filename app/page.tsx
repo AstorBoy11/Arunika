@@ -45,7 +45,7 @@ export default function Home() {
                   {/* Gradient Overlay */}
                   <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors duration-500"></div>
                   <div className="relative z-10 flex flex-col gap-4 max-w-2xl">
-                    <h1 className="text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-6xl drop-shadow-sm">
+                    <h1 className="text-amber-300 text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-6xl drop-shadow-sm">
                       Awaken Your Senses
                     </h1>
                     <h2 className="text-gray-100 text-base font-normal leading-relaxed @[480px]:text-lg max-w-lg mx-auto drop-shadow-sm">
@@ -55,7 +55,7 @@ export default function Home() {
                   </div>
                   <div className="relative z-10 flex flex-col sm:flex-row gap-3 mt-4">
                     <a
-                      href="/shop"
+                      href="/customer"
                       className="flex min-w-[140px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-[#0d1b10] text-base font-bold transition-all hover:bg-[#0fd630] hover:shadow-lg hover:shadow-primary/20"
                     >
                       <span className="truncate">Shop Now</span>
@@ -86,7 +86,7 @@ export default function Home() {
                     cup tells a story of dedication and passion.
                   </p>
                 </div>
-                <button className="color-black font-bold text-sm hover:underline decoration-2 underline-offset-4 flex items-center gap-1">
+                <button className="color-black font-bold text-sm hover:underline hover:text-[#726a60] decoration-2 underline-offset-4 flex items-center gap-1">
                   Learn More{" "}
                 </button>
               </div>
