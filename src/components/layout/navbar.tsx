@@ -34,12 +34,6 @@ export default function Navbar() {
             <a href="/cart" className="text-white hover:text-gray-300 transition font-medium">
               Cart
             </a>
-            <a
-              href="/login"
-              className="bg-primary text-[#0d1b10] px-6 py-2 rounded-lg font-bold hover:bg-[#0fd630] transition"
-            >
-              Login
-            </a>
           </div>
         </div>
       </div>
