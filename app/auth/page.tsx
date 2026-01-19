@@ -20,32 +20,39 @@ export default function Auth() {
 
   return (
     <div
-      className={`relative h-screen w-full flex items-center justify-center p-4 overflow-hidden ${workSans.className} bg-background-light dark:bg-background-dark text-[#1b130d] dark:text-[#fcfaf8]`}
+      className={`relative h-screen w-full flex items-center justify-center p-4 overflow-hidden ${workSans.className} text-[#1b130d] dark:text-[#fcfaf8]`}
     >
+      {/* 🖼️ BACKGROUND IMAGE SECTION */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="/layered-waves-haikei.svg" 
+          alt="Background Waves" 
+          className="w-full h-full object-cover"
+        />
+      </div>
+
       {/* Auth Card */}
-      <div className="relative z-20 w-full max-w-[480px] max-h-full bg-white dark:bg-[#2c241b] rounded-xl shadow-2xl flex flex-col border border-[#f3ece7] dark:border-[#3e342b]">
+      <div className="relative z-10 w-full max-w-[480px] max-h-full bg-white dark:bg-blue-950 rounded-xl shadow-2xl flex flex-col border border-[#f3ece7] dark:border-[#3e342b]">
         <div className="overflow-y-auto overflow-x-hidden w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <div className="pt-5 pl-5 mt-10 text-[#9a6c4c]">
+          
+          {/* Back Button */}
+          <div className="pl-10 mt-10 text-blue-400">
             <Link href="/">
-              <button className="className= flex items-center text-l font-medium hover:underline mb-4">
-                <StepBack /> back
+              <button className="flex items-center text-l font-medium hover:underline mb-4">
+                <StepBack className="mr-2" size={20} /> back
               </button>
             </Link>
           </div>
 
           {/* Header Section */}
-          <div className="px-8 pt-5 pb-6 text-center">
-            <div className="flex justify-center mb-6 text-[#ec6d13]">
-              <Coffee size={48} strokeWidth={1.5} />
-            </div>
-
-            <div className="grid grid-cols-2 bg-[#221810]/10 dark:bg-[#1a140e] p-1.5 rounded-lg mb-6 border border-[#3e342b]/50">
+          <div className="px-8 pt-3 pb-6 text-center">
+            <div className="grid grid-cols-2 bg-[#221810]/10 dark:bg-[#365979] p-1.5 rounded-lg mb-6 border border-[#3e342b]/50">
               <button
                 onClick={() => setVariant("LOGIN")}
                 className={`font-medium py-2.5 rounded-md transition-all duration-200 focus:outline-none ${
                   variant === "LOGIN"
-                    ? "bg-white dark:bg-[#3e342b] text-[#ec6d13] shadow-sm font-bold scale-[1.02]"
-                    : "text-[#9a6c4c] hover:text-[#ec6d13]"
+                    ? "bg-white dark:bg-[#092c47] text-blue-300 shadow-sm font-bold scale-[1.02]"
+                    : "text-blue-300 hover:text-blue-600"
                 }`}
               >
                 Login
@@ -54,8 +61,8 @@ export default function Auth() {
                 onClick={() => setVariant("REGISTER")}
                 className={`font-medium py-2.5 rounded-md transition-all duration-200 focus:outline-none ${
                   variant === "REGISTER"
-                    ? "bg-white dark:bg-[#3e342b] text-[#ec6d13] shadow-sm font-bold scale-[1.02]"
-                    : "text-[#9a6c4c] hover:text-[#ec6d13]"
+                    ? "bg-white dark:bg-[#092c47] text-blue-300 shadow-sm font-bold scale-[1.02]"
+                    : "text-blue-300 hover:text-blue-600"
                 }`}
               >
                 Register
@@ -84,12 +91,14 @@ export default function Auth() {
                   <span className="text-sm font-bold text-[#1b130d] dark:text-white leading-normal">
                     Full Name
                   </span>
-                  <div className="relative flex w-full items-stretch rounded-lg group">
-                    <div className="text-[#9a6c4c] flex border border-[#e7d9cf] dark:border-gray-600 bg-[#fcfaf8] dark:bg-[#221810] items-center justify-center pl-[15px] rounded-l-lg border-r-0 z-10">
+                  {/* 🛠️ PERBAIKAN: Parent div menangani border & background */}
+                  <div className="relative flex w-full items-center rounded-lg border border-[#e7d9cf] dark:border-gray-600 bg-[#fcfaf8] dark:bg-[#092c47] focus-within:ring-1 focus-within:ring-blue-300 focus-within:border-blue-300 transition-all">
+                    <div className="absolute left-4 text-blue-300 pointer-events-none">
                       <User size={20} />
                     </div>
+                    {/* Input dibuat transparan & border-none */}
                     <input
-                      className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg rounded-l-none border-l-0 text-[#1b130d] dark:text-white focus:outline-none focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] border border-[#e7d9cf] dark:border-gray-600 bg-[#fcfaf8] dark:bg-[#221810] h-12 placeholder:text-[#9a6c4c]/50 px-[15px] text-base font-normal leading-normal transition-colors"
+                      className="flex w-full bg-transparent border-none h-12 pl-12 pr-4 text-blue-300 dark:text-white placeholder:text-blue-300 focus:ring-0 text-base font-normal leading-normal"
                       placeholder="John Doe"
                       type="text"
                     />
@@ -102,12 +111,12 @@ export default function Auth() {
                 <span className="text-sm font-bold text-[#1b130d] dark:text-white leading-normal">
                   Email Address
                 </span>
-                <div className="relative flex w-full items-stretch rounded-lg">
-                  <div className="text-[#9a6c4c] flex border border-[#e7d9cf] dark:border-gray-600 bg-[#fcfaf8] dark:bg-[#221810] items-center justify-center pl-[15px] rounded-l-lg border-r-0 z-10">
+                <div className="relative flex w-full items-center rounded-lg border border-[#e7d9cf] dark:border-gray-600 bg-[#fcfaf8] dark:bg-[#092c47] focus-within:ring-1 focus-within:ring-blue-300 focus-within:border-blue-300 transition-all">
+                  <div className="absolute left-4 text-blue-300 pointer-events-none">
                     <Mail size={20} />
                   </div>
                   <input
-                    className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg rounded-l-none border-l-0 text-[#1b130d] dark:text-white focus:outline-none focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] border border-[#e7d9cf] dark:border-gray-600 bg-[#fcfaf8] dark:bg-[#221810] h-12 placeholder:text-[#9a6c4c]/50 px-[15px] text-base font-normal leading-normal transition-colors"
+                    className="flex w-full bg-transparent border-none h-12 pl-12 pr-4 text-[#1b130d] dark:text-white placeholder:text-blue-300 focus:ring-0 text-base font-normal leading-normal"
                     placeholder="you@example.com"
                     type="email"
                   />
@@ -121,12 +130,13 @@ export default function Auth() {
                     Password
                   </span>
                 </div>
-                <div className="relative flex w-full items-stretch rounded-lg">
-                  <div className="text-[#9a6c4c] flex border border-[#e7d9cf] dark:border-gray-600 bg-[#fcfaf8] dark:bg-[#221810] items-center justify-center pl-[15px] rounded-l-lg border-r-0 z-10">
+                {/* 🛠️ PERBAIKAN */}
+                <div className="relative flex w-full items-center rounded-lg border border-[#e7d9cf] dark:border-gray-600 bg-[#fcfaf8] dark:bg-[#092c47] focus-within:ring-1 focus-within:ring-blue-300 focus-within:border-blue-300 transition-all">
+                  <div className="absolute left-4 text-blue-300 pointer-events-none">
                     <Lock size={20} />
                   </div>
                   <input
-                    className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg rounded-x-none border-x-0 text-[#1b130d] dark:text-white focus:outline-none focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] border border-[#e7d9cf] dark:border-gray-600 bg-[#fcfaf8] dark:bg-[#221810] h-12 placeholder:text-[#9a6c4c]/50 px-[15px] text-base font-normal leading-normal transition-colors"
+                    className="flex w-full bg-transparent border-none h-12 pl-12 pr-12 text-[#1b130d] dark:text-white placeholder:text-blue-300 focus:ring-0 text-base font-normal leading-normal"
                     placeholder={
                       variant === "REGISTER"
                         ? "Create a password"
@@ -137,7 +147,7 @@ export default function Auth() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-[#9a6c4c] flex border border-[#e7d9cf] dark:border-gray-600 bg-[#fcfaf8] dark:bg-[#221810] items-center justify-center pr-[15px] rounded-r-lg border-l-0 z-10 cursor-pointer hover:text-[#ec6d13] transition-colors focus:outline-none"
+                    className="absolute right-4 text-blue-300 hover:text-blue-600 transition-colors focus:outline-none cursor-pointer"
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -145,36 +155,11 @@ export default function Auth() {
               </label>
 
               {/* Submit Button */}
-              <button className="mt-2 flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-[#ec6d13] hover:bg-[#d65c0b] active:scale-95 text-white text-base font-bold leading-normal tracking-[0.015em] shadow-md transition-all duration-200">
+              <button className="mt-2 flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-blue-600 hover:bg-blue-900 active:scale-95 text-white text-base font-bold leading-normal tracking-[0.015em] shadow-md transition-all duration-200">
                 <span className="truncate">
                   {variant === "REGISTER" ? "Sign Up" : "Sign In"}
                 </span>
               </button>
-
-              {/* Divider */}
-              <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-[#e7d9cf] dark:border-gray-600"></div>
-                <span className="flex-shrink-0 mx-4 text-[#9a6c4c] text-xs uppercase font-medium tracking-wider">
-                  Or {variant === "REGISTER" ? "register" : "login"} with
-                </span>
-                <div className="flex-grow border-t border-[#e7d9cf] dark:border-gray-600"></div>
-              </div>
-
-              {/* Footer Text */}
-              <div className="text-center mt-2">
-                <p className="text-sm text-[#1b130d] dark:text-gray-300">
-                  {variant === "REGISTER"
-                    ? "Already have an account? "
-                    : "New to Coffee Connect? "}
-                  <button
-                    type="button"
-                    onClick={toggleVariant}
-                    className="font-bold text-[#ec6d13] hover:text-[#d65c0b] hover:underline focus:outline-none"
-                  >
-                    {variant === "REGISTER" ? "Sign In" : "Register"}
-                  </button>
-                </p>
-              </div>
             </form>
           </div>
         </div>
