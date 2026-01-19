@@ -25,7 +25,7 @@ export default function Auth() {
       {/* 🖼️ BACKGROUND IMAGE SECTION */}
       <div className="absolute inset-0 z-0">
         <img 
-          src="/layered-waves-haikei.svg" 
+          src="/stacked-waves-haikei.svg" 
           alt="Background Waves" 
           className="w-full h-full object-cover"
         />
