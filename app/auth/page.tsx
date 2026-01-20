@@ -32,13 +32,13 @@ export default function Auth() {
       </div>
 
       {/* Auth Card */}
-      <div className="relative z-10 w-full max-w-[480px] max-h-full bg-white dark:bg-blue-950 rounded-xl shadow-2xl flex flex-col border border-[#f3ece7] dark:border-[#3e342b]">
+      <div className="relative z-10 w-full max-w-[480px] max-h-full bg-white dark:bg-[#2c241b] rounded-xl shadow-2xl flex flex-col border border-[#f3ece7] dark:border-[#3e342b]">
         <div className="overflow-y-auto overflow-x-hidden w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           
           {/* Back Button */}
-          <div className="pl-10 mt-10 text-blue-400">
+          <div className="pl-10 mt-10 text-[#b49484]">
             <Link href="/">
-              <button className="flex items-center text-l font-medium hover:underline mb-4">
+              <button className="flex items-center text-l font-medium mb-4 hover:text-[#ec6d13] hover:scale-107">
                 <StepBack className="mr-2" size={20} /> back
               </button>
             </Link>
@@ -46,13 +46,13 @@ export default function Auth() {
 
           {/* Header Section */}
           <div className="px-8 pt-3 pb-6 text-center">
-            <div className="grid grid-cols-2 bg-[#221810]/10 dark:bg-[#365979] p-1.5 rounded-lg mb-6 border border-[#3e342b]/50">
+            <div className="grid grid-cols-2 bg-[#221810]/10 dark:bg-[#9a6c4c] p-1.5 rounded-lg mb-6 border border-[#3e342b]/50">
               <button
                 onClick={() => setVariant("LOGIN")}
                 className={`font-medium py-2.5 rounded-md transition-all duration-200 focus:outline-none ${
                   variant === "LOGIN"
-                    ? "bg-white dark:bg-[#092c47] text-blue-300 shadow-sm font-bold scale-[1.02]"
-                    : "text-blue-300 hover:text-blue-600"
+                    ? "bg-[#ec6d13] hover:bg-[#2c241b] text-[#9a6c4c] shadow-sm font-bold scale-[1.02]"
+                    : "text-[#b49484] hover:text-[#ec6d13]"
                 }`}
               >
                 Login
@@ -69,7 +69,7 @@ export default function Auth() {
               </button>
             </div>
 
-            <h1 className="text-3xl font-black tracking-tight text-[#1b130d] dark:text-white mb-2">
+            <h1 className="text-3xl font-black tracking-tight text-[#1b130d] dark:text-[#fcfaf8]">
               {variant === "REGISTER" ? "Create Account" : "Welcome Back"}
             </h1>
             <p className="text-[#9a6c4c] dark:text-gray-400 text-base font-normal">
