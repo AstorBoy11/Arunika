@@ -22,7 +22,6 @@ export default function Auth() {
     <div
       className={`relative h-screen w-full flex items-center justify-center p-4 overflow-hidden ${workSans.className} text-[#1b130d] dark:text-[#fcfaf8]`}
     >
-      {/* 🖼️ BACKGROUND IMAGE SECTION */}
       <div className="absolute inset-0 z-0">
         <img 
           src="/stacked-waves-haikei.svg" 
@@ -51,7 +50,7 @@ export default function Auth() {
                 onClick={() => setVariant("LOGIN")}
                 className={`font-medium py-2.5 rounded-md transition-all duration-200 focus:outline-none ${
                   variant === "LOGIN"
-                    ? "bg-[#ec6d13] hover:bg-[#2c241b] text-[#9a6c4c] shadow-sm font-bold scale-[1.02]"
+                    ? "bg-[#5b381f] hover:bg-[#55432f] text-[#f8ece4] shadow-sm font-bold scale-[1.02]"
                     : "text-[#b49484] hover:text-[#ec6d13]"
                 }`}
               >
@@ -61,8 +60,8 @@ export default function Auth() {
                 onClick={() => setVariant("REGISTER")}
                 className={`font-medium py-2.5 rounded-md transition-all duration-200 focus:outline-none ${
                   variant === "REGISTER"
-                    ? "bg-white dark:bg-[#092c47] text-blue-300 shadow-sm font-bold scale-[1.02]"
-                    : "text-blue-300 hover:text-blue-600"
+                    ? "bg-[#5b381f] hover:bg-[#55432f] text-[#f8ece4] shadow-sm font-bold scale-[1.02]"
+                    : "text-[#b49484] hover:text-[#ec6d13]"
                 }`}
               >
                 Register
@@ -91,14 +90,13 @@ export default function Auth() {
                   <span className="text-sm font-bold text-[#1b130d] dark:text-white leading-normal">
                     Full Name
                   </span>
-                  {/* 🛠️ PERBAIKAN: Parent div menangani border & background */}
-                  <div className="relative flex w-full items-center rounded-lg border border-[#e7d9cf] dark:border-gray-600 bg-[#fcfaf8] dark:bg-[#092c47] focus-within:ring-1 focus-within:ring-blue-300 focus-within:border-blue-300 transition-all">
-                    <div className="absolute left-4 text-blue-300 pointer-events-none">
+                  <div className="relative flex w-full items-center rounded-lg border border-[#e7d9cf] dark:border-[#55432f] bg-[#fcfaf8] dark:bg-[#55432f] focus-within:ring-1 transition-all">
+                    <div className="absolute left-4 text-[#b49484] pointer-events-none">
                       <User size={20} />
                     </div>
                     {/* Input dibuat transparan & border-none */}
                     <input
-                      className="flex w-full bg-transparent border-none h-12 pl-12 pr-4 text-blue-300 dark:text-white placeholder:text-blue-300 focus:ring-0 text-base font-normal leading-normal"
+                      className="flex w-full bg-transparent border-none h-12 pl-12 pr-4 text-[#b49484] dark:text-white placeholder:text-[#b49484] focus:ring-0 text-base font-normal leading-normal"
                       placeholder="John Doe"
                       type="text"
                     />
@@ -111,12 +109,12 @@ export default function Auth() {
                 <span className="text-sm font-bold text-[#1b130d] dark:text-white leading-normal">
                   Email Address
                 </span>
-                <div className="relative flex w-full items-center rounded-lg border border-[#e7d9cf] dark:border-gray-600 bg-[#fcfaf8] dark:bg-[#092c47] focus-within:ring-1 focus-within:ring-blue-300 focus-within:border-blue-300 transition-all">
-                  <div className="absolute left-4 text-blue-300 pointer-events-none">
+                <div className="relative flex w-full items-center rounded-lg border border-[#e7d9cf] dark:border-[#55432f] bg-[#fcfaf8] dark:bg-[#55432f] focus-within:ring-1 transition-all">
+                  <div className="absolute left-4 text-[#b49484] pointer-events-none">
                     <Mail size={20} />
                   </div>
                   <input
-                    className="flex w-full bg-transparent border-none h-12 pl-12 pr-4 text-[#1b130d] dark:text-white placeholder:text-blue-300 focus:ring-0 text-base font-normal leading-normal"
+                    className="flex w-full bg-transparent border-none h-12 pl-12 pr-4 text-[#1b130d] dark:text-white placeholder:text-[#b49484] focus:ring-0 text-base font-normal leading-normal"
                     placeholder="you@example.com"
                     type="email"
                   />
@@ -131,12 +129,12 @@ export default function Auth() {
                   </span>
                 </div>
                 {/* 🛠️ PERBAIKAN */}
-                <div className="relative flex w-full items-center rounded-lg border border-[#e7d9cf] dark:border-gray-600 bg-[#fcfaf8] dark:bg-[#092c47] focus-within:ring-1 focus-within:ring-blue-300 focus-within:border-blue-300 transition-all">
-                  <div className="absolute left-4 text-blue-300 pointer-events-none">
+                <div className="relative flex w-full items-center rounded-lg border border-[#e7d9cf] dark:border-[#55432f] bg-[#fcfaf8] dark:bg-[#55432f] focus-within:ring-1 transition-all">
+                  <div className="absolute left-4 text-[#b49484] pointer-events-none">
                     <Lock size={20} />
                   </div>
                   <input
-                    className="flex w-full bg-transparent border-none h-12 pl-12 pr-12 text-[#1b130d] dark:text-white placeholder:text-blue-300 focus:ring-0 text-base font-normal leading-normal"
+                    className="flex w-full bg-transparent border-none h-12 pl-12 pr-12 text-[#1b130d] dark:text-white placeholder:text-[#b49484] focus:ring-0 text-base font-normal leading-normal"
                     placeholder={
                       variant === "REGISTER"
                         ? "Create a password"
@@ -147,7 +145,7 @@ export default function Auth() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 text-blue-300 hover:text-blue-600 transition-colors focus:outline-none cursor-pointer"
+                    className="absolute right-4 text-[#b49484] hover:text-[#ec6d13] transition-colors focus:outline-none cursor-pointer"
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -155,7 +153,7 @@ export default function Auth() {
               </label>
 
               {/* Submit Button */}
-              <button className="mt-2 flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-blue-600 hover:bg-blue-900 active:scale-95 text-white text-base font-bold leading-normal tracking-[0.015em] shadow-md transition-all duration-200">
+              <button className="mt-2 flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-[#a8602d] hover:bg-[#55432f] active:scale-95 text-white text-base font-bold leading-normal tracking-[0.015em] shadow-md transition-all duration-200">
                 <span className="truncate">
                   {variant === "REGISTER" ? "Sign Up" : "Sign In"}
                 </span>

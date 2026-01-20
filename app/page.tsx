@@ -41,7 +41,7 @@ export default function LandingPage() {
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled
             ? "bg-[#1a140e]/95 backdrop-blur-md shadow-lg py-4 border-b border-[#3e3025]"
-            : "bg-transparent"
+            : "bg-transparent py-6"
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
@@ -49,7 +49,7 @@ export default function LandingPage() {
           <Link href="/" className="flex items-center gap-2 group">
             <div>
               <Image
-                src="/logo.png"
+                src="/logo_header.png"
                 alt="Arunika Logo"
                 width={665}
                 height={484}
@@ -84,13 +84,8 @@ export default function LandingPage() {
 
         {/* Content */}
         <div className="relative z-10 text-center px-6 max-w-4xl mx-auto mt-16">
-          <div className="inline-block px-4 py-1.5 mb-6 rounded-full border border-[#ec6d13]/30 bg-[#ec6d13]/10 backdrop-blur-sm">
-            <span className="text-[#ec6d13] text-sm font-bold tracking-widest uppercase">
-              Online Coffee Shop
-            </span>
-          </div>
-          <h1 className="text-5xl md:text-7xl font-black leading-tight mb-6 text-white drop-shadow-lg">
-            <span className="text-[#ec6d13]">Arunika </span> Arabica Robusta
+          <h1 className="text-4xl md:text-7xl font-black leading-tight pt-10 mb-6 text-white drop-shadow-lg">
+            <span className="text-[#ec6d13] text-5xl">Arunika </span> <br /> Arabica Robusta
             Untuk Dinikmati Bersama
           </h1>
           <p className="text-lg md:text-xl text-[#dcdcdc] mb-10 max-w-2xl mx-auto leading-relaxed">
@@ -106,11 +101,6 @@ export default function LandingPage() {
               </button>
             </Link>
           </div>
-        </div>
-
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-[#9a6c4c]">
-          <div className="w-[1px] h-16 bg-gradient-to-b from-transparent via-[#ec6d13] to-transparent"></div>
         </div>
       </section>
 
