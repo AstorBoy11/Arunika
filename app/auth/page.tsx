@@ -14,7 +14,8 @@ const workSans = Work_Sans({
 export default function Auth() {
   const [variant, setVariant] = useState<"LOGIN" | "REGISTER">("REGISTER");
   const [showPassword, setShowPassword] = useState(false);
-  const { theme, toggleTheme } = useTheme();
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { theme } = useTheme();
   const isDark = theme === "dark";
 
   return (
@@ -182,6 +183,39 @@ export default function Auth() {
                   </button>
                 </div>
               </label>
+
+              {/* Confirm Password - Only for Register */}
+              {variant === "REGISTER" && (
+                <label className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <span className={`text-sm font-bold leading-normal ${isDark ? "text-white" : "text-[#1b130d]"
+                    }`}>
+                    Confirm Password
+                  </span>
+                  <div className={`relative flex w-full items-center rounded-lg border focus-within:ring-1 focus-within:ring-[#ec6d13] transition-all ${isDark
+                      ? "border-[#55432f] bg-[#1a140e]"
+                      : "border-[#e5ddd5] bg-[#f5f0eb]"
+                    }`}>
+                    <div className={`absolute left-4 pointer-events-none ${isDark ? "text-[#b49484]" : "text-[#8b7355]"
+                      }`}>
+                      <Lock size={20} />
+                    </div>
+                    <input
+                      className={`flex w-full bg-transparent border-none h-12 pl-12 pr-12 placeholder:text-[#b49484] focus:ring-0 text-base font-normal leading-normal focus:outline-none ${isDark ? "text-white" : "text-[#1b130d]"
+                        }`}
+                      placeholder="Confirm your password"
+                      type={showConfirmPassword ? "text" : "password"}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className={`absolute right-4 hover:text-[#ec6d13] transition-colors focus:outline-none cursor-pointer ${isDark ? "text-[#b49484]" : "text-[#8b7355]"
+                        }`}
+                    >
+                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </label>
+              )}
 
               {/* Submit Button */}
               <Link href="/user/dashboard">

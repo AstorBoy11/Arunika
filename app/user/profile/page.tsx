@@ -103,10 +103,6 @@ export default function UserProfile() {
                         <h3 className={`text-xl font-bold ${isDark ? "text-white" : "text-[#1a140e]"}`}>
                             Shipping Addresses
                         </h3>
-                        <button className="text-[#ec6d13] text-sm font-bold hover:text-[#d65c0b] transition-colors flex items-center gap-1">
-                            <Plus size={18} />
-                            Add New Address
-                        </button>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -180,19 +176,8 @@ export default function UserProfile() {
                                     }`}>Delete</button>
                             </div>
                         </div>
-
-                        {/* Card 3: Add New Button */}
-                        <button className={`rounded-2xl border border-dashed p-6 flex flex-col items-center justify-center gap-3 transition-all min-h-[200px] group ${isDark
-                                ? "border-[#3e342b] hover:border-[#ec6d13]/50 hover:bg-[#1a140e]/50 text-[#b9a89d] hover:text-[#ec6d13]"
-                                : "border-[#e5ddd5] hover:border-[#ec6d13]/50 hover:bg-[#fef9f5] text-[#8b7355] hover:text-[#ec6d13]"
-                            }`}>
-                            <MapPin className="group-hover:scale-110 transition-transform" size={40} />
-                            <span className="font-bold text-sm">Add New Address</span>
-                        </button>
-
                     </div>
                 </div>
-
             </div>
         </div>
     );
