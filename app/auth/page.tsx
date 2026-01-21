@@ -153,11 +153,13 @@ export default function Auth() {
               </label>
 
               {/* Submit Button */}
+              <Link href="user/dashboard">
               <button className="mt-2 flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-[#a8602d] hover:bg-[#55432f] active:scale-95 text-white text-base font-bold leading-normal tracking-[0.015em] shadow-md transition-all duration-200">
                 <span className="truncate">
                   {variant === "REGISTER" ? "Sign Up" : "Sign In"}
                 </span>
               </button>
+               </Link>
             </form>
           </div>
         </div>
