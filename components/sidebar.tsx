@@ -11,6 +11,7 @@ import {
   X,
   ShoppingCart
 } from "lucide-react";
+import { useTheme } from "@/context/ThemeContext";
 
 // --- CONTEXT SETUP ---
 export const SidebarContext = createContext<{
@@ -39,6 +40,9 @@ export function useSidebar() {
 export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
   const { isOpen, setIsOpen } = useSidebar();
   const pathname = usePathname();
+  const { theme } = useTheme();
+
+  const isDark = theme === "dark";
 
   const navItems = [
     {
@@ -71,9 +75,13 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
       {/* Sidebar */}
       <aside className={`
         fixed lg:static inset-y-0 left-0 z-40
-        w-72 h-full flex flex-col bg-[#1a140e] border-r border-[#3e342b] flex-shrink-0
-        transform transition-transform duration-300 ease-in-out
+        w-72 h-full flex flex-col flex-shrink-0
+        transform transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${isDark
+          ? "bg-[#1a140e] border-r border-[#3e342b]"
+          : "bg-white border-r border-[#e5ddd5]"
+        }
       `}>
         {/* Sidebar Header */}
         <div className="p-6 pb-2">
@@ -93,7 +101,10 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
             {/* Close button (Mobile only) */}
             <button
               onClick={() => setIsOpen(false)}
-              className="lg:hidden p-2 rounded-lg hover:bg-[#2a221b] text-[#b9a89d] hover:text-white transition-all"
+              className={`lg:hidden p-2 rounded-lg transition-all ${isDark
+                ? "hover:bg-[#2a221b] text-[#b9a89d] hover:text-white"
+                : "hover:bg-[#f0e8e0] text-[#8b7355] hover:text-[#1a140e]"
+                }`}
             >
               <X size={20} />
             </button>
@@ -111,10 +122,14 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
                 href={item.href}
                 onClick={() => setIsOpen(false)}
                 className={`
-                  flex items-center gap-3 px-4 py-3 rounded-xl transition-all group
+                  flex items-center gap-3 px-4 py-3 rounded-xl transition-all group border
                   ${isActive
-                    ? "bg-[#ec6d13]/10 border border-[#ec6d13]/20 text-[#ec6d13]"
-                    : "hover:bg-[#2a221b] text-[#b9a89d] hover:text-white border border-transparent"
+                    ? isDark
+                      ? "bg-[#ec6d13]/10 border-[#ec6d13]/20 text-[#ec6d13]"
+                      : "bg-[#ec6d13]/10 border-[#ec6d13]/20 text-[#ec6d13]"
+                    : isDark
+                      ? "hover:bg-[#2a221b] text-[#b9a89d] hover:text-white border-transparent"
+                      : "hover:bg-[#f5f0eb] text-[#8b7355] hover:text-[#1a140e] border-transparent"
                   }
                 `}
               >
@@ -128,11 +143,14 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
         </nav>
 
         {/* User Footer */}
-        <div className="p-4 border-t border-[#3e342b]">
-          {/* PERBAIKAN DI SINI: Tambahkan onClick={() => setIsOpen(false)} */}
+        <div className={`p-4 border-t ${isDark ? "border-[#3e342b]" : "border-[#e5ddd5]"}`}>
           <Link href="/user/profile" onClick={() => setIsOpen(false)}>
-            <div className="flex items-center gap-3 p-2 rounded-xl bg-[#231910] mb-3 hover:bg-[#2a221b] transition-colors border border-transparent hover:border-[#3e342b]">
-              <div className="relative h-10 w-10 rounded-full overflow-hidden border border-[#3e342b]">
+            <div className={`flex items-center gap-3 p-2 rounded-xl mb-3 transition-colors border border-transparent ${isDark
+              ? "bg-[#231910] hover:bg-[#2a221b] hover:border-[#3e342b]"
+              : "bg-[#f5f0eb] hover:bg-[#ebe3db] hover:border-[#e5ddd5]"
+              }`}>
+              <div className={`relative h-10 w-10 rounded-full overflow-hidden border ${isDark ? "border-[#3e342b]" : "border-[#e5ddd5]"
+                }`}>
                 <Image
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2GmZQePWPY04wHlVPH7g2QechnIQhqr-oZQY35eO03gOTMRZT0T5GiSUL_P2shWFbkumDQ5nZG9meggW2Ue_5QoK3xIQeiSO6WSq-Vq_UI5-GJnkbAA7mTvlFrsRPvs4ZPqcE-2oI6EGqR0oJe33z1XydzPgbdW-aHPkOeOvJV1xacWdkSfHJu7pRSGJ_8x0tOmrDi6G00Gq7LOwFzNPHhmHf5oydaiE-D6ueg-TdCHj9yQm37IUtDqXdlP-eeKsK6igXmU_1mfFC"
                   alt="User Profile"
@@ -141,13 +159,20 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
                 />
               </div>
               <div className="flex flex-col overflow-hidden">
-                <p className="text-white text-sm font-semibold truncate">Alex Morgan</p>
-                <p className="text-[#b9a89d] text-xs truncate">Gold Member</p>
+                <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-[#1a140e]"}`}>
+                  Alex Morgan
+                </p>
+                <p className={`text-xs truncate ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
+                  Gold Member
+                </p>
               </div>
             </div>
           </Link>
-          
-          <button className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-transparent border border-[#3e342b] hover:bg-[#231910] hover:text-white text-[#b9a89d] text-sm font-bold transition-all">
+
+          <button className={`w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-transparent border text-sm font-bold transition-all ${isDark
+            ? "border-[#3e342b] hover:bg-[#231910] hover:text-white text-[#b9a89d]"
+            : "border-[#e5ddd5] hover:bg-[#f5f0eb] hover:text-[#1a140e] text-[#8b7355]"
+            }`}>
             <LogOut size={18} />
             <span>Log Out</span>
           </button>

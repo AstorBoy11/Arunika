@@ -1,22 +1,21 @@
 "use client";
 
 import Image from "next/image";
-import { 
-  ArrowRight, 
+import {
   Heart,
-  ShoppingCart, 
+  ShoppingCart,
   ChevronDown,
-  Plus
 } from "lucide-react";
+import { useTheme } from "@/context/ThemeContext";
 
-// Data Dummy Produk (agar kodingan tidak panjang berulang-ulang)
+// Data Dummy Produk
 const products = [
   {
     id: 1,
     name: "Ethiopian Yirgacheffe",
     price: "$22.00",
     desc: "Floral aroma with notes of jasmine and lemon. A bright, tea-like body.",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuB06jAOy0e6VpbUp6hOlshceiORePg0Pvs54Ms1qza9ov8vm15VJSj1Eb1JC77MblwiNTKnzB2nPHoFeAxeU4MGM3NBLBP4BJ4p5wWGyqGo9VhyUJcfiLe3UPyu62xbnZ9gDf5Ix_8i4XZzJiO02V51N2DdLf8Lcz0fsub86I5w_CooD2yzLy7W74c0gRgMhXPmyYyVdk6RpoGm__Oobfw8F6ajbFBcleBXcQcupgr37UVMWcWnGKD-LTNbV06oSBM2fWSHaKEwlvEs", // Ganti dengan gambar lokal jika ada
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuB06jAOy0e6VpbUp6hOlshceiORePg0Pvs54Ms1qza9ov8vm15VJSj1Eb1JC77MblwiNTKnzB2nPHoFeAxeU4MGM3NBLBP4BJ4p5wWGyqGo9VhyUJcfiLe3UPyu62xbnZ9gDf5Ix_8i4XZzJiO02V51N2DdLf8Lcz0fsub86I5w_CooD2yzLy7W74c0gRgMhXPmyYyVdk6RpoGm__Oobfw8F6ajbFBcleBXcQcupgr37UVMWcWnGKD-LTNbV06oSBM2fWSHaKEwlvEs",
   },
   {
     id: 2,
@@ -56,6 +55,9 @@ const products = [
 ];
 
 export default function UserDashboard() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   return (
     <div className="flex flex-col gap-8 pb-20">
       {/* --- FILTERS & SORT --- */}
@@ -63,13 +65,14 @@ export default function UserDashboard() {
         {/* Filter Buttons */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
           {["All Roasts", "Light", "Medium", "Dark", "Decaf"].map((filter, index) => (
-            <button 
+            <button
               key={filter}
-              className={`px-5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
-                index === 0 
-                  ? "bg-[#ec6d13] text-white shadow-lg shadow-[#ec6d13]/20" 
-                  : "bg-[#1a140e] border border-[#3e342b] text-[#b9a89d] hover:text-white hover:border-[#ec6d13]/50 font-medium"
-              }`}
+              className={`px-5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${index === 0
+                  ? "bg-[#ec6d13] text-white shadow-lg shadow-[#ec6d13]/20"
+                  : isDark
+                    ? "bg-[#1a140e] border border-[#3e342b] text-[#b9a89d] hover:text-white hover:border-[#ec6d13]/50"
+                    : "bg-white border border-[#e5ddd5] text-[#8b7355] hover:text-[#1a140e] hover:border-[#ec6d13]/50"
+                }`}
             >
               {filter}
             </button>
@@ -78,8 +81,9 @@ export default function UserDashboard() {
 
         {/* Sort Dropdown */}
         <div className="flex items-center gap-2 min-w-fit">
-          <span className="text-[#b9a89d] text-sm">Sort by:</span>
-          <button className="flex items-center gap-1 text-white text-sm font-medium hover:text-[#ec6d13] transition-colors">
+          <span className={`text-sm ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>Sort by:</span>
+          <button className={`flex items-center gap-1 text-sm font-medium hover:text-[#ec6d13] transition-colors ${isDark ? "text-white" : "text-[#1a140e]"
+            }`}>
             Featured
             <ChevronDown size={18} />
           </button>
@@ -89,39 +93,45 @@ export default function UserDashboard() {
       {/* --- PRODUCT GRID --- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {products.map((product) => (
-          <div 
-            key={product.id} 
-            className="group bg-[#1a140e] rounded-2xl p-3 border border-[#3e342b] hover:border-[#ec6d13]/50 transition-all duration-300 hover:shadow-xl hover:shadow-black/20 flex flex-col"
+          <div
+            key={product.id}
+            className={`group rounded-2xl p-3 border transition-all duration-300 hover:shadow-xl flex flex-col ${isDark
+                ? "bg-[#1a140e] border-[#3e342b] hover:border-[#ec6d13]/50 hover:shadow-black/20"
+                : "bg-white border-[#e5ddd5] hover:border-[#ec6d13]/50 hover:shadow-black/10"
+              }`}
           >
             {/* Product Image Container */}
-            <div className="relative aspect-square rounded-xl overflow-hidden mb-4 bg-[#231910]">
-              <Image 
+            <div className={`relative aspect-square rounded-xl overflow-hidden mb-4 ${isDark ? "bg-[#231910]" : "bg-[#f5f0eb]"
+              }`}>
+              <Image
                 src={product.image}
                 alt={product.name}
                 fill
                 className="object-cover group-hover:scale-110 transition-transform duration-500"
               />
-              {/* Favorite Button */}
-              <button className="absolute top-3 right-3 p-2 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-[#ec6d13] hover:text-white transition-colors z-10">
-                <Heart size={20} />
-              </button>
             </div>
 
             {/* Product Details */}
             <div className="flex flex-col gap-1 px-1 flex-1">
               <div className="flex justify-between items-start">
-                <h3 className="text-white text-lg font-bold leading-tight group-hover:text-[#ec6d13] transition-colors">
+                <h3 className={`text-lg font-bold leading-tight group-hover:text-[#ec6d13] transition-colors ${isDark ? "text-white" : "text-[#1a140e]"
+                  }`}>
                   {product.name}
                 </h3>
-                <span className="text-white font-bold text-lg">{product.price}</span>
+                <span className={`font-bold text-lg ${isDark ? "text-white" : "text-[#1a140e]"}`}>
+                  {product.price}
+                </span>
               </div>
-              <p className="text-[#b9a89d] text-sm line-clamp-2 mb-4">
+              <p className={`text-sm line-clamp-2 mb-4 ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
                 {product.desc}
               </p>
-              
+
               {/* Add to Cart Button */}
               <div className="mt-auto">
-                <button className="w-full py-2.5 rounded-xl bg-white text-[#231910] font-bold text-sm hover:bg-[#ec6d13] hover:text-white transition-colors flex items-center justify-center gap-2 group/btn">
+                <button className={`w-full py-2.5 rounded-xl font-bold text-sm hover:bg-[#ec6d13] hover:text-white transition-colors flex items-center justify-center gap-2 group/btn ${isDark
+                    ? "bg-white text-[#231910]"
+                    : "bg-[#1a140e] text-white"
+                  }`}>
                   Add to Cart
                   <ShoppingCart size={18} className="group-hover/btn:translate-x-1 transition-transform" />
                 </button>

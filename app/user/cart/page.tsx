@@ -3,16 +3,17 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { 
-  Trash2, 
-  Minus, 
-  Plus, 
-  ShoppingBag, 
+import {
+  Trash2,
+  Minus,
+  Plus,
+  ShoppingBag,
   ArrowRight,
   Truck
 } from "lucide-react";
+import { useTheme } from "@/context/ThemeContext";
 
-// Tipe Data & Data Dummy (Sama seperti sebelumnya)
+// Tipe Data & Data Dummy
 interface CartItem {
   id: number;
   name: string;
@@ -67,6 +68,8 @@ const initialCart: CartItem[] = [
 
 export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>(initialCart);
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const updateQuantity = (id: number, type: "plus" | "minus") => {
     setCartItems((prev) =>
@@ -85,19 +88,22 @@ export default function CartPage() {
   };
 
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const shipping = 5.00; 
+  const shipping = 5.00;
   const tax = subtotal * 0.1;
   const total = subtotal + shipping + tax;
 
   if (cartItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <div className="p-6 bg-[#1a140e] rounded-full mb-6 border border-[#3e342b]">
+        <div className={`p-6 rounded-full mb-6 border ${isDark ? "bg-[#1a140e] border-[#3e342b]" : "bg-[#f5f0eb] border-[#e5ddd5]"
+          }`}>
           <ShoppingBag size={48} className="text-[#ec6d13] opacity-50" />
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">Keranjangmu Kosong</h2>
-        <Link href="/user/shop">
-          <button className="mt-4 px-8 py-3 bg-[#ec6d13] text-white font-bold rounded-xl">
+        <h2 className={`text-2xl font-bold mb-2 ${isDark ? "text-white" : "text-[#1a140e]"}`}>
+          Keranjangmu Kosong
+        </h2>
+        <Link href="/user/dashboard">
+          <button className="mt-4 px-8 py-3 bg-[#ec6d13] text-white font-bold rounded-xl hover:bg-[#d65c0b] transition-colors">
             Mulai Belanja
           </button>
         </Link>
@@ -106,43 +112,38 @@ export default function CartPage() {
   }
 
   return (
-    // PERBAIKAN 1:
-    // h-auto: Tinggi otomatis di HP (bisa scroll panjang ke bawah)
-    // lg:h-[calc(100vh-8rem)]: Tinggi dikunci hanya di Laptop
     <div className="max-w-[1200px] mx-auto h-auto lg:h-[calc(100vh-8rem)] flex flex-col">
-      
+
       {/* HEADER */}
-      <div className="shrink-0 mb-6 border-b border-[#3e342b] pb-4">
-        <h1 className="text-3xl font-bold text-white mb-2">Keranjang Belanja</h1>
-        <p className="text-[#b9a89d]">
+      <div className={`shrink-0 mb-6 border-b pb-4 ${isDark ? "border-[#3e342b]" : "border-[#e5ddd5]"}`}>
+        <h1 className={`text-3xl font-bold mb-2 ${isDark ? "text-white" : "text-[#1a140e]"}`}>
+          Keranjang Belanja
+        </h1>
+        <p className={isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}>
           Kamu memiliki <span className="text-[#ec6d13] font-bold">{cartItems.length} item</span> di dalam keranjang.
         </p>
       </div>
 
-      {/* PERBAIKAN 2:
-          lg:overflow-hidden: Hanya hilangkan scroll container utama di laptop
-          Di HP biarkan default agar bisa scroll ke bawah sampai footer
-      */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-auto lg:h-full lg:overflow-hidden">
-        
+
         {/* KOLOM KIRI: LIST ITEM */}
-        {/* PERBAIKAN 3:
-            lg:overflow-y-auto: Scroll independen hanya aktif di laptop
-            Di HP, dia akan memanjang ke bawah biasa
-        */}
         <div className="lg:col-span-2 lg:overflow-y-auto lg:pr-2 lg:pb-20 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <div className="flex flex-col gap-6">
             {cartItems.map((item) => (
-              <div 
-                key={item.id} 
-                className="bg-[#1a140e] border border-[#3e342b] rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-6 group hover:border-[#ec6d13]/30 transition-all"
+              <div
+                key={item.id}
+                className={`border rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-6 group transition-all ${isDark
+                    ? "bg-[#1a140e] border-[#3e342b] hover:border-[#ec6d13]/30"
+                    : "bg-white border-[#e5ddd5] hover:border-[#ec6d13]/30"
+                  }`}
               >
                 {/* Gambar Produk */}
-                <div className="relative w-full sm:w-32 h-32 bg-[#231910] rounded-xl overflow-hidden flex-shrink-0">
-                  <Image 
-                    src={item.image} 
-                    alt={item.name} 
-                    fill 
+                <div className={`relative w-full sm:w-32 h-32 rounded-xl overflow-hidden flex-shrink-0 ${isDark ? "bg-[#231910]" : "bg-[#f5f0eb]"
+                  }`}>
+                  <Image
+                    src={item.image}
+                    alt={item.name}
+                    fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>
@@ -151,10 +152,13 @@ export default function CartPage() {
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start mb-1">
-                      <h3 className="text-lg font-bold text-white">{item.name}</h3>
-                      <button 
+                      <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-[#1a140e]"}`}>
+                        {item.name}
+                      </h3>
+                      <button
                         onClick={() => removeItem(item.id)}
-                        className="text-[#b9a89d] hover:text-red-500 transition-colors p-1"
+                        className={`transition-colors p-1 ${isDark ? "text-[#b9a89d] hover:text-red-500" : "text-[#8b7355] hover:text-red-500"
+                          }`}
                       >
                         <Trash2 size={18} />
                       </button>
@@ -164,23 +168,34 @@ export default function CartPage() {
 
                   <div className="flex justify-between items-end">
                     {/* Quantity */}
-                    <div className="flex items-center gap-3 bg-[#120d0a] border border-[#3e342b] rounded-lg p-1">
-                      <button 
+                    <div className={`flex items-center gap-3 border rounded-lg p-1 ${isDark
+                        ? "bg-[#120d0a] border-[#3e342b]"
+                        : "bg-[#f5f0eb] border-[#e5ddd5]"
+                      }`}>
+                      <button
                         onClick={() => updateQuantity(item.id, "minus")}
-                        className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-[#2c241b] text-white disabled:opacity-50"
+                        className={`w-8 h-8 flex items-center justify-center rounded-md disabled:opacity-50 ${isDark
+                            ? "hover:bg-[#2c241b] text-white"
+                            : "hover:bg-[#ebe3db] text-[#1a140e]"
+                          }`}
                         disabled={item.quantity <= 1}
                       >
                         <Minus size={14} />
                       </button>
-                      <span className="text-white font-bold w-4 text-center">{item.quantity}</span>
-                      <button 
+                      <span className={`font-bold w-4 text-center ${isDark ? "text-white" : "text-[#1a140e]"}`}>
+                        {item.quantity}
+                      </span>
+                      <button
                         onClick={() => updateQuantity(item.id, "plus")}
-                        className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-[#2c241b] text-white"
+                        className={`w-8 h-8 flex items-center justify-center rounded-md ${isDark
+                            ? "hover:bg-[#2c241b] text-white"
+                            : "hover:bg-[#ebe3db] text-[#1a140e]"
+                          }`}
                       >
                         <Plus size={14} />
                       </button>
                     </div>
-                    <p className="text-xl font-bold text-white">
+                    <p className={`text-xl font-bold ${isDark ? "text-white" : "text-[#1a140e]"}`}>
                       ${(item.price * item.quantity).toFixed(2)}
                     </p>
                   </div>
@@ -191,36 +206,47 @@ export default function CartPage() {
         </div>
 
         {/* KOLOM KANAN: RINGKASAN */}
-        {/* Di HP, ini akan muncul di paling bawah (karena grid system) */}
         <div className="lg:col-span-1 lg:h-full">
-          <div className="bg-[#1a140e] border border-[#3e342b] rounded-2xl p-6 shadow-xl shadow-black/20">
-            <h3 className="text-xl font-bold text-white mb-6">Ringkasan Pesanan</h3>
+          <div className={`border rounded-2xl p-6 shadow-xl ${isDark
+              ? "bg-[#1a140e] border-[#3e342b] shadow-black/20"
+              : "bg-white border-[#e5ddd5] shadow-black/5"
+            }`}>
+            <h3 className={`text-xl font-bold mb-6 ${isDark ? "text-white" : "text-[#1a140e]"}`}>
+              Ringkasan Pesanan
+            </h3>
 
-            <div className="space-y-4 mb-6 border-b border-[#3e342b] pb-6">
-              <div className="flex justify-between text-[#b9a89d]">
+            <div className={`space-y-4 mb-6 border-b pb-6 ${isDark ? "border-[#3e342b]" : "border-[#e5ddd5]"}`}>
+              <div className={`flex justify-between ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
                 <span>Subtotal</span>
-                <span className="text-white font-medium">${subtotal.toFixed(2)}</span>
+                <span className={`font-medium ${isDark ? "text-white" : "text-[#1a140e]"}`}>
+                  ${subtotal.toFixed(2)}
+                </span>
               </div>
-              <div className="flex justify-between text-[#b9a89d]">
+              <div className={`flex justify-between ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
                 <span>Pengiriman</span>
-                <span className="text-white font-medium">${shipping.toFixed(2)}</span>
+                <span className={`font-medium ${isDark ? "text-white" : "text-[#1a140e]"}`}>
+                  ${shipping.toFixed(2)}
+                </span>
               </div>
-              <div className="flex justify-between text-[#b9a89d]">
+              <div className={`flex justify-between ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
                 <span>Pajak (10%)</span>
-                <span className="text-white font-medium">${tax.toFixed(2)}</span>
+                <span className={`font-medium ${isDark ? "text-white" : "text-[#1a140e]"}`}>
+                  ${tax.toFixed(2)}
+                </span>
               </div>
             </div>
 
             <div className="flex justify-between items-center mb-8">
-              <span className="text-white font-bold text-lg">Total</span>
+              <span className={`font-bold text-lg ${isDark ? "text-white" : "text-[#1a140e]"}`}>Total</span>
               <span className="text-[#ec6d13] font-black text-2xl">${total.toFixed(2)}</span>
             </div>
 
-            <div className="bg-[#2a221b]/50 p-3 rounded-lg flex items-start gap-3 mb-6">
-               <Truck size={20} className="text-[#ec6d13] mt-0.5" />
-               <p className="text-xs text-[#b9a89d]">
-                 Gratis ongkir untuk pesanan di atas $50.
-               </p>
+            <div className={`p-3 rounded-lg flex items-start gap-3 mb-6 ${isDark ? "bg-[#2a221b]/50" : "bg-[#fdf5ee]"
+              }`}>
+              <Truck size={20} className="text-[#ec6d13] mt-0.5" />
+              <p className={`text-xs ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
+                Gratis ongkir untuk pesanan di atas $50.
+              </p>
             </div>
 
             <button className="w-full py-4 bg-[#ec6d13] hover:bg-[#d65c0b] text-white font-bold rounded-xl shadow-lg shadow-[#ec6d13]/20 transition-all hover:scale-[1.02] flex items-center justify-center gap-2">
@@ -229,7 +255,6 @@ export default function CartPage() {
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );
