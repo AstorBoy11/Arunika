@@ -1,72 +1,146 @@
-import { Package, Clock, ShoppingBag } from "lucide-react";
+"use client";
+
+import Image from "next/image";
+import { 
+  ArrowRight, 
+  Heart, 
+  ShoppingCart, 
+  ChevronDown,
+  Plus
+} from "lucide-react";
+
+// Data Dummy Produk (agar kodingan tidak panjang berulang-ulang)
+const products = [
+  {
+    id: 1,
+    name: "Ethiopian Yirgacheffe",
+    price: "$22.00",
+    roast: "Light Roast",
+    desc: "Floral aroma with notes of jasmine and lemon. A bright, tea-like body.",
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuB06jAOy0e6VpbUp6hOlshceiORePg0Pvs54Ms1qza9ov8vm15VJSj1Eb1JC77MblwiNTKnzB2nPHoFeAxeU4MGM3NBLBP4BJ4p5wWGyqGo9VhyUJcfiLe3UPyu62xbnZ9gDf5Ix_8i4XZzJiO02V51N2DdLf8Lcz0fsub86I5w_CooD2yzLy7W74c0gRgMhXPmyYyVdk6RpoGm__Oobfw8F6ajbFBcleBXcQcupgr37UVMWcWnGKD-LTNbV06oSBM2fWSHaKEwlvEs", // Ganti dengan gambar lokal jika ada
+  },
+  {
+    id: 2,
+    name: "Sumatra Mandheling",
+    price: "$19.50",
+    roast: "Dark Roast",
+    desc: "Full body with an intense, earthy aroma and herbal nuances. Low acidity.",
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAMFtMAcIKaVPvQYctBLheaTsf6inh5kusmEPv8dAtt5CAkGFWWo3JLMGqvsOnwsKqi028amHlsFfvdsDauUTrhZ4p9KHwImj23Z7D-WDj4SCW4iWt1Wr9Y5Jph1l-Zl1w9ADQaiC2qomr4HoWL21tPCxi1pECQY05QzaoGHraPUvMxPeGzCw9nIA5jlZmDT3WWLtVLtfDZd7rx7UZfDdyOoTFOdZU8CPjMVmrN7-uhc7Sb4fPLXQYgmJ3XVPIw9U61Dcm6pKtOeFUe",
+  },
+  {
+    id: 3,
+    name: "Colombia Supremo",
+    price: "$18.00",
+    roast: "Medium Roast",
+    desc: "Smooth and sweet with notes of caramel and fruit. Perfectly balanced.",
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuD6Rtnqc0knxLE0r6zNwSbxxLmdh0ae94THdw8aYmdqKQHlmXJ92jN4e8Vvv43VKMHu22zHUS2K2ZayLP-iNNcbihw9FoQssku8mEx5G5C53iEWRK0DvM7Z__UYBi5gi57IQfSIZcq51AzlbLhXSOnGSWPMX-D63RhH6tFjUNPe5FMuFy-MoRKJeORdOS_kZ_vwFOBhkxgi1CsVfLoFRxFog7gF6LgsiDFT7-gnY98VwJ5DrXITR2F4rE7qMC_K48Ul714wdJLlFi7X",
+  },
+  {
+    id: 4,
+    name: "Espresso House Blend",
+    price: "$20.00",
+    roast: "Espresso",
+    desc: "Our signature blend crafted for the perfect crema. Bold, rich, and syrupy.",
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBDqGbCu-PjW8XJl7mlArgoi-f-vnEr1jU24YXaLBZy3GtN0Lpg58p-6XoCoqpy5_AGJSfQG9zMwACIs__tFEvH5DqvoOdJqpZh9TGgDYUVU7Ov0hzL4DFjymyw63rxvgXxfvW0W8yV6BlkRXmF7ehphhQ7ikj-ZRhDBaeOOeqoKncRZmcGf6fZFXo9cjZwnMjJIMuVONl1NXJEyg6Tch3KRqypH06M9t_xZMHsQrEUUt-XNBfLsduQ2W2yfM_itJUavmr_te7l5Kkk",
+  },
+  {
+    id: 5,
+    name: "Kenya AA",
+    price: "$24.00",
+    roast: "Light Roast",
+    desc: "Complex flavor profile with distinct blackcurrant notes and wine-like acidity.",
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCg8ODvWlvkdaCvcwj4ZDEyB-nN7KV-94P5awGyPN2gMvB3JGDpnsh0TO1gPLbdCx21TCitKds-hOq5hRVz6XQzCM-Etep_5yy1SY65yJxnRcoHD7ccQCe1XILPKbCA52qnIqTIsAwlyIarKkASw9peo8Gr9ZNXkbsOpedWJQ3nnUM7KBXojrR4JKeXrPqLb-wX7hQMaoT31wgpBKtZTdkIzCqvlpoJGmuERvsL--ezS3KvzkV2hwpVIIWUVErh1MssRTUs_xojG5Ct",
+  },
+  {
+    id: 6,
+    name: "Costa Rica Tarrazu",
+    price: "$21.00",
+    roast: "Medium Roast",
+    desc: "Crisp and clean with hints of citrus and chocolate. High altitude grown.",
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDvGk1zhDtmMOqQ1x_HziqscnUUvGCn5mHFopvl78tlL12hsu3SzzsueoNdvOgF-eqL5RJG5woPgo4sXYgZtzAqAYKqKHicJF7QzwCDXoVAvz6hc3IuvOkdJ93PGBc7aRTxRT4Bk2FrnndhdIm3e8Y6bxlG8BAardAVERopssnsjru_0RbmwoIUEY4l1KFrTC4YBq721wzRMk5fWlvQIVKvFZ3rdRhneSC1r0AUiOXYy4wCWugITCovUwTCJlvFD2xDyYbqYWo5J84s",
+  },
+];
 
 export default function UserDashboard() {
-    return (
-        <div className="space-y-6 sm:space-y-8">
-            {/* 1. Header Konten */}
-            <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Halo, John Doe!</h1>
-                <p className="text-sm sm:text-base text-[#9a6c4c]">Senang melihatmu kembali. Mau ngopi apa hari ini?</p>
-            </div>
-
-            {/* 2. Statistik Singkat (Grid) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {/* Card 1 */}
-                <div className="bg-[#1a140e] p-4 sm:p-6 rounded-xl border border-[#3e3025] flex items-center gap-3 sm:gap-4">
-                    <div className="p-2 sm:p-3 bg-[#ec6d13]/10 rounded-lg text-[#ec6d13] flex-shrink-0">
-                        <ShoppingBag size={20} className="sm:w-6 sm:h-6" />
-                    </div>
-                    <div className="min-w-0">
-                        <p className="text-[#9a6c4c] text-xs sm:text-sm truncate">Total Pesanan</p>
-                        <h3 className="text-xl sm:text-2xl font-bold text-white">12</h3>
-                    </div>
-                </div>
-
-                {/* Card 2 */}
-                <div className="bg-[#1a140e] p-4 sm:p-6 rounded-xl border border-[#3e3025] flex items-center gap-3 sm:gap-4">
-                    <div className="p-2 sm:p-3 bg-blue-500/10 rounded-lg text-blue-500 flex-shrink-0">
-                        <Clock size={20} className="sm:w-6 sm:h-6" />
-                    </div>
-                    <div className="min-w-0">
-                        <p className="text-[#9a6c4c] text-xs sm:text-sm truncate">Sedang Diproses</p>
-                        <h3 className="text-xl sm:text-2xl font-bold text-white">1</h3>
-                    </div>
-                </div>
-
-                {/* Card 3 */}
-                <div className="bg-[#1a140e] p-4 sm:p-6 rounded-xl border border-[#3e3025] flex items-center gap-3 sm:gap-4 sm:col-span-2 lg:col-span-1">
-                    <div className="p-2 sm:p-3 bg-green-500/10 rounded-lg text-green-500 flex-shrink-0">
-                        <Package size={20} className="sm:w-6 sm:h-6" />
-                    </div>
-                    <div className="min-w-0">
-                        <p className="text-[#9a6c4c] text-xs sm:text-sm truncate">Selesai</p>
-                        <h3 className="text-xl sm:text-2xl font-bold text-white">11</h3>
-                    </div>
-                </div>
-            </div>
-
-            {/* 3. Pesanan Terakhir */}
-            <div className="bg-[#1a140e] rounded-xl border border-[#3e3025] overflow-hidden">
-                <div className="p-4 sm:p-6 border-b border-[#3e3025] flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                    <h3 className="font-bold text-base sm:text-lg text-white">Pesanan Terakhir</h3>
-                    <button className="text-sm text-[#ec6d13] hover:underline self-start sm:self-auto">Lihat Semua</button>
-                </div>
-                <div className="p-4 sm:p-6">
-                    {/* Order Item */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 border-b border-[#3e3025]/50 last:border-0 gap-3">
-                        <div className="flex items-center gap-3 sm:gap-4">
-                            <div className="h-10 w-10 sm:h-12 sm:w-12 bg-[#2c241b] rounded-md border border-[#3e3025] flex-shrink-0"></div>
-                            <div className="min-w-0">
-                                <p className="font-bold text-sm sm:text-base text-white truncate">Arabica Gayo Wine</p>
-                                <p className="text-xs sm:text-sm text-[#9a6c4c] truncate">250gr • Fine Grind</p>
-                            </div>
-                        </div>
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 self-start sm:self-auto flex-shrink-0">
-                            Dikirim
-                        </span>
-                    </div>
-                </div>
-            </div>
+  return (
+    <div className="flex flex-col gap-8 pb-20">
+      {/* --- FILTERS & SORT --- */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Filter Buttons */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+          {["All Roasts", "Light", "Medium", "Dark", "Decaf"].map((filter, index) => (
+            <button 
+              key={filter}
+              className={`px-5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
+                index === 0 
+                  ? "bg-[#ec6d13] text-white shadow-lg shadow-[#ec6d13]/20" 
+                  : "bg-[#1a140e] border border-[#3e342b] text-[#b9a89d] hover:text-white hover:border-[#ec6d13]/50 font-medium"
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
         </div>
-    );
+
+        {/* Sort Dropdown */}
+        <div className="flex items-center gap-2 min-w-fit">
+          <span className="text-[#b9a89d] text-sm">Sort by:</span>
+          <button className="flex items-center gap-1 text-white text-sm font-medium hover:text-[#ec6d13] transition-colors">
+            Featured
+            <ChevronDown size={18} />
+          </button>
+        </div>
+      </div>
+
+      {/* --- PRODUCT GRID --- */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {products.map((product) => (
+          <div 
+            key={product.id} 
+            className="group bg-[#1a140e] rounded-2xl p-3 border border-[#3e342b] hover:border-[#ec6d13]/50 transition-all duration-300 hover:shadow-xl hover:shadow-black/20 flex flex-col"
+          >
+            {/* Product Image Container */}
+            <div className="relative aspect-square rounded-xl overflow-hidden mb-4 bg-[#231910]">
+              <Image 
+                src={product.image}
+                alt={product.name}
+                fill
+                className="object-cover group-hover:scale-110 transition-transform duration-500"
+              />
+              {/* Favorite Button */}
+              <button className="absolute top-3 right-3 p-2 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-[#ec6d13] hover:text-white transition-colors z-10">
+                <Heart size={20} />
+              </button>
+              {/* Roast Tag */}
+              <div className="absolute bottom-3 left-3 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-lg border border-white/10 z-10">
+                <span className="text-xs font-medium text-white">{product.roast}</span>
+              </div>
+            </div>
+
+            {/* Product Details */}
+            <div className="flex flex-col gap-1 px-1 flex-1">
+              <div className="flex justify-between items-start">
+                <h3 className="text-white text-lg font-bold leading-tight group-hover:text-[#ec6d13] transition-colors">
+                  {product.name}
+                </h3>
+                <span className="text-white font-bold text-lg">{product.price}</span>
+              </div>
+              <p className="text-[#b9a89d] text-sm line-clamp-2 mb-4">
+                {product.desc}
+              </p>
+              
+              {/* Add to Cart Button */}
+              <div className="mt-auto">
+                <button className="w-full py-2.5 rounded-xl bg-white text-[#231910] font-bold text-sm hover:bg-[#ec6d13] hover:text-white transition-colors flex items-center justify-center gap-2 group/btn">
+                  Add to Cart
+                  <ShoppingCart size={18} className="group-hover/btn:translate-x-1 transition-transform" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+    </div>
+  );
 }

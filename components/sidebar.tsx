@@ -58,14 +58,17 @@ export default function Sidebar() {
                 <div className="p-6 pb-2">
                     <div className="flex items-center justify-between mb-8">
                         <div>
+                            <Link href="/user/dashboard">
                             <Image
                                 src="/logo_sidebar.png"
                                 alt="Arunika Logo"
                                 width={665}
                                 height={484}
                                 className="h-15 w-auto object-contain transform group-hover:scale-105 transition-transform"
-                            />
+                            /> 
+                            </Link>
                         </div>
+                      
                         {/* Close button - Only visible on mobile when sidebar is open */}
                         <button
                             onClick={() => setIsOpen(false)}
