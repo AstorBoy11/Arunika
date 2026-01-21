@@ -1,10 +1,15 @@
 "use client";
 
 import { Search, Menu } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useSidebar } from "./sidebar";
 
 export default function Header() {
   const { setIsOpen } = useSidebar();
+  const pathname = usePathname();
+
+  // Search bar hanya muncul di halaman dashboard (shop)
+  const showSearch = pathname === "/user/dashboard";
 
   return (
     <header className="h-16 border-b border-[#3e342b] bg-[#1a140e]/95 backdrop-blur-md flex items-center justify-between px-4 sm:px-6 md:px-8 sticky top-0 z-10 gap-4">
@@ -20,17 +25,19 @@ export default function Header() {
           <Menu size={20} />
         </button>
 
-        {/* Search Bar */}
-        <div className="relative flex-1 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Search className="text-[#9a6c4c]" size={16} />
+        {/* Search Bar - Only visible on dashboard/shop page */}
+        {showSearch && (
+          <div className="relative flex-1 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <Search className="text-[#9a6c4c]" size={16} />
+            </div>
+            <input
+              className="w-full bg-[#120d0a] border border-[#3e342b] text-white text-xs rounded-lg focus:outline-none focus:border-[#ec6d13] block pl-9 p-2.5 placeholder-[#9a6c4c]"
+              placeholder="Search..."
+              type="text"
+            />
           </div>
-          <input
-            className="w-full bg-[#120d0a] border border-[#3e342b] text-white text-xs rounded-lg focus:outline-none focus:border-[#ec6d13] block pl-9 p-2.5 placeholder-[#9a6c4c]"
-            placeholder="Search..."
-            type="text"
-          />
-        </div>
+        )}
       </div>
 
       {/* Right: User Avatar */}
