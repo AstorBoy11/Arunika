@@ -68,10 +68,10 @@ export default function UserDashboard() {
             <button
               key={filter}
               className={`px-5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${index === 0
-                  ? "bg-[#ec6d13] text-white shadow-lg shadow-[#ec6d13]/20"
-                  : isDark
-                    ? "bg-[#1a140e] border border-[#3e342b] text-[#b9a89d] hover:text-white hover:border-[#ec6d13]/50"
-                    : "bg-white border border-[#e5ddd5] text-[#8b7355] hover:text-[#1a140e] hover:border-[#ec6d13]/50"
+                ? "bg-[#ec6d13] text-white shadow-lg shadow-[#ec6d13]/20"
+                : isDark
+                  ? "bg-[#1a140e] border border-[#3e342b] text-[#b9a89d] hover:text-white hover:border-[#ec6d13]/50"
+                  : "bg-white border border-[#e5ddd5] text-[#8b7355] hover:text-[#1a140e] hover:border-[#ec6d13]/50"
                 }`}
             >
               {filter}
@@ -96,8 +96,8 @@ export default function UserDashboard() {
           <div
             key={product.id}
             className={`group rounded-2xl p-3 border transition-all duration-300 hover:shadow-xl flex flex-col ${isDark
-                ? "bg-[#1a140e] border-[#3e342b] hover:border-[#ec6d13]/50 hover:shadow-black/20"
-                : "bg-white border-[#e5ddd5] hover:border-[#ec6d13]/50 hover:shadow-black/10"
+              ? "bg-[#1a140e] border-[#3e342b] hover:border-[#ec6d13]/50 hover:shadow-black/20"
+              : "bg-white border-[#e5ddd5] hover:border-[#ec6d13]/50 hover:shadow-black/10"
               }`}
           >
             {/* Product Image Container */}
@@ -129,8 +129,8 @@ export default function UserDashboard() {
               {/* Add to Cart Button */}
               <div className="mt-auto">
                 <button className={`w-full py-2.5 rounded-xl font-bold text-sm hover:bg-[#ec6d13] hover:text-white transition-colors flex items-center justify-center gap-2 group/btn ${isDark
-                    ? "bg-white text-[#231910]"
-                    : "bg-[#1a140e] text-white"
+                  ? "bg-white text-[#231910]"
+                  : "bg-[#1a140e] text-white"
                   }`}>
                   Add to Cart
                   <ShoppingCart size={18} className="group-hover/btn:translate-x-1 transition-transform" />

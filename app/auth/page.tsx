@@ -44,8 +44,8 @@ export default function Auth() {
           <div className="pl-10 mt-10">
             <Link href="/">
               <button className={`flex items-center text-l font-medium mb-4 transition-colors ${isDark
-                ? "text-[#b49484] hover:text-[#ec6d13]"
-                : "text-[#8b7355] hover:text-[#ec6d13]"
+                ? "text-[#ec6d13] hover:text-[#ec6d13]"
+                : "text-[#ec6d13] hover:text-[#ec6d13]"
                 }`}>
                 <StepBack className="mr-2" size={20} /> back
               </button>

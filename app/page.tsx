@@ -116,7 +116,7 @@ export default function LandingPage() {
               onClick={toggleTheme}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl border transition-all ${isDark
                   ? "border-[#3e3025] bg-[#1a140e]/80 hover:bg-[#221810] text-white"
-                  : "border-white/30 bg-white/20 hover:bg-white/30 text-white"
+                  : "border-white/30 bg-[#ec6d13]/50 hover:bg-white/30 text-black"
                 }`}
             >
               {isDark ? <Sun size={18} /> : <Moon size={18} />}
