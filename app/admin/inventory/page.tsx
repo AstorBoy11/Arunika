@@ -94,34 +94,17 @@ export default function AdminInventory() {
         title="Inventory Stock"
         subtitle="Manage stock levels and supplies"
       >
-        <div className="flex items-center gap-4">
-          {/* Search Bar */}
-          <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-lg focus-within:border-[#ec6d13] transition-colors shadow-sm dark:shadow-none">
-            <Search size={20} className="text-gray-400 dark:text-[#8e7f72]" />
-            <input
-              className="bg-transparent border-none text-sm text-gray-700 dark:text-[#EAE0D5] placeholder-gray-400 dark:placeholder-[#8e7f72]/70 focus:outline-none w-48"
-              placeholder="Search item..."
-              type="text"
-            />
-          </div>
-          {/* Add Button */}
-          <button className="flex items-center gap-2 bg-[#ec6d13] hover:bg-[#d65c0b] text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-[#ec6d13]/20 transition-all active:scale-95">
-            <Plus size={20} />
-            <span>Add New Item</span>
-          </button>
-        </div>
       </AdminHeader>
 
       {/* 2. KONTEN UTAMA */}
       <div className="flex-1 overflow-y-auto p-8 pt-4 custom-scrollbar">
-        
+
         {/* Section 1: Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           {[
             { label: "Total Items", value: "142", icon: Package, color: "text-emerald-500 bg-emerald-500/10" },
             { label: "Low Stock", value: "8", icon: AlertTriangle, color: "text-amber-500 bg-amber-500/10" },
             { label: "Out of Stock", value: "2", icon: XCircle, color: "text-red-500 bg-red-500/10" },
-            { label: "Incoming", value: "5 Orders", icon: Truck, color: "text-blue-500 bg-blue-500/10" },
           ].map((stat, idx) => (
             <div key={idx} className="bg-white dark:bg-[#1a140e] p-4 rounded-xl border border-gray-200 dark:border-[#3e342b] flex items-center gap-4 shadow-sm dark:shadow-none">
               <div className={`size-12 rounded-lg flex items-center justify-center ${stat.color}`}>
@@ -133,27 +116,12 @@ export default function AdminInventory() {
               </div>
             </div>
           ))}
+
         </div>
 
         {/* Section 2: Table Container */}
         <div className="bg-white dark:bg-[#1a140e] rounded-xl border border-gray-200 dark:border-[#3e342b] overflow-hidden shadow-sm dark:shadow-black/40 flex flex-col">
-          
-          {/* Table Header Controls */}
           <div className="p-4 border-b border-gray-200 dark:border-[#3e342b] flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 no-scrollbar">
-              {["All Items", "Beans", "Dairy", "Syrups", "Paper Goods"].map((tab, idx) => (
-                <button
-                  key={tab}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                    idx === 0
-                      ? "bg-[#ec6d13]/10 text-[#ec6d13] border border-[#ec6d13]/30"
-                      : "text-gray-500 dark:text-[#8e7f72] hover:text-gray-900 dark:hover:text-[#EAE0D5] hover:bg-gray-100 dark:hover:bg-[#231910]"
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
             <div className="flex items-center gap-2 text-gray-500 dark:text-[#8e7f72]">
               <span className="text-xs uppercase font-semibold tracking-wider">Sort by:</span>
               <div className="flex items-center gap-1 cursor-pointer hover:text-gray-900 dark:hover:text-[#EAE0D5]">
@@ -161,6 +129,10 @@ export default function AdminInventory() {
                 <ArrowUpDown size={16} />
               </div>
             </div>
+            <button className="flex items-center gap-2 bg-[#ec6d13] hover:bg-[#d65c0b] border border-gray-200 dark:border-[#3e342b] text-white px-5 py-2.5 rounded-lg font-bold shadow-lg shadow-[#ec6d13]/20 transition-all active:scale-95">
+              <Plus size={20} />
+              <span>Add New Item</span>
+            </button>
           </div>
 
           {/* Table Content */}
@@ -202,8 +174,8 @@ export default function AdminInventory() {
                           <span className="text-gray-500 dark:text-[#8e7f72]">{item.stockValue}</span>
                         </div>
                         <div className="w-full bg-gray-200 dark:bg-[#3e342b] rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full ${item.barColor}`} 
+                          <div
+                            className={`h-2 rounded-full ${item.barColor}`}
                             style={{ width: `${item.stockPercent}%` }}
                           ></div>
                         </div>

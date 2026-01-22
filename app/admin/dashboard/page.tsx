@@ -23,7 +23,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between w-full">
                     <div>
                         <h2 className={`${isDark ? "text-[#fcfaf8]" : "text-[#1a140e]"} text-lg md:text-2xl font-bold tracking-tight`}>Analytics Dashboard</h2>
-                        <p className={`text-xs md:text-sm ${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"} hidden sm:block`}>Good Morning, Owner. Here's what's brewing.</p>
+                        <p className={`text-xs md:text-sm ${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"} hidden sm:block`}>Good Morning. Here's what's brewing.</p>
                     </div>
                 </div>
             </AdminHeader>
@@ -31,7 +31,7 @@ export default function AdminDashboard() {
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-6 md:space-y-8 pb-20 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 
                 {/* Stats Row */}
-                <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Revenue */}
                     <div className={`${isDark ? "bg-[#1a140e] border-[#3e342b]" : "bg-white border-[#e5ddd5]"} p-6 rounded-xl border shadow-xl shadow-black/20 flex flex-col gap-4 relative overflow-hidden group hover:border-[#ec6d13]/30 transition-colors`}>
                         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -41,13 +41,13 @@ export default function AdminDashboard() {
                             <div className={`p-2 rounded-lg text-[#ec6d13] ${isDark ? "bg-[#3e342b]" : "bg-[#f5f0eb]"}`}>
                                 <DollarSign size={24} />
                             </div>
-                            <span className="flex items-center gap-1 text-[#0bda16] bg-[#0bda16]/10 px-2 py-1 rounded-md text-xs font-bold">
-                                <TrendingUp size={14} /> +12%
-                            </span>
                         </div>
                         <div className="z-10">
                             <p className={`${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"} text-sm font-medium mb-1`}>Total Revenue</p>
                             <h3 className={`${isDark ? "text-[#fcfaf8]" : "text-[#1a140e]"} text-3xl font-bold tracking-tight`}>$12,450.00</h3>
+                            <span className="flex items-center w-1/6 gap-1 text-[#0bda16] bg-[#0bda16]/10 px-2 py-1 rounded-md text-xs font-bold">
+                                <TrendingUp size={14} /> +12%
+                            </span>
                         </div>
                     </div>
 
@@ -60,30 +60,13 @@ export default function AdminDashboard() {
                             <div className={`p-2 rounded-lg text-[#ec6d13] ${isDark ? "bg-[#3e342b]" : "bg-[#f5f0eb]"}`}>
                                 <Coffee size={24} />
                             </div>
-                            <span className="flex items-center gap-1 text-[#0bda16] bg-[#0bda16]/10 px-2 py-1 rounded-md text-xs font-bold">
-                                <TrendingUp size={14} /> +2%
-                            </span>
                         </div>
                         <div className="z-10">
                             <p className={`${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"} text-sm font-medium mb-1`}>Total Orders</p>
                             <h3 className={`${isDark ? "text-[#fcfaf8]" : "text-[#1a140e]"} text-3xl font-bold tracking-tight`}>1,240 Cups</h3>
-                        </div>
-                    </div>
-
-                    {/* Staff */}
-                    <div className={`${isDark ? "bg-[#1a140e] border-[#3e342b]" : "bg-white border-[#e5ddd5]"} p-6 rounded-xl border shadow-xl shadow-black/20 flex flex-col gap-4 relative overflow-hidden group hover:border-[#ec6d13]/30 transition-colors`}>
-                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Users size={80} className="text-[#ec6d13]" />
-                        </div>
-                        <div className="flex justify-between items-start z-10">
-                            <div className={`p-2 rounded-lg text-[#ec6d13] ${isDark ? "bg-[#3e342b]" : "bg-[#f5f0eb]"}`}>
-                                <Users size={24} />
-                            </div>
-                            <span className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${isDark ? "text-[#b9a89d] bg-[#3e342b]/50" : "text-[#8b7355] bg-[#f5f0eb]"}`}>8 Total</span>
-                        </div>
-                        <div className="z-10">
-                            <p className={`${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"} text-sm font-medium mb-1`}>Active Staff</p>
-                            <h3 className={`${isDark ? "text-[#fcfaf8]" : "text-[#1a140e]"} text-3xl font-bold tracking-tight`}>4 On Shift</h3>
+                            <span className="flex items-center w-1/6 gap-1 text-[#0bda16] bg-[#0bda16]/10 px-2 py-1 rounded-md text-xs font-bold">
+                                <TrendingUp size={14} /> +12%
+                            </span>
                         </div>
                     </div>
                 </section>

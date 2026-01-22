@@ -1,29 +1,25 @@
 "use client";
 
 import AdminHeader from "@/components/admin-header";
-import { 
-  Save, 
-  Store, 
-  UploadCloud, 
-  Clock, 
-  CreditCard, 
-  Banknote, 
-  ShieldCheck, 
-  Lock 
+import {
+  Save,
+  Store,
+  UploadCloud,
+  Clock,
+  CreditCard,
+  Banknote,
+  ShieldCheck,
+  Lock
 } from "lucide-react";
 
 export default function AdminSettings() {
   return (
     <div className="flex flex-col h-full w-full">
       {/* 1. HEADER */}
-      <AdminHeader 
-        title="System Settings" 
+      <AdminHeader
+        title="System Settings"
         subtitle="Configure global store profile, preferences and security"
       >
-        <button className="flex items-center gap-2 bg-[#ec6d13] hover:bg-[#d65c0b] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-[#ec6d13]/20 transition-all active:scale-95">
-          <Save size={20} />
-          <span>Save Changes</span>
-        </button>
       </AdminHeader>
 
       {/* 2. MAIN CONTENT */}
@@ -36,7 +32,7 @@ export default function AdminSettings() {
               <Store className="text-[#ec6d13]" size={24} />
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Store Profile</h3>
             </div>
-            
+
             <div className="flex flex-col md:flex-row gap-8">
               {/* Photo Upload */}
               <div className="flex flex-col items-center gap-3 shrink-0">
@@ -56,27 +52,27 @@ export default function AdminSettings() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-gray-500 dark:text-[#8e7f72] uppercase tracking-wider">Store Name</label>
-                    <input 
-                      className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all placeholder-gray-400" 
-                      type="text" 
+                    <input
+                      className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all placeholder-gray-400"
+                      type="text"
                       defaultValue="Coffee Connect Downtown"
                     />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-gray-500 dark:text-[#8e7f72] uppercase tracking-wider">Store ID</label>
-                    <input 
-                      className="w-full bg-gray-100 dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-2.5 text-gray-500 dark:text-[#8e7f72] text-sm cursor-not-allowed opacity-70" 
-                      disabled 
-                      type="text" 
+                    <input
+                      className="w-full bg-gray-100 dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-2.5 text-gray-500 dark:text-[#8e7f72] text-sm cursor-not-allowed opacity-70"
+                      disabled
+                      type="text"
                       defaultValue="CC-001-DT"
                     />
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-gray-500 dark:text-[#8e7f72] uppercase tracking-wider">Store Address</label>
-                  <textarea 
-                    className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all placeholder-gray-400" 
-                    rows={3} 
+                  <textarea
+                    className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all placeholder-gray-400"
+                    rows={3}
                     defaultValue="123 Roasted Bean Avenue, Suite 100&#10;Metropolis, NY 10012"
                   />
                 </div>
@@ -91,7 +87,7 @@ export default function AdminSettings() {
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Operating Hours</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
+
               {/* Weekdays */}
               <div className="space-y-3">
                 <h4 className="text-sm font-semibold text-gray-700 dark:text-[#EAE0D5]">Weekdays (Mon - Fri)</h4>
@@ -127,75 +123,32 @@ export default function AdminSettings() {
             </div>
           </section>
 
-          {/* SECTION 3: PAYMENT INTEGRATION */}
-          <section className="bg-white dark:bg-[#1a140e] rounded-xl border border-gray-200 dark:border-[#3e342b] p-6 shadow-sm dark:shadow-none transition-colors">
-            <div className="flex items-center gap-2 mb-6 border-b border-gray-200 dark:border-[#3e342b] pb-4">
-              <CreditCard className="text-[#ec6d13]" size={24} />
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Payment Integration</h3>
-            </div>
-            <div className="space-y-4">
-              
-              {/* Stripe */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-[#231910] rounded-xl border border-gray-200 dark:border-[#3e342b]">
-                <div className="flex items-center gap-4">
-                  <div className="size-10 rounded-lg bg-[#635BFF] flex items-center justify-center text-white font-bold text-lg">S</div>
-                  <div>
-                    <p className="text-gray-900 dark:text-[#EAE0D5] font-bold">Stripe Payments</p>
-                    <p className="text-xs text-gray-500 dark:text-[#8e7f72]">Enable credit/debit card processing</p>
-                  </div>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" defaultChecked className="sr-only peer" />
-                  <div className="w-11 h-6 bg-gray-300 dark:bg-[#3e342b] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#ec6d13]"></div>
-                </label>
-              </div>
-
-              {/* Cash */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-[#231910] rounded-xl border border-gray-200 dark:border-[#3e342b]">
-                <div className="flex items-center gap-4">
-                  <div className="size-10 rounded-lg bg-green-600 flex items-center justify-center text-white">
-                    <Banknote size={20} />
-                  </div>
-                  <div>
-                    <p className="text-gray-900 dark:text-[#EAE0D5] font-bold">Cash Payments</p>
-                    <p className="text-xs text-gray-500 dark:text-[#8e7f72]">Allow physical cash transactions at counter</p>
-                  </div>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" defaultChecked className="sr-only peer" />
-                  <div className="w-11 h-6 bg-gray-300 dark:bg-[#3e342b] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#ec6d13]"></div>
-                </label>
-              </div>
-
-            </div>
-          </section>
-
           {/* SECTION 4: SECURITY */}
           <section className="bg-white dark:bg-[#1a140e] rounded-xl border border-gray-200 dark:border-[#3e342b] p-6 shadow-sm dark:shadow-none transition-colors">
             <div className="flex items-center gap-2 mb-6 border-b border-gray-200 dark:border-[#3e342b] pb-4">
               <ShieldCheck className="text-[#ec6d13]" size={24} />
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Security</h3>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
               <div className="md:col-span-1">
                 <h4 className="text-sm font-semibold text-gray-900 dark:text-[#EAE0D5]">Change Password</h4>
                 <p className="text-xs text-gray-500 dark:text-[#8e7f72] mt-1">Ensure your account is using a long, random password to stay secure.</p>
               </div>
-              
+
               <div className="md:col-span-2 space-y-4">
                 <div className="space-y-1.5 relative">
                   <label className="text-xs font-medium text-gray-500 dark:text-[#8e7f72] uppercase tracking-wider">Current Password</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-2.5 text-gray-400 dark:text-[#8e7f72]" size={16} />
-                    <input 
-                      className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg pl-10 pr-4 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all placeholder-gray-400" 
-                      placeholder="••••••••" 
-                      type="password" 
+                    <input
+                      className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg pl-10 pr-4 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all placeholder-gray-400"
+                      placeholder="••••••••"
+                      type="password"
                     />
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-gray-500 dark:text-[#8e7f72] uppercase tracking-wider">New Password</label>
@@ -215,7 +168,12 @@ export default function AdminSettings() {
               </div>
             </div>
           </section>
-
+          <div className="flex w-full justify-end">
+          <button className="flex items-center gap-2 bg-[#ec6d13] hover:bg-[#d65c0b] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-[#ec6d13]/20 transition-all active:scale-95">
+            <Save size={20} />
+            <span>Save Changes</span>
+          </button>
+          </div>
         </div>
       </div>
     </div>

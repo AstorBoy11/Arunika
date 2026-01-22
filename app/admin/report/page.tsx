@@ -12,8 +12,8 @@ import {
   TrendingUp,
   FileText,
   Filter,
-  Sun,
-  Moon
+  ChevronRight,
+  ChevronUp
 } from "lucide-react";
 
 export default function AdminReports() {
@@ -30,14 +30,6 @@ export default function AdminReports() {
         title="Sales & Performance"
         subtitle="Real-time insights across all your locations."
       >
-        <div className="flex items-center gap-3">
-          <button className="size-10 rounded-full bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] flex items-center justify-center text-gray-400 dark:text-[#b9a89d] hover:text-gray-900 dark:hover:text-white hover:border-[#ec6d13]/50 transition-all shadow-sm dark:shadow-none">
-            <Bell size={20} />
-          </button>
-          <button className="size-10 rounded-full bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] flex items-center justify-center text-gray-400 dark:text-[#b9a89d] hover:text-gray-900 dark:hover:text-white hover:border-[#ec6d13]/50 transition-all shadow-sm dark:shadow-none">
-            <HelpCircle size={20} />
-          </button>
-        </div>
       </AdminHeader>
 
       {/* 2. KONTEN UTAMA */}
@@ -52,22 +44,14 @@ export default function AdminReports() {
                 <Calendar size={18} />
                 <span className="text-sm font-medium">Oct 1 - Oct 31</span>
               </div>
-              <ChevronDown size={16} className="text-gray-400 dark:text-[#b9a89d]" />
+              <ChevronUp size={16} className="text-gray-400 dark:text-[#b9a89d]" />
             </button>
           </div>
 
           <div className="flex items-center gap-3 w-full xl:w-auto">
-            <button
-              onClick={toggleTheme}
-              className="w-full md:w-auto flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] hover:border-[#ec6d13]/50 transition-all shadow-sm dark:shadow-none"
-            >
-              {isDark ? <Sun size={18} /> : <Moon size={18} />}
-              <span className="text-sm font-medium">{isDark ? "Light Mode" : "Dark Mode"}</span>
-            </button>
-
             <button className="w-full md:w-auto flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-[#ec6d13] hover:bg-[#d65c0b] text-white shadow-lg shadow-[#ec6d13]/20 transition-all">
               <Download size={18} />
-              <span className="text-sm font-bold">Export Spreadsheet</span>
+              <span className="text-sm font-bold">Export PDF</span>
             </button>
           </div>
         </div>
@@ -75,7 +59,7 @@ export default function AdminReports() {
         {/* --- SECTION 2: STATS CARDS --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
 
-          {/* Revenue Card - Styling diperbaiki agar background hitam pekat di dark mode */}
+          {/* Revenue Card */}
           <div className="bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-xl p-6 relative overflow-hidden group shadow-sm dark:shadow-none transition-all">
             <div className="absolute right-0 top-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
               <DollarSign size={80} className="text-[#ec6d13]" />
@@ -161,7 +145,7 @@ export default function AdminReports() {
                         <span className={`px-2 py-1 rounded text-xs font-medium border ${item.payColor}`}>{item.pay}</span>
                       </div>
                       <div className="col-span-1 text-center flex justify-center">
-                        <ChevronDown className="text-gray-400 dark:text-[#b9a89d] group-hover:text-[#ec6d13] transition-transform duration-300 group-open:rotate-180" size={18} />
+                        <ChevronRight className="text-gray-400 dark:text-[#b9a89d] group-hover:text-[#ec6d13] transition-transform duration-300 group-open:rotate-90" size={18} />
                       </div>
                     </summary>
 

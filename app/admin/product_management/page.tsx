@@ -19,8 +19,6 @@ export default function AdminProducts() {
       desc: "Floral notes with hints of citrus and bergamot.",
       price: "$24.00",
       image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCdNBXTYnPxU1kPZPpnHrs1t8B0esROWXjRpYmjvOGXBeyev3BSIKGNI_xdOFvsjIy_S6pEJBJDqIoOf7BQuC36BqFK9am7VOx-ZwKwg1gWK99pPvOdy2f8GW72WE-SC-uoiSEhATsbZ6U5cBm_4EoqMUYf0LCXc4e8ep29zvledZdUUoAwOIDNYf4C5UifSQTOvGpO5UNHLsh4Vmn4lCxepJucscLbR70J0oH6G5d3ZTi3nkd2TvDUMx-g5aw3Ms8ghEIBF8gtYLNs",
-      roast: "Light Roast",
-      roastColor: "bg-amber-100 text-amber-800",
       visible: true
     },
     {
@@ -29,8 +27,6 @@ export default function AdminProducts() {
       desc: "Full body, earthy flavor with herbal nuances.",
       price: "$22.50",
       image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAwxhi_iHgGsi7mv5rDslgJMlXZ-SCsKSf-AsVqBlfZV6_e7N7Rq1p8TI8b1B2f7hxKev5dj1UG9WfSgxwRq1ecA6WYBxqYqEBk6tKDL-loRcT6ctU5MfIH_043NaPZlV_70Ws4rSgNO3fqm5h4DGayGikAJV2p9D76LzlyurHNqFv2Cauzg8tokyNlMDvWqdlp1BTfmf_rUendhuvIrYiR0yY9f-AcvItHLATN46K8RT9NqsbuA_ruR6HlYRWLhd135Wbq-boj4yAn",
-      roast: "Dark Roast",
-      roastColor: "bg-amber-900 text-amber-100 border border-amber-700",
       visible: true
     },
     {
@@ -39,8 +35,6 @@ export default function AdminProducts() {
       desc: "Sweet, smooth, and balanced with nutty undertones.",
       price: "$19.00",
       image: "https://lh3.googleusercontent.com/aida-public/AB6AXuB29ghdLNV_5IZlJvp3QUC5ih_e8iH9EMRdFH4qvAJ_mQAuEHWkJnKKVjITfGfMYjZMDzlJlMdlu_8n2paEL9e9mk8eEX_PhVN1BaxTg5S4-9jujL1Zb-6HY3WUTVCaJBACnWADZHhQrsacHLY1hXQBCTTVBTNVRDWMW0kt7xFoGOCT8_fANvB0VgoMdnDQWNs0n4DAeJTFyrP5tsym98J2xJ8uLIJ1Kuoao3G5BIKG1Pk0rWeo0gGyvjnbLKrWO2Am3KdkDv9rzi_Q",
-      roast: "Medium Roast",
-      roastColor: "bg-amber-600 text-white border border-amber-500",
       visible: true
     },
     {
@@ -49,8 +43,6 @@ export default function AdminProducts() {
       desc: "Spicy and smoky with a hint of chocolate.",
       price: "$21.00",
       image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDSmDhnb9eQA1BusBHf2hpd4Ug8aBTjLJyP3KSfBFfm9EGI8IquaVD1xjMo138-kMKTgQoAds3VYHMiTa7kxL247mVyoL3n223hSwu6Hd1hSh3-bZYqH0tk1mKU2mzFAzHZhVmwa7FxaytplGYlqqvlo3tVc3WsTR-x2e7xwWQchJXOn81oud7bqFd1Gvnb9fXpEFIs8WiCwb7-OSJw-iNKVgLRYcTMIMJUTapO3OxUrMcmUh-28oeor0zEQEVu0aq7RPzUJoWmWmms",
-      roast: "Medium Roast",
-      roastColor: "bg-amber-600 text-white border border-amber-500",
       visible: false // Example Hidden Product
     },
     {
@@ -59,8 +51,6 @@ export default function AdminProducts() {
       desc: "Intense, bold, and smoky flavor profile.",
       price: "$18.00",
       image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDTplK1YTqAX0Jn6g26J1rZZ08BRSdh2E-tOc3j6N4WjtK41l7vNBMShBxgrphEvS4VlgSvbrel9jIOuUScnM6iKYKbsaC5iJ6t25pWXZ1lHtppEDo_VVsPxw3yu675TpTHXMj07jv1WyMuEBbnzOB6UEV2_1O49D2xGwk_g68nq5OOZ0ZQzU67zoY2eedaVQ8VNADXQcVhfGCTQ-sVRuHD6_DF77A64jrlmBPB4bl1Mljvdx88ifWNgUG5XHpibAvZGtkhfQQ8UOeX",
-      roast: "Dark Roast",
-      roastColor: "bg-amber-900 text-amber-100 border border-amber-700",
       visible: true
     },
     {
@@ -69,8 +59,6 @@ export default function AdminProducts() {
       desc: "Bright acidity with berry and wine notes.",
       price: "$26.00",
       image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDkCHv8hK05jxDKbY8QXnryK4kFW0rmtH11zfMBmG2_hyOSFOmmTomie-0ZzytihrZ6llbbaO2vrrScfurdpODH5voSfTVFBIGckxj9Lu7QCbzCb_hgcHS-gR-tkZCof2KW5DN-Y3Uwx65KAFsYi6HagKSYaMz1vCbdiWfq_EPNT35WmujIqxAxZuBevkpDQShL4xVlANrV0LtuLmvkXvBjiQks4JvuaxFi0FBSHxtCqtv4BJpd372QFf2mHhnYBpAZnoYeLTZp37zc",
-      roast: "Light Roast",
-      roastColor: "bg-amber-100 text-amber-800",
       visible: true
     },
   ];
@@ -79,13 +67,9 @@ export default function AdminProducts() {
     <div className="flex flex-col h-full w-full">
       {/* 1. HEADER */}
       <AdminHeader 
-        title="Shop Product Management" 
+        title="Product Management" 
         subtitle="Manage your coffee inventory and visibility."
       >
-        <button className="flex items-center gap-2 bg-[#ec6d13] hover:bg-[#d65c0b] text-white font-bold py-2.5 px-5 rounded-lg transition-all shadow-lg shadow-[#ec6d13]/20 active:scale-95">
-          <Plus size={20} />
-          <span>Add New Product</span>
-        </button>
       </AdminHeader>
 
       {/* 2. MAIN CONTENT */}
@@ -109,18 +93,10 @@ export default function AdminProducts() {
 
             {/* Filter Chips */}
             <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto no-scrollbar">
-              {["All Roasts", "Light Roast", "Medium Roast", "Dark Roast"].map((filter, index) => (
-                <button 
-                  key={filter}
-                  className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-transparent ${
-                    index === 0 
-                    ? "bg-[#ec6d13] text-white" 
-                    : "bg-gray-100 dark:bg-[#2c241e] text-gray-600 dark:text-[#b9a89d] hover:bg-gray-200 dark:hover:bg-[#392f28] hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  {filter}
-                </button>
-              ))}
+              <button className="flex items-center gap-2 bg-[#ec6d13] hover:bg-[#d65c0b] text-white font-bold py-2.5 px-5 rounded-lg transition-all shadow-lg shadow-[#ec6d13]/20 active:scale-95">
+                <Plus size={20} />
+                <span>Add New Product</span>
+              </button>
             </div>
           </div>
 
@@ -139,14 +115,7 @@ export default function AdminProducts() {
                     alt={product.name} 
                     fill 
                     className={`object-cover transition-transform duration-500 group-hover:scale-105 ${!product.visible ? "grayscale-[50%] group-hover:grayscale-0" : ""}`}
-                  />
-                  
-                  {/* Roast Badge */}
-                  <div className="absolute top-3 right-3">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium shadow-sm ${product.roastColor}`}>
-                      {product.roast}
-                    </span>
-                  </div>
+                  /> 
 
                   {/* Hidden Overlay */}
                   {!product.visible && (
