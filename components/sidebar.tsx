@@ -114,7 +114,7 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
         {/* Navigation Menu */}
         <nav className="flex-1 flex flex-col gap-2 px-4 overflow-y-auto">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
 
             return (
               <Link
@@ -122,14 +122,12 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
                 href={item.href}
                 onClick={() => setIsOpen(false)}
                 className={`
-                  flex items-center gap-3 px-4 py-3 rounded-xl transition-all group border
+                  flex items-center gap-3 px-4 py-3 rounded-xl transition-all group
                   ${isActive
-                    ? isDark
-                      ? "bg-[#ec6d13]/10 border-[#ec6d13]/20 text-[#ec6d13]"
-                      : "bg-[#ec6d13]/10 border-[#ec6d13]/20 text-[#ec6d13]"
+                    ? "bg-[#ec6d13] text-white shadow-lg shadow-[#ec6d13]/20"
                     : isDark
-                      ? "hover:bg-[#2a221b] text-[#b9a89d] hover:text-white border-transparent"
-                      : "hover:bg-[#f5f0eb] text-[#8b7355] hover:text-[#1a140e] border-transparent"
+                      ? "hover:bg-[#2a221b] text-[#b9a89d] hover:text-white"
+                      : "hover:bg-[#f5f0eb] text-[#8b7355] hover:text-[#1a140e]"
                   }
                 `}
               >
