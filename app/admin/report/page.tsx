@@ -44,14 +44,6 @@ export default function AdminReports() {
 
         <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 mb-8 mt-6">
           <div className="flex flex-col md:flex-row items-center gap-3 w-full xl:w-auto">
-             <div className="flex items-center w-full md:w-auto bg-white dark:bg-[#1a140e] rounded-xl border border-gray-200 dark:border-[#3e342b] p-1 shadow-sm dark:shadow-none overflow-x-auto no-scrollbar">
-              <button className="flex-1 md:flex-none px-4 py-2 rounded-lg bg-gray-100 dark:bg-[#3e342b]/50 text-gray-900 dark:text-white text-sm font-medium shadow-sm whitespace-nowrap">Overview</button>
-              <button className="flex-1 md:flex-none px-4 py-2 rounded-lg text-gray-500 dark:text-[#b9a89d] hover:text-gray-900 dark:hover:text-white text-sm font-medium transition-colors whitespace-nowrap">By Store</button>
-              <button className="flex-1 md:flex-none px-4 py-2 rounded-lg text-gray-500 dark:text-[#b9a89d] hover:text-gray-900 dark:hover:text-white text-sm font-medium transition-colors whitespace-nowrap">By Product</button>
-            </div>
-
-            <div className="h-8 w-px bg-gray-200 dark:bg-[#3e342b] mx-2 hidden xl:block"></div>
-
             <button className="w-full md:w-auto flex items-center justify-between gap-2 h-10 px-4 rounded-xl bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] hover:border-[#ec6d13]/50 transition-all shadow-sm dark:shadow-none">
               <div className="flex items-center gap-2">
                 <Calendar size={18} />
@@ -63,7 +55,7 @@ export default function AdminReports() {
           
           <button className="w-full xl:w-auto flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-[#ec6d13] hover:bg-[#d65c0b] text-white shadow-[0_4px_12px_rgba(236,109,19,0.3)] transition-all">
             <Download size={18} />
-            <span className="text-sm font-bold">Export CSV</span>
+            <span className="text-sm font-bold">Export Spreadsheet</span>
           </button>
         </div>
 
