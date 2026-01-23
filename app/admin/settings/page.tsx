@@ -80,7 +80,7 @@ export default function AdminSettings() {
             </div>
           </section>
 
-          {/* SECTION 2: OPERATING HOURS */}
+          {/* SECTION 2: OPERATING HOURS (FIXED FOR MOBILE) */}
           <section className="bg-white dark:bg-[#1a140e] rounded-xl border border-gray-200 dark:border-[#3e342b] p-6 shadow-sm dark:shadow-none transition-colors">
             <div className="flex items-center gap-2 mb-6 border-b border-gray-200 dark:border-[#3e342b] pb-4">
               <Clock className="text-[#ec6d13]" size={24} />
@@ -91,13 +91,15 @@ export default function AdminSettings() {
               {/* Weekdays */}
               <div className="space-y-3">
                 <h4 className="text-sm font-semibold text-gray-700 dark:text-[#EAE0D5]">Weekdays (Mon - Fri)</h4>
-                <div className="flex items-center gap-4">
-                  <div className="space-y-1 flex-1">
+                {/* UBAH: Tambah flex-col untuk mobile, sm:flex-row untuk tablet ke atas */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <div className="space-y-1 w-full sm:flex-1">
                     <label className="text-xs text-gray-500 dark:text-[#8e7f72]">Open</label>
                     <input className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-3 py-2 text-gray-900 dark:text-[#EAE0D5] text-sm focus:border-[#ec6d13] outline-none" type="time" defaultValue="06:00" />
                   </div>
-                  <span className="text-gray-400 dark:text-[#8e7f72] mt-5">-</span>
-                  <div className="space-y-1 flex-1">
+                  {/* Sembunyikan tanda strip (-) di mobile agar layout vertikal lebih rapi */}
+                  <span className="hidden sm:block text-gray-400 dark:text-[#8e7f72] mt-5">-</span>
+                  <div className="space-y-1 w-full sm:flex-1">
                     <label className="text-xs text-gray-500 dark:text-[#8e7f72]">Close</label>
                     <input className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-3 py-2 text-gray-900 dark:text-[#EAE0D5] text-sm focus:border-[#ec6d13] outline-none" type="time" defaultValue="20:00" />
                   </div>
@@ -107,13 +109,14 @@ export default function AdminSettings() {
               {/* Weekends */}
               <div className="space-y-3">
                 <h4 className="text-sm font-semibold text-gray-700 dark:text-[#EAE0D5]">Weekends (Sat - Sun)</h4>
-                <div className="flex items-center gap-4">
-                  <div className="space-y-1 flex-1">
+                {/* UBAH: Sama seperti di atas, gunakan flex-col untuk mobile */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <div className="space-y-1 w-full sm:flex-1">
                     <label className="text-xs text-gray-500 dark:text-[#8e7f72]">Open</label>
                     <input className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-3 py-2 text-gray-900 dark:text-[#EAE0D5] text-sm focus:border-[#ec6d13] outline-none" type="time" defaultValue="07:00" />
                   </div>
-                  <span className="text-gray-400 dark:text-[#8e7f72] mt-5">-</span>
-                  <div className="space-y-1 flex-1">
+                  <span className="hidden sm:block text-gray-400 dark:text-[#8e7f72] mt-5">-</span>
+                  <div className="space-y-1 w-full sm:flex-1">
                     <label className="text-xs text-gray-500 dark:text-[#8e7f72]">Close</label>
                     <input className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-3 py-2 text-gray-900 dark:text-[#EAE0D5] text-sm focus:border-[#ec6d13] outline-none" type="time" defaultValue="22:00" />
                   </div>
@@ -123,6 +126,7 @@ export default function AdminSettings() {
             </div>
           </section>
 
+          {/* SECTION 3 & 4 TETAP SAMA */}
           {/* SECTION 4: SECURITY */}
           <section className="bg-white dark:bg-[#1a140e] rounded-xl border border-gray-200 dark:border-[#3e342b] p-6 shadow-sm dark:shadow-none transition-colors">
             <div className="flex items-center gap-2 mb-6 border-b border-gray-200 dark:border-[#3e342b] pb-4">
@@ -168,11 +172,12 @@ export default function AdminSettings() {
               </div>
             </div>
           </section>
+          
           <div className="flex w-full justify-end">
-          <button className="flex items-center gap-2 bg-[#ec6d13] hover:bg-[#d65c0b] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-[#ec6d13]/20 transition-all active:scale-95">
-            <Save size={20} />
-            <span>Save Changes</span>
-          </button>
+            <button className="flex items-center gap-2 bg-[#ec6d13] hover:bg-[#d65c0b] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-[#ec6d13]/20 transition-all active:scale-95">
+              <Save size={20} />
+              <span>Save Changes</span>
+            </button>
           </div>
         </div>
       </div>
