@@ -224,6 +224,7 @@ export default function Auth() {
                     {variant === "REGISTER" ? "Sign Up" : "Sign In"}
                   </span>
                 </button>
+                {/* test for deployment */}
               </Link>
               <Link href="/admin/dashboard">
                 <button className="mt-2 flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-[#ec6d13] hover:bg-[#d65c0b] active:scale-95 text-white text-base font-bold leading-normal tracking-[0.015em] shadow-md transition-all duration-200">
