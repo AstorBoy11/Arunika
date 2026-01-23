@@ -4,6 +4,7 @@ import { useState, createContext, useContext } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import logoSidebar from "@/public/logo_sidebar.png";
 import {
   ShoppingBag,
   Settings,
@@ -89,7 +90,7 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
             <div>
               <Link href="/user/dashboard" onClick={() => setIsOpen(false)}>
                 <Image
-                  src="/logo_sidebar.png"
+                  src={logoSidebar}
                   alt="Arunika Logo"
                   width={150}
                   height={50}
