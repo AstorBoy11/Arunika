@@ -25,29 +25,29 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: 'npm'
-
+          # Kita hapus cache: 'npm' sementara agar tidak mengambil cache yang rusak
+          
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
           static_site_generator: next
 
-      # Install dependensi (menggunakan npm install agar lebih aman)
+      # PERBAIKAN: Hapus package-lock.json agar npm mendownload binary Linux yang benar
       - name: Install dependencies
-        run: npm install
+        run: |
+          rm -f package-lock.json
+          npm install
 
-      # Proses Build Next.js
       - name: Build with Next.js
         run: npm run build
 
-      # PENTING: Membuat file .nojekyll agar folder _next tidak di-ignore GitHub
       - name: Disable Jekyll
         run: touch ./out/.nojekyll
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out  # Mengupload folder hasil export Next.js
+          path: ./out
 
   deploy:
     environment:
