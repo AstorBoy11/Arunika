@@ -97,7 +97,7 @@ export default function AdminInventory() {
       </AdminHeader>
 
       {/* 2. KONTEN UTAMA */}
-      <div className="flex-1 overflow-y-auto p-8 pt-4 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-8 pt-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 
         {/* Section 1: Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">

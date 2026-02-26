@@ -9,6 +9,9 @@ import {
     Building2,
     MapPin,
     CheckCircle2,
+    Mail,
+    Phone,
+    User as UserIcon,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -68,8 +71,11 @@ export default function UserProfile() {
                         }`}>
 
                         <div className="group">
-                            <label className={`block text-xs uppercase font-bold tracking-wider mb-1.5 ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"
-                                }`}>Full Name</label>
+                            <label className={`flex items-center gap-2 text-xs uppercase font-bold tracking-wider mb-1.5 ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"
+                                }`}>
+                                <UserIcon size={14} />
+                                Full Name
+                            </label>
                             <p className={`font-medium text-lg ${isDark ? "text-white" : "text-[#1a140e]"}`}>
                                 Alex Morgan
                             </p>
@@ -78,8 +84,11 @@ export default function UserProfile() {
                         <div className={`h-px ${isDark ? "bg-[#3e342b]/50" : "bg-[#e5ddd5]"}`}></div>
 
                         <div className="group">
-                            <label className={`block text-xs uppercase font-bold tracking-wider mb-1.5 ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"
-                                }`}>Email Address</label>
+                            <label className={`flex items-center gap-2 text-xs uppercase font-bold tracking-wider mb-1.5 ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"
+                                }`}>
+                                <Mail size={14} />
+                                Email Address
+                            </label>
                             <p className={`font-medium text-lg ${isDark ? "text-white" : "text-[#1a140e]"}`}>
                                 alex.morgan@coffee.com
                             </p>
@@ -88,8 +97,11 @@ export default function UserProfile() {
                         <div className={`h-px ${isDark ? "bg-[#3e342b]/50" : "bg-[#e5ddd5]"}`}></div>
 
                         <div className="group">
-                            <label className={`block text-xs uppercase font-bold tracking-wider mb-1.5 ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"
-                                }`}>Phone Number</label>
+                            <label className={`flex items-center gap-2 text-xs uppercase font-bold tracking-wider mb-1.5 ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"
+                                }`}>
+                                <Phone size={14} />
+                                Phone Number
+                            </label>
                             <p className={`font-medium text-lg ${isDark ? "text-white" : "text-[#1a140e]"}`}>
                                 +1 (555) 123-4567
                             </p>
@@ -103,6 +115,10 @@ export default function UserProfile() {
                         <h3 className={`text-xl font-bold ${isDark ? "text-white" : "text-[#1a140e]"}`}>
                             Shipping Addresses
                         </h3>
+                        <button className="flex items-center gap-2 px-4 py-2.5 bg-[#ec6d13] text-white text-sm font-bold rounded-xl hover:bg-[#d65c0b] transition-all shadow-lg shadow-[#ec6d13]/20 hover:shadow-xl hover:shadow-[#ec6d13]/30">
+                            <Plus size={16} />
+                            Tambah Alamat
+                        </button>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -1,12 +1,8 @@
 "use client";
 
-import { useTheme } from "@/context/ThemeContext";
 import AdminHeader from "@/components/admin-header";
 import {
-  Bell,
-  HelpCircle,
   Calendar,
-  ChevronDown,
   Download,
   DollarSign,
   TrendingUp,
@@ -17,13 +13,11 @@ import {
 } from "lucide-react";
 
 export default function AdminReports() {
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === "dark";
+  const cardClass =
+    "bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-xl shadow-sm dark:shadow-none transition-colors";
 
   return (
-    // TAMBAHAN PENTING: Class "flex flex-col h-full bg-[#fdf8f2] dark:bg-[#1a140e]"
-    // Ini memaksa seluruh halaman punya warna background, bukan transparan/putih default.
-    <div className="flex flex-col h-full w-full bg-[#fdf8f2] dark:bg-[#231910]">
+    <div className="flex flex-col h-full w-full bg-gray-50 dark:bg-[#120d0a]">
 
       {/* 1. HEADER */}
       <AdminHeader
@@ -60,7 +54,7 @@ export default function AdminReports() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
 
           {/* Revenue Card */}
-          <div className="bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-xl p-6 relative overflow-hidden group shadow-sm dark:shadow-none transition-all">
+          <div className={`${cardClass} p-6 relative overflow-hidden group transition-all`}>
             <div className="absolute right-0 top-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
               <DollarSign size={80} className="text-[#ec6d13]" />
             </div>
@@ -78,7 +72,7 @@ export default function AdminReports() {
           </div>
 
           {/* Orders Card */}
-          <div className="bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-xl p-6 relative overflow-hidden group shadow-sm dark:shadow-none transition-all">
+          <div className={`${cardClass} p-6 relative overflow-hidden group transition-all`}>
             <div className="absolute right-0 top-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
               <FileText size={80} className="text-gray-900 dark:text-white" />
             </div>
@@ -99,7 +93,7 @@ export default function AdminReports() {
         {/* --- SECTION 3: DETAILED REPORTS --- */}
         <div className="w-full mb-8">
           {/* Container Tabel Utama */}
-          <div className="bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-xl flex flex-col overflow-hidden shadow-sm dark:shadow-none">
+          <div className={`${cardClass} flex flex-col overflow-hidden`}>
 
             {/* Header Tabel */}
             <div className="p-6 border-b border-gray-200 dark:border-[#3e342b] flex justify-between items-start">

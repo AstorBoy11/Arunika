@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Work_Sans } from "next/font/google";
 import Link from "next/link";
-import { User, Mail, Lock, Eye, EyeOff, StepBack, Moon, Sun } from "lucide-react";
+import Image from "next/image";
+import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, Coffee } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 
 const workSans = Work_Sans({
@@ -41,19 +42,22 @@ export default function Auth() {
         <div className="overflow-y-auto overflow-x-hidden w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 
           {/* Back Button */}
-          <div className="pl-10 mt-10">
+          <div className="px-8 pt-8 flex items-center justify-between">
             <Link href="/">
-              <button className={`flex items-center text-l font-medium mb-4 transition-colors ${isDark
-                ? "text-[#ec6d13] hover:text-[#ec6d13]"
-                : "text-[#ec6d13] hover:text-[#ec6d13]"
-                }`}>
-                <StepBack className="mr-2" size={20} /> back
+              <button className="flex items-center gap-2 text-sm font-medium text-[#ec6d13] hover:text-[#d65c0b] transition-colors">
+                <ArrowLeft size={18} /> Kembali
               </button>
             </Link>
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-[#ec6d13] rounded-md">
+                <Coffee className="text-white" size={16} />
+              </div>
+              <span className={`text-sm font-bold ${isDark ? "text-white" : "text-[#1b130d]"}`}>Arunika</span>
+            </div>
           </div>
 
           {/* Header Section */}
-          <div className="px-8 pt-3 pb-6 text-center">
+          <div className="px-8 pt-6 pb-6 text-center">
             <div className={`grid grid-cols-2 p-1.5 rounded-lg mb-6 border ${isDark
               ? "bg-[#1a140e] border-[#3e342b]"
               : "bg-[#f5f0eb] border-[#e5ddd5]"

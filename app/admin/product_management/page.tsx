@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 
 export default function AdminProducts() {
+  const cardClass =
+    "bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-xl shadow-sm dark:shadow-none transition-colors";
+
   // Dummy Data for Products
   const productsData = [
     {
@@ -64,7 +67,7 @@ export default function AdminProducts() {
   ];
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col h-full w-full bg-gray-50 dark:bg-[#120d0a]">
       {/* 1. HEADER */}
       <AdminHeader 
         title="Product Management" 
@@ -77,7 +80,7 @@ export default function AdminProducts() {
         <div className="max-w-[1200px] mx-auto flex flex-col gap-6">
           
           {/* Search & Filters */}
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white dark:bg-[#1a140e] p-4 rounded-xl border border-gray-200 dark:border-[#3e342b] shadow-sm dark:shadow-none transition-colors">
+          <div className={`${cardClass} p-4 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between`}>
             
             {/* Search Bar */}
             <div className="relative w-full md:w-96 group">
@@ -105,7 +108,7 @@ export default function AdminProducts() {
             {productsData.map((product) => (
               <div 
                 key={product.id} 
-                className={`group relative flex flex-col bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-2xl overflow-hidden hover:border-[#ec6d13]/50 transition-all duration-300 hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/20 ${!product.visible ? "opacity-75 hover:opacity-100" : ""}`}
+                className={`group relative flex flex-col bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-2xl overflow-hidden hover:border-[#ec6d13]/50 transition-all duration-300 hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/20 hover:-translate-y-1 ${!product.visible ? "opacity-75 hover:opacity-100" : ""}`}
               >
                 
                 {/* Image Container */}
@@ -142,7 +145,7 @@ export default function AdminProducts() {
                       {/* Toggle Switch */}
                       <label className="relative inline-flex items-center cursor-pointer" title="Toggle Visibility">
                         <input type="checkbox" defaultChecked={product.visible} className="sr-only peer" />
-                        <div className="w-9 h-5 bg-gray-300 dark:bg-[#392f28] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#ec6d13]"></div>
+                        <div className="w-9 h-5 bg-gray-300 dark:bg-[#392f28] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white dark:after:bg-[#EAE0D5] after:border-gray-300 dark:after:border-[#5a4d42] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#ec6d13]"></div>
                       </label>
                     </div>
                   </div>
@@ -152,7 +155,7 @@ export default function AdminProducts() {
           </div>
 
           {/* Pagination */}
-          <div className="flex justify-between items-center mt-6 p-4 rounded-xl bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] shadow-sm dark:shadow-none transition-colors">
+          <div className={`${cardClass} mt-6 p-4 flex justify-between items-center`}>
             <span className="text-sm text-gray-500 dark:text-[#b9a89d]">Showing <span className="text-gray-900 dark:text-white font-semibold">1-6</span> of <span className="text-gray-900 dark:text-white font-semibold">24</span> products</span>
             <div className="flex gap-2">
               <button className="px-2 py-1 rounded-lg border border-gray-200 dark:border-[#392f28] text-gray-400 dark:text-[#b9a89d] hover:bg-gray-100 dark:hover:bg-[#392f28] hover:text-gray-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors" disabled>

@@ -15,6 +15,7 @@ import {
   Edit,
   Home,
   Building2,
+  Settings,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -116,9 +117,14 @@ export default function SettingsPage() {
 
       {/* Header Halaman */}
       <div>
-        <h2 className={`text-3xl font-bold mb-2 ${isDark ? "text-white" : "text-[#1a140e]"}`}>
-          Pengaturan Akun
-        </h2>
+        <div className="flex items-center gap-3 mb-2">
+          <div className={`p-2.5 rounded-xl ${isDark ? "bg-[#2a221b]" : "bg-[#fef5ee]"}`}>
+            <Settings size={22} className="text-[#ec6d13]" />
+          </div>
+          <h2 className={`text-3xl font-bold ${isDark ? "text-white" : "text-[#1a140e]"}`}>
+            Pengaturan Akun
+          </h2>
+        </div>
         <p className={isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}>
           Kelola keamanan, preferensi notifikasi, dan alamat pengirimanmu.
         </p>
@@ -279,7 +285,7 @@ export default function SettingsPage() {
               Menghapus akun secara permanen dan menghilangkan semua data riwayat pesanan.
             </p>
           </div>
-          <button className="px-5 py-2.5 rounded-3xl bg-red-500 border border-red-500/ text-white hover:bg-red-500/10 hover:text-red-500 transition-colors font-medium text-sm">
+          <button className="px-5 py-2.5 rounded-3xl bg-red-500 border border-red-500 text-white hover:bg-red-500/10 hover:text-red-500 transition-colors font-medium text-sm">
             Hapus Akun
           </button>
         </div>

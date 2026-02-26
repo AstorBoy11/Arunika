@@ -45,7 +45,7 @@ export default function AdminDashboard() {
                         <div className="z-10">
                             <p className={`${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"} text-sm font-medium mb-1`}>Total Revenue</p>
                             <h3 className={`${isDark ? "text-[#fcfaf8]" : "text-[#1a140e]"} text-3xl font-bold tracking-tight`}>$12,450.00</h3>
-                            <span className="flex items-center w-1/6 gap-1 text-[#0bda16] bg-[#0bda16]/10 px-2 py-1 rounded-md text-xs font-bold">
+                            <span className="inline-flex items-center gap-1 text-[#0bda16] bg-[#0bda16]/10 px-2 py-1 rounded-md text-xs font-bold mt-2">
                                 <TrendingUp size={14} /> +12%
                             </span>
                         </div>
@@ -64,7 +64,7 @@ export default function AdminDashboard() {
                         <div className="z-10">
                             <p className={`${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"} text-sm font-medium mb-1`}>Total Orders</p>
                             <h3 className={`${isDark ? "text-[#fcfaf8]" : "text-[#1a140e]"} text-3xl font-bold tracking-tight`}>1,240 Cups</h3>
-                            <span className="flex items-center w-1/6 gap-1 text-[#0bda16] bg-[#0bda16]/10 px-2 py-1 rounded-md text-xs font-bold">
+                            <span className="inline-flex items-center gap-1 text-[#0bda16] bg-[#0bda16]/10 px-2 py-1 rounded-md text-xs font-bold mt-2">
                                 <TrendingUp size={14} /> +12%
                             </span>
                         </div>

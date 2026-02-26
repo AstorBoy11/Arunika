@@ -241,18 +241,32 @@ export default function CartPage() {
               <span className="text-[#ec6d13] font-black text-2xl">${total.toFixed(2)}</span>
             </div>
 
-            <div className={`p-3 rounded-lg flex items-start gap-3 mb-6 ${isDark ? "bg-[#2a221b]/50" : "bg-[#fdf5ee]"
+            <div className={`p-3 rounded-lg flex items-start gap-3 mb-4 ${isDark ? "bg-[#2a221b]/50" : "bg-[#fdf5ee]"
               }`}>
-              <Truck size={20} className="text-[#ec6d13] mt-0.5" />
-              <p className={`text-xs ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
-                Gratis ongkir untuk pesanan di atas $50.
-              </p>
+              <Truck size={20} className="text-[#ec6d13] mt-0.5 shrink-0" />
+              <div className="w-full">
+                <p className={`text-xs mb-2 ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
+                  {subtotal >= 50
+                    ? "🎉 Kamu mendapat gratis ongkir!"
+                    : `Belanja $${(50 - subtotal).toFixed(2)} lagi untuk gratis ongkir.`}
+                </p>
+                <div className={`w-full h-1.5 rounded-full overflow-hidden ${isDark ? "bg-[#3e342b]" : "bg-[#e5ddd5]"}`}>
+                  <div
+                    className="h-full bg-[#ec6d13] rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min((subtotal / 50) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
             </div>
 
-            <button className="w-full py-4 bg-[#ec6d13] hover:bg-[#d65c0b] text-white font-bold rounded-xl shadow-lg shadow-[#ec6d13]/20 transition-all hover:scale-[1.02] flex items-center justify-center gap-2">
+            <button className="w-full py-4 bg-[#ec6d13] hover:bg-[#d65c0b] text-white font-bold rounded-xl shadow-lg shadow-[#ec6d13]/20 transition-all hover:scale-[1.02] flex items-center justify-center gap-2 mb-3">
               Checkout Sekarang
               <ArrowRight size={20} />
             </button>
+
+            <Link href="/user/dashboard" className={`block text-center text-sm font-medium hover:text-[#ec6d13] transition-colors ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
+              ← Lanjut Belanja
+            </Link>
           </div>
         </div>
       </div>

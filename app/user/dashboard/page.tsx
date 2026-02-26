@@ -5,6 +5,8 @@ import {
   Heart,
   ShoppingCart,
   ChevronDown,
+  Star,
+  Coffee,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -15,6 +17,8 @@ const products = [
     name: "Ethiopian Yirgacheffe",
     price: "$22.00",
     desc: "Floral aroma with notes of jasmine and lemon. A bright, tea-like body.",
+    badge: "Best Seller",
+    rating: 4.9,
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuB06jAOy0e6VpbUp6hOlshceiORePg0Pvs54Ms1qza9ov8vm15VJSj1Eb1JC77MblwiNTKnzB2nPHoFeAxeU4MGM3NBLBP4BJ4p5wWGyqGo9VhyUJcfiLe3UPyu62xbnZ9gDf5Ix_8i4XZzJiO02V51N2DdLf8Lcz0fsub86I5w_CooD2yzLy7W74c0gRgMhXPmyYyVdk6RpoGm__Oobfw8F6ajbFBcleBXcQcupgr37UVMWcWnGKD-LTNbV06oSBM2fWSHaKEwlvEs",
   },
   {
@@ -22,6 +26,8 @@ const products = [
     name: "Sumatra Mandheling",
     price: "$19.50",
     desc: "Full body with an intense, earthy aroma and herbal nuances. Low acidity.",
+    badge: null,
+    rating: 4.8,
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAMFtMAcIKaVPvQYctBLheaTsf6inh5kusmEPv8dAtt5CAkGFWWo3JLMGqvsOnwsKqi028amHlsFfvdsDauUTrhZ4p9KHwImj23Z7D-WDj4SCW4iWt1Wr9Y5Jph1l-Zl1w9ADQaiC2qomr4HoWL21tPCxi1pECQY05QzaoGHraPUvMxPeGzCw9nIA5jlZmDT3WWLtVLtfDZd7rx7UZfDdyOoTFOdZU8CPjMVmrN7-uhc7Sb4fPLXQYgmJ3XVPIw9U61Dcm6pKtOeFUe",
   },
   {
@@ -29,6 +35,8 @@ const products = [
     name: "Colombia Supremo",
     price: "$18.00",
     desc: "Smooth and sweet with notes of caramel and fruit. Perfectly balanced.",
+    badge: "Baru",
+    rating: 4.7,
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuD6Rtnqc0knxLE0r6zNwSbxxLmdh0ae94THdw8aYmdqKQHlmXJ92jN4e8Vvv43VKMHu22zHUS2K2ZayLP-iNNcbihw9FoQssku8mEx5G5C53iEWRK0DvM7Z__UYBi5gi57IQfSIZcq51AzlbLhXSOnGSWPMX-D63RhH6tFjUNPe5FMuFy-MoRKJeORdOS_kZ_vwFOBhkxgi1CsVfLoFRxFog7gF6LgsiDFT7-gnY98VwJ5DrXITR2F4rE7qMC_K48Ul714wdJLlFi7X",
   },
   {
@@ -36,6 +44,8 @@ const products = [
     name: "Espresso House Blend",
     price: "$20.00",
     desc: "Our signature blend crafted for the perfect crema. Bold, rich, and syrupy.",
+    badge: null,
+    rating: 4.6,
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBDqGbCu-PjW8XJl7mlArgoi-f-vnEr1jU24YXaLBZy3GtN0Lpg58p-6XoCoqpy5_AGJSfQG9zMwACIs__tFEvH5DqvoOdJqpZh9TGgDYUVU7Ov0hzL4DFjymyw63rxvgXxfvW0W8yV6BlkRXmF7ehphhQ7ikj-ZRhDBaeOOeqoKncRZmcGf6fZFXo9cjZwnMjJIMuVONl1NXJEyg6Tch3KRqypH06M9t_xZMHsQrEUUt-XNBfLsduQ2W2yfM_itJUavmr_te7l5Kkk",
   },
   {
@@ -43,6 +53,8 @@ const products = [
     name: "Kenya AA",
     price: "$24.00",
     desc: "Complex flavor profile with distinct blackcurrant notes and wine-like acidity.",
+    badge: null,
+    rating: 4.9,
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCg8ODvWlvkdaCvcwj4ZDEyB-nN7KV-94P5awGyPN2gMvB3JGDpnsh0TO1gPLbdCx21TCitKds-hOq5hRVz6XQzCM-Etep_5yy1SY65yJxnRcoHD7ccQCe1XILPKbCA52qnIqTIsAwlyIarKkASw9peo8Gr9ZNXkbsOpedWJQ3nnUM7KBXojrR4JKeXrPqLb-wX7hQMaoT31wgpBKtZTdkIzCqvlpoJGmuERvsL--ezS3KvzkV2hwpVIIWUVErh1MssRTUs_xojG5Ct",
   },
   {
@@ -50,6 +62,8 @@ const products = [
     name: "Costa Rica Tarrazu",
     price: "$21.00",
     desc: "Crisp and clean with hints of citrus and chocolate. High altitude grown.",
+    badge: null,
+    rating: 4.5,
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDvGk1zhDtmMOqQ1x_HziqscnUUvGCn5mHFopvl78tlL12hsu3SzzsueoNdvOgF-eqL5RJG5woPgo4sXYgZtzAqAYKqKHicJF7QzwCDXoVAvz6hc3IuvOkdJ93PGBc7aRTxRT4Bk2FrnndhdIm3e8Y6bxlG8BAardAVERopssnsjru_0RbmwoIUEY4l1KFrTC4YBq721wzRMk5fWlvQIVKvFZ3rdRhneSC1r0AUiOXYy4wCWugITCovUwTCJlvFD2xDyYbqYWo5J84s",
   },
 ];
@@ -60,6 +74,22 @@ export default function UserDashboard() {
 
   return (
     <div className="flex flex-col gap-8 pb-20">
+      {/* --- WELCOME HEADER --- */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Coffee size={20} className="text-[#ec6d13]" />
+            <span className={`text-sm font-medium ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>Koleksi Kopi Kami</span>
+          </div>
+          <h1 className={`text-2xl md:text-3xl font-bold ${isDark ? "text-white" : "text-[#1a140e]"}`}>
+            Jelajahi <span className="text-[#ec6d13]">Produk</span>
+          </h1>
+        </div>
+        <p className={`text-sm max-w-md ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
+          Temukan biji kopi premium yang dipanggang sempurna dari seluruh penjuru dunia.
+        </p>
+      </div>
+
       {/* --- FILTERS & SORT --- */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Filter Buttons */}
@@ -95,7 +125,7 @@ export default function UserDashboard() {
         {products.map((product) => (
           <div
             key={product.id}
-            className={`group rounded-2xl p-3 border transition-all duration-300 hover:shadow-xl flex flex-col ${isDark
+            className={`group rounded-2xl p-3 border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col ${isDark
               ? "bg-[#1a140e] border-[#3e342b] hover:border-[#ec6d13]/50 hover:shadow-black/20"
               : "bg-white border-[#e5ddd5] hover:border-[#ec6d13]/50 hover:shadow-black/10"
               }`}
@@ -109,6 +139,26 @@ export default function UserDashboard() {
                 fill
                 className="object-cover group-hover:scale-110 transition-transform duration-500"
               />
+
+              {/* Badge */}
+              {product.badge && (
+                <span className={`absolute top-3 left-3 text-xs font-bold px-3 py-1 rounded-full shadow-md ${
+                  product.badge === "Best Seller"
+                    ? "bg-[#ec6d13] text-white"
+                    : "bg-emerald-500 text-white"
+                }`}>
+                  {product.badge}
+                </span>
+              )}
+
+              {/* Wishlist Heart */}
+              <button className={`absolute top-3 right-3 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 ${
+                isDark
+                  ? "bg-black/50 text-white hover:text-red-400"
+                  : "bg-white/80 text-[#8b7355] hover:text-red-500"
+              }`}>
+                <Heart size={16} />
+              </button>
             </div>
 
             {/* Product Details */}
@@ -122,7 +172,14 @@ export default function UserDashboard() {
                   {product.price}
                 </span>
               </div>
-              <p className={`text-sm line-clamp-2 mb-4 ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
+
+              {/* Star Rating */}
+              <div className="flex items-center gap-1 mt-0.5">
+                <Star size={14} className="fill-amber-400 text-amber-400" />
+                <span className={`text-xs font-semibold ${isDark ? "text-white" : "text-[#1a140e]"}`}>{product.rating}</span>
+              </div>
+
+              <p className={`text-sm line-clamp-2 mb-4 mt-1 ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
                 {product.desc}
               </p>
 

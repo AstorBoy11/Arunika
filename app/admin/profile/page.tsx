@@ -14,8 +14,11 @@ import {
 } from "lucide-react";
 
 export default function AdminProfile() {
+  const cardClass =
+    "bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-xl shadow-sm dark:shadow-none transition-colors";
+
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col h-full w-full bg-gray-50 dark:bg-[#120d0a]">
       {/* 1. HEADER */}
       <AdminHeader 
         title="Admin Profile" 
@@ -30,7 +33,7 @@ export default function AdminProfile() {
           <div className="lg:col-span-1 flex flex-col gap-6">
             
             {/* Profile Info */}
-            <div className="bg-white dark:bg-[#1a140e] rounded-xl p-6 border border-gray-200 dark:border-[#3e342b] shadow-sm dark:shadow-lg flex flex-col items-center text-center transition-colors">
+            <div className={`${cardClass} p-6 flex flex-col items-center text-center dark:shadow-lg`}>
               <div className="relative group cursor-pointer mb-4">
                 <div className="relative size-32 rounded-full border-4 border-gray-100 dark:border-[#3e342b] shadow-xl overflow-hidden">
                   <Image 
@@ -57,7 +60,7 @@ export default function AdminProfile() {
             </div>
 
             {/* Account Status */}
-            <div className="bg-white dark:bg-[#1a140e] rounded-xl p-6 border border-gray-200 dark:border-[#3e342b] shadow-sm dark:shadow-none transition-colors">
+            <div className={`${cardClass} p-6`}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-500 dark:text-[#b9a89d] text-sm font-medium">Account Status</span>
                 <span className="text-green-500 text-xs font-bold uppercase tracking-wider">Active</span>
@@ -73,7 +76,7 @@ export default function AdminProfile() {
           <div className="lg:col-span-2 flex flex-col gap-6">
             
             {/* Personal Info Form */}
-            <div className="bg-white dark:bg-[#1a140e] rounded-xl p-6 md:p-8 border border-gray-200 dark:border-[#3e342b] shadow-sm dark:shadow-none transition-colors">
+            <div className={`${cardClass} p-6 md:p-8`}>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 <BadgeCheck className="text-[#ec6d13]" size={24} />
                 Personal Information
@@ -126,7 +129,7 @@ export default function AdminProfile() {
             </div>
 
             {/* Login Activity */}
-            <div className="bg-white dark:bg-[#1a140e] rounded-xl border border-gray-200 dark:border-[#3e342b] overflow-hidden shadow-sm dark:shadow-none transition-colors">
+            <div className={`${cardClass} overflow-hidden`}>
               <div className="p-6 border-b border-gray-200 dark:border-[#3e342b] flex justify-between items-center">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   <ShieldCheck className="text-[#ec6d13]" size={24} />

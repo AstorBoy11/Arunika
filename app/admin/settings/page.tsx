@@ -13,8 +13,11 @@ import {
 } from "lucide-react";
 
 export default function AdminSettings() {
+  const cardClass =
+    "bg-white dark:bg-[#1a140e] rounded-xl border border-gray-200 dark:border-[#3e342b] p-6 shadow-sm dark:shadow-none transition-colors";
+
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col h-full w-full bg-gray-50 dark:bg-[#120d0a]">
       {/* 1. HEADER */}
       <AdminHeader
         title="System Settings"
@@ -27,7 +30,7 @@ export default function AdminSettings() {
         <div className="max-w-4xl mx-auto space-y-6 pb-12">
 
           {/* SECTION 1: STORE PROFILE */}
-          <section className="bg-white dark:bg-[#1a140e] rounded-xl border border-gray-200 dark:border-[#3e342b] p-6 shadow-sm dark:shadow-none transition-colors">
+          <section className={cardClass}>
             <div className="flex items-center gap-2 mb-6 border-b border-gray-200 dark:border-[#3e342b] pb-4">
               <Store className="text-[#ec6d13]" size={24} />
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Store Profile</h3>
@@ -81,7 +84,7 @@ export default function AdminSettings() {
           </section>
 
           {/* SECTION 2: OPERATING HOURS (FIXED FOR MOBILE) */}
-          <section className="bg-white dark:bg-[#1a140e] rounded-xl border border-gray-200 dark:border-[#3e342b] p-6 shadow-sm dark:shadow-none transition-colors">
+          <section className={cardClass}>
             <div className="flex items-center gap-2 mb-6 border-b border-gray-200 dark:border-[#3e342b] pb-4">
               <Clock className="text-[#ec6d13]" size={24} />
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Operating Hours</h3>
@@ -128,7 +131,7 @@ export default function AdminSettings() {
 
           {/* SECTION 3 & 4 TETAP SAMA */}
           {/* SECTION 4: SECURITY */}
-          <section className="bg-white dark:bg-[#1a140e] rounded-xl border border-gray-200 dark:border-[#3e342b] p-6 shadow-sm dark:shadow-none transition-colors">
+          <section className={cardClass}>
             <div className="flex items-center gap-2 mb-6 border-b border-gray-200 dark:border-[#3e342b] pb-4">
               <ShieldCheck className="text-[#ec6d13]" size={24} />
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Security</h3>
