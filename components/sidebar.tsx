@@ -4,7 +4,7 @@ import { useState, createContext, useContext } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import logoSidebar from "@/public/logo_sidebar.png";
+import ThemeAwareLogo from "@/components/theme-aware-logo";
 import {
   ShoppingBag,
   Settings,
@@ -76,7 +76,7 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
       {/* Sidebar */}
       <aside className={`
         fixed lg:static inset-y-0 left-0 z-40
-        w-72 h-full flex flex-col flex-shrink-0
+        w-72 h-full flex flex-col shrink-0
         transform transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         ${isDark
@@ -85,16 +85,15 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
         }
       `}>
         {/* Sidebar Header */}
-        <div className="p-6 pb-2">
-          <div className="flex items-center justify-between mb-8">
+        <div className="pl-6 pt-2 pb-2">
+          <div className="flex items-center justify-between mb-3">
             <div>
               <Link href="/user/dashboard" onClick={() => setIsOpen(false)}>
-                <Image
-                  src={logoSidebar}
-                  alt="Arunika Logo"
+                <ThemeAwareLogo
                   width={150}
                   height={50}
-                  className="h-10 w-auto object-contain"
+                  className="h-20 w-auto object-contain"
+                  priority
                 />
               </Link>
             </div>

@@ -42,6 +42,7 @@ export default function SettingsPage() {
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [addressToDelete, setAddressToDelete] = useState<number | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
@@ -113,7 +114,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="max-w-[1000px] w-full mx-auto flex flex-col gap-10 pb-20">
+    <div className="max-w-250 w-full mx-auto flex flex-col gap-10 pb-20">
 
       {/* Header Halaman */}
       <div>
@@ -285,7 +286,10 @@ export default function SettingsPage() {
               Menghapus akun secara permanen dan menghilangkan semua data riwayat pesanan.
             </p>
           </div>
-          <button className="px-5 py-2.5 rounded-3xl bg-red-500 border border-red-500 text-white hover:bg-red-500/10 hover:text-red-500 transition-colors font-medium text-sm">
+          <button
+            onClick={() => setShowDeleteAccountModal(true)}
+            className="px-5 py-2.5 rounded-3xl bg-red-500 border border-red-500 text-white hover:bg-red-500/10 hover:text-red-500 transition-colors font-medium text-sm"
+          >
             Hapus Akun
           </button>
         </div>
@@ -843,6 +847,95 @@ export default function SettingsPage() {
                 className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm transition-all"
               >
                 Ya, Hapus
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ DELETE ACCOUNT MODAL ============ */}
+      {showDeleteAccountModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setShowDeleteAccountModal(false)}
+          />
+
+          {/* Modal */}
+          <div className={`relative w-full max-w-md rounded-2xl border-2 shadow-2xl p-6 animate-in zoom-in-95 duration-200 border-red-500/30 ${
+            isDark ? "bg-[#1a140e]" : "bg-white"
+          }`}>
+            {/* Close button */}
+            <button
+              onClick={() => setShowDeleteAccountModal(false)}
+              className={`absolute top-4 right-4 p-2 rounded-lg transition-colors ${
+                isDark ? "hover:bg-[#2a221b] text-[#b9a89d]" : "hover:bg-[#f5f0eb] text-[#8b7355]"
+              }`}
+            >
+              <X size={20} />
+            </button>
+
+            {/* Danger icon */}
+            <div className="flex justify-center mb-5">
+              <div className="relative">
+                <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center">
+                  <Trash2 size={36} className="text-red-500" />
+                </div>
+                {/* Pulse ring */}
+                <span className="absolute inset-0 rounded-full border-2 border-red-500/30 animate-ping" />
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="text-center mb-6">
+              <h3 className={`text-xl font-black mb-2 ${
+                isDark ? "text-white" : "text-[#1a140e]"
+              }`}>
+                Hapus Akun Secara Permanen?
+              </h3>
+              <p className={`text-sm leading-relaxed mb-4 ${
+                isDark ? "text-[#b9a89d]" : "text-[#8b7355]"
+              }`}>
+                Tindakan ini <strong className="text-red-500">tidak dapat dibatalkan</strong>.
+                Semua data akunmu termasuk riwayat pesanan, alamat pengiriman, dan preferensi akan dihapus selamanya.
+              </p>
+
+              {/* Warning box */}
+              <div className={`rounded-xl border border-red-500/20 p-3 text-left ${
+                isDark ? "bg-red-500/5" : "bg-red-50"
+              }`}>
+                <p className="text-xs text-red-500 font-medium mb-1">Yang akan dihapus:</p>
+                <ul className="text-xs text-red-400 space-y-0.5 list-disc list-inside">
+                  <li>Profil dan informasi pribadi</li>
+                  <li>Seluruh riwayat pembelian</li>
+                  <li>Semua alamat pengiriman tersimpan</li>
+                  <li>Akses ke akun ini selamanya</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteAccountModal(false)}
+                className={`flex-1 py-3 rounded-xl border font-medium text-sm transition-all ${
+                  isDark
+                    ? "border-[#3e342b] text-[#b9a89d] hover:bg-[#2a221b]"
+                    : "border-[#e5ddd5] text-[#8b7355] hover:bg-[#f5f0eb]"
+                }`}
+              >
+                Batal, Kembali
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteAccountModal(false);
+                  // TODO: panggil API delete account di sini
+                  console.log("Account deleted");
+                }}
+                className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 active:scale-95 text-white font-bold text-sm transition-all shadow-lg shadow-red-500/20"
+              >
+                Hapus Akun Permanen
               </button>
             </div>
           </div>

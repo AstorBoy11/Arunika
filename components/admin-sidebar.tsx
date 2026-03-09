@@ -4,6 +4,7 @@ import { useState, createContext, useContext } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import ThemeAwareLogo from "@/components/theme-aware-logo";
 import {
     LayoutDashboard,
     BarChart3,
@@ -81,15 +82,14 @@ export default function AdminSidebar() {
         bg-white dark:bg-[#1a140e] border-r border-[#e5ddd5] dark:border-[#3e342b]
       `}>
                 {/* Header Logo with Close Button (Mobile) */}
-                <div className="p-6 pb-2 flex items-start justify-between mb-4">
+                <div className="pl-6 flex items-start justify-between mb-2">
                     <div className="flex flex-col">
                         <Link href="/admin/dashboard" onClick={() => setIsOpen(false)}>
-                            <Image
-                                src="/logo_sidebar.png"
-                                alt="Arunika Logo"
+                            <ThemeAwareLogo
                                 width={150}
                                 height={50}
-                                className="h-10 w-auto object-contain"
+                                className="h-15 w-auto object-contain"
+                                priority
                             />
                         </Link>
                         <p className="text-xs mt-1 text-[#8b7355] dark:text-[#9a6c4c]">Admin Console</p>
