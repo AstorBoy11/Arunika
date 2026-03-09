@@ -97,7 +97,7 @@ export default function AdminInventory() {
       </AdminHeader>
 
       {/* 2. KONTEN UTAMA */}
-      <div className="flex-1 overflow-y-auto p-8 pt-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-8 pt-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 
         {/* Section 1: Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -140,11 +140,11 @@ export default function AdminInventory() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 dark:bg-[#231910] border-b border-gray-200 dark:border-[#3e342b]">
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] w-[25%]">Item Name</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] w-[15%]">Category</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] w-[30%]">Stock Level</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] w-[15%]">Unit Price</th>
-                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] w-[15%]">Status</th>
+                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] w-[25%] min-w-40">Item Name</th>
+                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] w-[15%] min-w-30">Category</th>
+                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] w-[30%] min-w-45">Stock Level</th>
+                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] w-[15%] min-w-30">Unit Price</th>
+                  <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] w-[15%] min-w-27.5">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-[#3e342b]">

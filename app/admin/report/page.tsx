@@ -27,7 +27,7 @@ export default function AdminReports() {
       </AdminHeader>
 
       {/* 2. KONTEN UTAMA */}
-      <div className="flex-1 overflow-y-auto px-8 pb-12 z-10 custom-scrollbar relative">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-6 sm:pb-12 z-10 custom-scrollbar relative">
 
         {/* --- SECTION 1: FILTER & CONTROLS --- */}
         <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 mb-8 mt-6">
