@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Arunika Coffee — Premium Kopi Nusantara",
+  title: "Arunika Coffee",
   description: "Menghubungkan pecinta kopi dengan biji kopi terbaik dari seluruh nusantara. Arabica, Robusta, dan blend premium.",
 };
 

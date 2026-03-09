@@ -382,15 +382,6 @@ export default function LandingPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
               </div>
-              <div className={`absolute -bottom-6 -right-6 p-6 rounded-2xl shadow-xl border ${isDark
-                ? "bg-[#1a140e] border-[#3e3025]"
-                : "bg-white border-[#e5ddd5]"
-                }`}>
-                <div className="text-center">
-                  <span className="text-[#ec6d13] text-4xl font-black block">5+</span>
-                  <span className={`text-sm font-medium ${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"}`}>Tahun<br />Pengalaman</span>
-                </div>
-              </div>
             </div>
 
             {/* Content Side */}
@@ -411,10 +402,9 @@ export default function LandingPage() {
                   setiap biji kopi yang sampai di tangan Anda adalah yang terbaik.
                 </p>
               </div>
-              <div className="grid grid-cols-3 gap-6 mt-10">
+              <div className="grid grid-cols-2 gap-6 mt-10">
                 {[
                   { value: "15+", label: "Varian Kopi" },
-                  { value: "2K+", label: "Pelanggan" },
                   { value: "100%", label: "Organik" },
                 ].map((stat) => (
                   <div key={stat.label} className="text-center">

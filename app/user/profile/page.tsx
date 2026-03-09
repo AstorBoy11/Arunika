@@ -2,6 +2,19 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
+
+// ─── Lazy-loaded modals ─────────────────────────────────────────────────────
+// These chunks are only downloaded when the user opens a modal, so they never
+// appear in the initial JS bundle.
+const EditProfileModal = dynamic(
+  () => import("./_components/EditProfileModal"),
+  { ssr: false }
+);
+const AddAddressModal = dynamic(
+  () => import("./_components/AddAddressModal"),
+  { ssr: false }
+);
 import {
   Edit,
   Pencil,
@@ -13,7 +26,6 @@ import {
   Mail,
   Phone,
   User as UserIcon,
-  X,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -96,75 +108,32 @@ export default function UserProfile() {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showAddAddress, setShowAddAddress] = useState(false);
 
-  // ── Edit Profile form state ──
-  const [editName, setEditName] = useState(profile.name);
-  const [editEmail, setEditEmail] = useState(profile.email);
-  const [editPhone, setEditPhone] = useState(profile.phone);
+  // Form state now lives inside each modal component; the page just holds the
+  // visibility flag and the save callbacks.
 
-  const openEditProfile = () => {
-    setEditName(profile.name);
-    setEditEmail(profile.email);
-    setEditPhone(profile.phone);
-    setShowEditProfile(true);
-  };
-
-  const saveProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    setProfile({ name: editName, email: editEmail, phone: editPhone });
+  const handleSaveProfile = (data: { name: string; email: string; phone: string }) => {
+    setProfile(data);
     setShowEditProfile(false);
   };
 
-  // ── Add Address form state ──
-  const [newAddrLabel, setNewAddrLabel] = useState("");
-  const [newAddrType, setNewAddrType] = useState<"home" | "office">("home");
-  const [newAddrRecipient, setNewAddrRecipient] = useState("");
-  const [newAddrPhone, setNewAddrPhone] = useState("");
-  const [newAddrStreet, setNewAddrStreet] = useState("");
-  const [newAddrCity, setNewAddrCity] = useState("");
-  const [newAddrPostal, setNewAddrPostal] = useState("");
-  const [newAddrDefault, setNewAddrDefault] = useState(false);
-
-  const openAddAddress = () => {
-    setNewAddrLabel("");
-    setNewAddrType("home");
-    setNewAddrRecipient("");
-    setNewAddrPhone("");
-    setNewAddrStreet("");
-    setNewAddrCity("");
-    setNewAddrPostal("");
-    setNewAddrDefault(false);
-    setShowAddAddress(true);
-  };
-
-  const saveAddress = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newAddr: Address = {
-      id: Date.now(),
-      label: newAddrLabel || "Alamat Baru",
-      type: newAddrType,
-      recipient: newAddrRecipient,
-      street: newAddrStreet,
-      city: newAddrCity,
-      province: "",
-      postalCode: newAddrPostal,
-      phone: newAddrPhone,
-      isDefault: newAddrDefault,
-    };
+  const handleSaveAddress = (data: {
+    label: string;
+    type: "home" | "office";
+    recipient: string;
+    phone: string;
+    street: string;
+    city: string;
+    postalCode: string;
+    isDefault: boolean;
+  }) => {
+    const newAddr: Address = { id: Date.now(), province: "", ...data };
     setAddresses((prev) =>
-      newAddrDefault
+      data.isDefault
         ? [newAddr, ...prev.map((a) => ({ ...a, isDefault: false }))]
         : [...prev, newAddr],
     );
     setShowAddAddress(false);
   };
-
-  // ── Shared backdrop ──
-  const Backdrop = ({ onClose }: { onClose: () => void }) => (
-    <div
-      className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
-    />
-  );
 
   return (
     <div className="max-w-300 mx-auto w-full flex flex-col gap-8 pb-20">
@@ -213,7 +182,7 @@ export default function UserProfile() {
         </div>
 
         <button
-          onClick={openEditProfile}
+          onClick={() => setShowEditProfile(true)}
           className="flex items-center gap-2 px-6 py-3 bg-[#ec6d13] text-white font-bold rounded-xl shadow-[0_4px_12px_rgba(236,109,19,0.3)] hover:shadow-[0_6px_16px_rgba(236,109,19,0.4)] hover:bg-[#d65d0a] transition-all"
         >
           <Edit size={20} />
@@ -294,6 +263,13 @@ export default function UserProfile() {
               <MapPin size={22} className="text-[#ec6d13]" />
               Alamat Pengiriman
             </h3>
+            <button
+              onClick={() => setShowAddAddress(true)}
+              className="flex items-center gap-2 text-[#ec6d13] hover:text-[#d65c0b] transition-colors text-sm font-semibold"
+            >
+              <Plus size={18} />
+              Tambah Alamat
+            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -408,120 +384,25 @@ export default function UserProfile() {
       {/* ══════════════════════════════════════════════════════════════════
                 MODAL: EDIT PROFIL
             ══════════════════════════════════════════════════════════════════ */}
+      {/* EditProfileModal — lazily loaded chunk */}
       {showEditProfile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <Backdrop onClose={() => setShowEditProfile(false)} />
+        <EditProfileModal
+          isDark={isDark}
+          initialName={profile.name}
+          initialEmail={profile.email}
+          initialPhone={profile.phone}
+          onClose={() => setShowEditProfile(false)}
+          onSave={handleSaveProfile}
+        />
+      )}
 
-          <div
-            className={`relative w-full max-w-md rounded-2xl border shadow-2xl p-6 animate-in zoom-in-95 duration-200 ${
-              isDark
-                ? "bg-[#1a140e] border-[#3e342b]"
-                : "bg-white border-[#e5ddd5]"
-            }`}
-          >
-            <button
-              onClick={() => setShowEditProfile(false)}
-              className={`absolute top-4 right-4 p-2 rounded-lg transition-colors ${
-                isDark
-                  ? "hover:bg-[#2a221b] text-[#b9a89d]"
-                  : "hover:bg-[#f5f0eb] text-[#8b7355]"
-              }`}
-            >
-              <X size={20} />
-            </button>
-
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 rounded-lg bg-[#ec6d13]/10">
-                <Edit size={20} className="text-[#ec6d13]" />
-              </div>
-              <div>
-                <h3
-                  className={`text-xl font-bold ${
-                    isDark ? "text-white" : "text-[#1a140e]"
-                  }`}
-                >
-                  Edit Profil
-                </h3>
-                <p
-                  className={`text-sm ${
-                    isDark ? "text-[#b9a89d]" : "text-[#8b7355]"
-                  }`}
-                >
-                  Perbarui informasi pribadi kamu.
-                </p>
-              </div>
-            </div>
-
-            <form onSubmit={saveProfile} className="flex flex-col gap-4">
-              <div>
-                <label className={labelCls(isDark)}>
-                  <span className="flex items-center gap-1.5">
-                    <UserIcon size={14} /> Nama Lengkap
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  required
-                  placeholder="Nama lengkap"
-                  className={inputCls(isDark)}
-                />
-              </div>
-
-              <div>
-                <label className={labelCls(isDark)}>
-                  <span className="flex items-center gap-1.5">
-                    <Mail size={14} /> Email
-                  </span>
-                </label>
-                <input
-                  type="email"
-                  value={editEmail}
-                  onChange={(e) => setEditEmail(e.target.value)}
-                  required
-                  placeholder="email@contoh.com"
-                  className={inputCls(isDark)}
-                />
-              </div>
-
-              <div>
-                <label className={labelCls(isDark)}>
-                  <span className="flex items-center gap-1.5">
-                    <Phone size={14} /> Nomor Telepon
-                  </span>
-                </label>
-                <input
-                  type="tel"
-                  value={editPhone}
-                  onChange={(e) => setEditPhone(e.target.value)}
-                  placeholder="08xx-xxxx-xxxx"
-                  className={inputCls(isDark)}
-                />
-              </div>
-
-              <div className="flex gap-3 mt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowEditProfile(false)}
-                  className={`flex-1 py-3 rounded-xl border font-medium text-sm transition-all ${
-                    isDark
-                      ? "border-[#3e342b] text-[#b9a89d] hover:bg-[#2a221b]"
-                      : "border-[#e5ddd5] text-[#8b7355] hover:bg-[#f5f0eb]"
-                  }`}
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-3 rounded-xl bg-[#ec6d13] hover:bg-[#d65c0b] text-white font-bold text-sm transition-all"
-                >
-                  Simpan Perubahan
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* AddAddressModal — lazily loaded chunk */}
+      {showAddAddress && (
+        <AddAddressModal
+          isDark={isDark}
+          onClose={() => setShowAddAddress(false)}
+          onSave={handleSaveAddress}
+        />
       )}
     </div>
   );
