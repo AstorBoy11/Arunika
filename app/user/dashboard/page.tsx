@@ -195,7 +195,7 @@ export default function UserDashboard() {
                 >
                   {opt.label}
                   {sortOption === opt.value && (
-                    <span className="w-2 h-2 rounded-full bg-[#ec6d13] shrink-0" />
+                    <span className="w-2 h-2 rounded-full bg-[#ec6d13] shrink-0"/>
                   )}
                 </button>
               ))}
@@ -203,7 +203,7 @@ export default function UserDashboard() {
           )}
         </div>
       </div>
-
+          
       {/* --- PRODUCT GRID --- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {sortedProducts.map((product) => (
@@ -281,7 +281,6 @@ export default function UserDashboard() {
           </div>
         ))}
       </div>
-
     </div>
   );
 }
