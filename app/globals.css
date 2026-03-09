@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/*
+ * Tailwind v4: Sync the `dark:` variant with next-themes class strategy.
+ * next-themes adds `.dark` to <html>, so we register a custom dark variant
+ * that activates whenever the element itself or any ancestor has .dark.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
