@@ -82,7 +82,7 @@ export default function AdminSidebar() {
         bg-white dark:bg-[#1a140e] border-r border-[#e5ddd5] dark:border-[#3e342b]
       `}>
                 {/* Header Logo with Close Button (Mobile) */}
-                <div className="pl-6 flex items-start justify-between mb-2">
+                <div className="pl-6 pt-2 flex items-start justify-between mb-2">
                     <div className="flex flex-col">
                         <Link href="/admin/dashboard" onClick={() => setIsOpen(false)}>
                             <ThemeAwareLogo
@@ -92,7 +92,7 @@ export default function AdminSidebar() {
                                 priority
                             />
                         </Link>
-                        <p className="text-xs mt-1 text-[#8b7355] dark:text-[#9a6c4c]">Admin Console</p>
+                        <p className="text-xs mt-1 text-[#8b7355] dark:text-[#9a6c4c]">Admin Page</p>
                     </div>
                     {/* Close Button - Mobile Only */}
                     <button

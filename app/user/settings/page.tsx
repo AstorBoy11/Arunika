@@ -127,7 +127,7 @@ export default function SettingsPage() {
           </h2>
         </div>
         <p className={isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}>
-          Kelola keamanan, preferensi notifikasi, dan alamat pengirimanmu.
+          Kelola keamanan, alamat pengirimanmu, dan akun.
         </p>
       </div>
 
@@ -162,7 +162,7 @@ export default function SettingsPage() {
                   : "bg-[#f5f0eb] border-[#e5ddd5] text-[#1a140e] hover:bg-[#ebe3db] hover:text-[#ec6d13]"
                   }`}
               >
-                Update Password
+                Ganti Password
               </button>
             </div>
           </div>
@@ -250,7 +250,7 @@ export default function SettingsPage() {
                         className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                       >
                         <Trash2 size={16} />
-                        Delete
+                        Hapus
                       </button>
                     </div>
                   )}
@@ -457,29 +457,6 @@ export default function SettingsPage() {
 
             {/* Form */}
             <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); setShowAddressModal(false); }}>
-              {/* Address Type */}
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isDark ? "text-white" : "text-[#1a140e]"}`}>
-                  Jenis Alamat
-                </label>
-                <div className="flex gap-3">
-                  <button type="button" className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-medium transition-all ${isDark
-                    ? "bg-[#ec6d13]/10 border-[#ec6d13] text-[#ec6d13]"
-                    : "bg-[#ec6d13]/10 border-[#ec6d13] text-[#ec6d13]"
-                    }`}>
-                    <Home size={18} />
-                    Rumah
-                  </button>
-                  <button type="button" className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-medium transition-all ${isDark
-                    ? "border-[#3e342b] text-[#b9a89d] hover:border-[#ec6d13]"
-                    : "border-[#e5ddd5] text-[#8b7355] hover:border-[#ec6d13]"
-                    }`}>
-                    <Building2 size={18} />
-                    Kantor
-                  </button>
-                </div>
-              </div>
-
               {/* Label */}
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDark ? "text-white" : "text-[#1a140e]"}`}>
@@ -491,7 +468,7 @@ export default function SettingsPage() {
                     ? "bg-[#120d0a] border-[#3e342b] text-white placeholder-[#8b7355]"
                     : "bg-[#f5f0eb] border-[#e5ddd5] text-[#1a140e] placeholder-[#8b7355]"
                     }`}
-                  placeholder="Contoh: Rumah, Kantor, Apartemen"
+                  placeholder="Contoh: Rumah, Apartemen"
                 />
               </div>
 

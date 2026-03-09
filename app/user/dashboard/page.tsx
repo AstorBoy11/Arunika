@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
 import {
   Heart,
@@ -15,7 +16,7 @@ const products = [
   {
     id: 1,
     name: "Ethiopian Yirgacheffe",
-    price: "$22.00",
+    priceNum: 280000,
     desc: "Floral aroma with notes of jasmine and lemon. A bright, tea-like body.",
     badge: "Best Seller",
     rating: 4.9,
@@ -24,7 +25,7 @@ const products = [
   {
     id: 2,
     name: "Sumatra Mandheling",
-    price: "$19.50",
+    priceNum: 195000,
     desc: "Full body with an intense, earthy aroma and herbal nuances. Low acidity.",
     badge: null,
     rating: 4.8,
@@ -33,7 +34,7 @@ const products = [
   {
     id: 3,
     name: "Colombia Supremo",
-    price: "$18.00",
+    priceNum: 175000,
     desc: "Smooth and sweet with notes of caramel and fruit. Perfectly balanced.",
     badge: "Baru",
     rating: 4.7,
@@ -42,7 +43,7 @@ const products = [
   {
     id: 4,
     name: "Espresso House Blend",
-    price: "$20.00",
+    priceNum: 210000,
     desc: "Our signature blend crafted for the perfect crema. Bold, rich, and syrupy.",
     badge: null,
     rating: 4.6,
@@ -51,7 +52,7 @@ const products = [
   {
     id: 5,
     name: "Kenya AA",
-    price: "$24.00",
+    priceNum: 320000,
     desc: "Complex flavor profile with distinct blackcurrant notes and wine-like acidity.",
     badge: null,
     rating: 4.9,
@@ -60,7 +61,7 @@ const products = [
   {
     id: 6,
     name: "Costa Rica Tarrazu",
-    price: "$21.00",
+    priceNum: 240000,
     desc: "Crisp and clean with hints of citrus and chocolate. High altitude grown.",
     badge: null,
     rating: 4.5,
@@ -68,9 +69,50 @@ const products = [
   },
 ];
 
+// ─── Sort helpers ───────────────────────────────────────────────────────────
+
+type SortOption = "default" | "price-asc" | "price-desc";
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "default",     label: "Terbaru" },
+  { value: "price-asc",   label: "Harga: Termurah ke Termahal" },
+  { value: "price-desc",  label: "Harga: Termahal ke Termurah" },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function UserDashboard() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+
+  // ── Sort state ──
+  const [sortOption, setSortOption] = useState<SortOption>("default");
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onClickOutside = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  const sortedProducts = useMemo(() => {
+    const arr = [...products];
+    if (sortOption === "price-asc")  return arr.sort((a, b) => a.priceNum - b.priceNum);
+    if (sortOption === "price-desc") return arr.sort((a, b) => b.priceNum - a.priceNum);
+    return arr; // "default" → original insertion order
+  }, [sortOption]);
+
+  const formatRupiah = (n: number) =>
+    new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(n);
 
   return (
     <div className="flex flex-col gap-8 pb-20">
@@ -85,9 +127,6 @@ export default function UserDashboard() {
             Jelajahi <span className="text-[#ec6d13]">Produk</span>
           </h1>
         </div>
-        <p className={`text-sm max-w-md ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
-          Temukan biji kopi premium yang dipanggang sempurna dari seluruh penjuru dunia.
-        </p>
       </div>
 
       {/* --- FILTERS & SORT --- */}
@@ -110,19 +149,64 @@ export default function UserDashboard() {
         </div>
 
         {/* Sort Dropdown */}
-        <div className="flex items-center gap-2 min-w-fit">
-          <span className={`text-sm ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>Sort by:</span>
-          <button className={`flex items-center gap-1 text-sm font-medium hover:text-[#ec6d13] transition-colors ${isDark ? "text-white" : "text-[#1a140e]"
-            }`}>
-            Featured
-            <ChevronDown size={18} />
+        <div ref={sortRef} className="relative flex items-center gap-2 min-w-fit">
+          <span className={`text-sm font-medium ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
+            Urutkan:
+          </span>
+
+          {/* Trigger button */}
+          <button
+            onClick={() => setSortOpen((v) => !v)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-semibold transition-all ${
+              sortOpen
+                ? "border-[#ec6d13] text-[#ec6d13] " + (isDark ? "bg-[#1a140e]" : "bg-white")
+                : isDark
+                ? "bg-[#1a140e] border-[#3e342b] text-white hover:border-[#ec6d13]/60"
+                : "bg-white border-[#e5ddd5] text-[#1a140e] hover:border-[#ec6d13]/60"
+            }`}
+          >
+            {SORT_OPTIONS.find((o) => o.value === sortOption)?.label}
+            <ChevronDown
+              size={15}
+              className={`shrink-0 transition-transform duration-200 ${sortOpen ? "rotate-180" : ""}`}
+            />
           </button>
+
+          {/* Dropdown panel */}
+          {sortOpen && (
+            <div
+              className={`absolute top-full right-0 mt-2 w-60 rounded-2xl border shadow-2xl z-30 overflow-hidden ${
+                isDark
+                  ? "bg-[#1a140e] border-[#3e342b] shadow-black/50"
+                  : "bg-white border-[#e5ddd5] shadow-black/10"
+              }`}
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => { setSortOption(opt.value); setSortOpen(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-colors ${
+                    sortOption === opt.value
+                      ? "text-[#ec6d13] bg-[#ec6d13]/10"
+                      : isDark
+                      ? "text-[#b9a89d] hover:bg-[#231910] hover:text-white"
+                      : "text-[#8b7355] hover:bg-[#f5f0eb] hover:text-[#1a140e]"
+                  }`}
+                >
+                  {opt.label}
+                  {sortOption === opt.value && (
+                    <span className="w-2 h-2 rounded-full bg-[#ec6d13] shrink-0" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       {/* --- PRODUCT GRID --- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {products.map((product) => (
+        {sortedProducts.map((product) => (
           <div
             key={product.id}
             className={`group rounded-2xl p-3 border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col ${isDark
@@ -168,8 +252,8 @@ export default function UserDashboard() {
                   }`}>
                   {product.name}
                 </h3>
-                <span className={`font-bold text-lg ${isDark ? "text-white" : "text-[#1a140e]"}`}>
-                  {product.price}
+                <span className="font-bold text-base text-[#ec6d13]">
+                  {formatRupiah(product.priceNum)}
                 </span>
               </div>
 
