@@ -46,8 +46,7 @@ export default function ModalDeleteProduct({ product, onClose, onConfirm }: Prop
                 Tindakan ini tidak dapat dibatalkan
               </p>
               <p className="text-xs text-red-600/70 dark:text-red-400/70 mt-1 leading-relaxed">
-                Produk <strong>&ldquo;{product.name}&rdquo;</strong> (SKU:{" "}
-                <span className="font-mono">{product.sku}</span>) akan dihapus
+                Produk <strong>&ldquo;{product.name}&rdquo;</strong> akan dihapus
                 permanen dari sistem.
               </p>
             </div>
