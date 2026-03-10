@@ -12,7 +12,8 @@ import {
     Settings,
     Coffee,
     X,
-    LogOut
+    LogOut,
+    ChartCandlestick
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -42,6 +43,7 @@ export function useAdminSidebar() {
 const adminNavItems = [
     { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
     { name: "Reports", href: "/admin/report", icon: BarChart3 },
+    { name: "Finance", href: "/admin/finance", icon: ChartCandlestick },
     { name: "Inventory", href: "/admin/inventory", icon: Package },
     { name: "Product Management", href: "/admin/product_management", icon: Coffee },
     { name: "Settings", href: "/admin/settings", icon: Settings },
