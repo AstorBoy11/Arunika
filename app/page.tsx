@@ -451,7 +451,7 @@ export default function LandingPage() {
         : "bg-[#f5f0eb] border-[#e5ddd5]"
         }`}>
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 mb-16">
             {/* Brand Column */}
             <div>
               <div className="flex items-center gap-2 mb-6">
@@ -467,7 +467,7 @@ export default function LandingPage() {
                 nusantara.
               </p>
               <div className="flex gap-3">
-                {[Instagram, Mail].map((Icon, i) => (
+                {[Instagram, ].map((Icon, i) => (
                   <a
                     key={i}
                     href="#"
@@ -508,9 +508,6 @@ export default function LandingPage() {
               <ul className={`space-y-3 ${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"}`}>
                 {[
                   "Konfirmasi Pembayaran",
-                  "Lacak Pesanan",
-                  "Syarat & Ketentuan",
-                  "Kebijakan Privasi",
                 ].map((item) => (
                   <li key={item}>
                     <a href="#" className="hover:text-[#ec6d13] transition-colors text-sm">
@@ -518,28 +515,6 @@ export default function LandingPage() {
                     </a>
                   </li>
                 ))}
-              </ul>
-            </div>
-
-            {/* Contact */}
-            <div>
-              <h4 className={`font-bold mb-6 uppercase tracking-wider text-sm ${isDark ? "text-white" : "text-[#1a140e]"
-                }`}>
-                Kontak
-              </h4>
-              <ul className={`space-y-4 ${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"}`}>
-                <li className="flex items-start gap-3">
-                  <MapPin size={18} className="text-[#ec6d13] mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Jl. Kopi Nusantara No. 12,<br />Jember, Jawa Timur</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Phone size={18} className="text-[#ec6d13] flex-shrink-0" />
-                  <span className="text-sm">+62 812 3456 7890</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Mail size={18} className="text-[#ec6d13] flex-shrink-0" />
-                  <span className="text-sm">hello@arunika.id</span>
-                </li>
               </ul>
             </div>
           </div>
