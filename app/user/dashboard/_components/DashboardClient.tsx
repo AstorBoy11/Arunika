@@ -149,7 +149,7 @@ export default function DashboardClient() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Filter Buttons */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-          {["Coffee Based", "Milk Based", "Medium", "Dark", "Decaf"].map((filter, index) => (
+          {["Coffee Based", "Milk Based"].map((filter, index) => (
             <button
               key={filter}
               className={`px-5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${

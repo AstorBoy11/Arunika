@@ -805,10 +805,6 @@ export default function CartPage() {
               Checkout Sekarang
               <ArrowRight size={20} />
             </button>
-
-            <Link href="/user/dashboard" className={`block text-center text-sm font-medium hover:text-[#ec6d13] transition-colors ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
-              ← Lanjut Belanja
-            </Link>
           </div>
         </div>
       </div>
