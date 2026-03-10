@@ -186,7 +186,7 @@ export default function Development() {
 
                     {/* Back button */}
                     <div className="pt-6">
-                        <Link href="/">
+                        <Link href="/admin/dashboard">
                             <button className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-200 text-sm font-medium group">
                                 Back to Home
                             </button>
