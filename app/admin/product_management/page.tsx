@@ -1,18 +1,54 @@
 "use client";
 
+import { useState } from "react";
+import dynamic from "next/dynamic";
 import AdminHeader from "@/components/admin-header";
 import Image from "next/image";
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  ChevronLeft, 
-  ChevronRight 
-} from "lucide-react";
+import { Plus, Search, Edit, ChevronLeft, ChevronRight, Tag, Pencil, Trash2 } from "lucide-react";
+
+// ─── Category types & dummy data ──────────────────────────────────────────────
+type Category = { id: number; name: string; description: string };
+
+type AddCatProps    = { onClose: () => void; onSubmit: (data: Omit<Category, "id">) => void };
+type EditCatProps   = { category: Category; onClose: () => void; onSubmit: (data: Category) => void };
+type DeleteCatProps = { category: Category; onClose: () => void; onConfirm: () => void };
+
+const ModalAddCategory    = dynamic<AddCatProps>(() => import("./_components/ModalAddCategory"));
+const ModalEditCategory   = dynamic<EditCatProps>(() => import("./_components/ModalEditCategory"));
+const ModalDeleteCategory = dynamic<DeleteCatProps>(() => import("./_components/ModalDeleteCategory"));
+
+const initialCategories: Category[] = [
+  { id: 1, name: "Coffee Based", description: "Minuman berbasis espresso dan kopi tubruk."     },
+  { id: 2, name: "Milk Based",   description: "Minuman susu, latte, dan kreasi berbasis susu." },
+  { id: 3, name: "Snack",        description: "Camilan pendamping minuman, kue, dan pastri."   },
+  { id: 4, name: "Non Coffee",   description: "Teh, coklat panas, dan minuman non-kafein."     },
+];
 
 export default function AdminProducts() {
   const cardClass =
     "bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-xl shadow-sm dark:shadow-none transition-colors";
+
+  // ── Category state ──────────────────────────────────────────────────────────
+  const [categories, setCategories]     = useState<Category[]>(initialCategories);
+  const [isOpenAdd, setIsOpenAdd]       = useState(false);
+  const [isOpenEdit, setIsOpenEdit]     = useState(false);
+  const [isOpenDelete, setIsOpenDelete] = useState(false);
+  const [selectedCat, setSelectedCat]  = useState<Category | null>(null);
+
+  const handleAddCat = (data: Omit<Category, "id">) => {
+    setCategories((prev) => [...prev, { ...data, id: Date.now() }]);
+    setIsOpenAdd(false);
+  };
+  const handleEditCat = (data: Category) => {
+    setCategories((prev) => prev.map((c) => (c.id === data.id ? data : c)));
+    setIsOpenEdit(false);
+  };
+  const handleDeleteCat = () => {
+    if (!selectedCat) return;
+    setCategories((prev) => prev.filter((c) => c.id !== selectedCat.id));
+    setIsOpenDelete(false);
+    setSelectedCat(null);
+  };
 
   // Dummy Data for Products
   const productsData = [
@@ -171,8 +207,113 @@ export default function AdminProducts() {
             </div>
           </div>
 
+          {/* ── Manajemen Kategori ─────────────────────────────────────────── */}
+          <div className={`${cardClass} overflow-hidden`}>
+
+            {/* Card header */}
+            <div className="p-4 border-b border-gray-200 dark:border-[#3e342b] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Tag size={17} className="text-[#ec6d13]" />
+                  Manajemen Kategori
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-[#8e7f72] mt-0.5">
+                  Kelola jenis/kategori produk yang tersedia
+                </p>
+              </div>
+              <button
+                onClick={() => setIsOpenAdd(true)}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#ec6d13] hover:bg-[#d65c0b] text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md shadow-[#ec6d13]/20 transition-all active:scale-95"
+              >
+                <Plus size={16} />
+                <span>Tambah Kategori</span>
+              </button>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 dark:bg-[#231910] border-b border-gray-200 dark:border-[#3e342b]">
+                    <th className="py-3 px-6 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] min-w-48">Nama Kategori</th>
+                    <th className="py-3 px-6 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] min-w-72">Deskripsi</th>
+                    <th className="py-3 px-6 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] min-w-24 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-[#3e342b]">
+                  {categories.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="py-10 text-center">
+                        <Tag size={28} className="mx-auto mb-2 text-gray-300 dark:text-[#4a3f35]" />
+                        <p className="text-sm text-gray-400 dark:text-[#8e7f72]">Belum ada kategori.</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    categories.map((cat) => (
+                      <tr key={cat.id} className="hover:bg-gray-50 dark:hover:bg-[#2a221c] transition-colors">
+                        <td className="py-3 px-6">
+                          <div className="flex items-center gap-3">
+                            <div className="size-8 rounded-lg bg-[#ec6d13]/10 flex items-center justify-center shrink-0">
+                              <Tag size={13} className="text-[#ec6d13]" />
+                            </div>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{cat.name}</p>
+                          </div>
+                        </td>
+                        <td className="py-3 px-6">
+                          <p className="text-sm text-gray-500 dark:text-[#8e7f72] line-clamp-1">
+                            {cat.description || <span className="italic text-gray-400 dark:text-[#4a3f35]">Tidak ada deskripsi</span>}
+                          </p>
+                        </td>
+                        <td className="py-3 px-6">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => { setSelectedCat(cat); setIsOpenEdit(true); }}
+                              className="p-1.5 rounded-lg text-gray-500 dark:text-[#8e7f72] hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                              title="Edit kategori"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              onClick={() => { setSelectedCat(cat); setIsOpenDelete(true); }}
+                              className="p-1.5 rounded-lg text-gray-500 dark:text-[#8e7f72] hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                              title="Hapus kategori"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </div>
       </div>
+
+      {/* ── Category Modals ────────────────────────────────────────────────── */}
+      {isOpenAdd && (
+        <ModalAddCategory
+          onClose={() => setIsOpenAdd(false)}
+          onSubmit={handleAddCat}
+        />
+      )}
+      {isOpenEdit && selectedCat && (
+        <ModalEditCategory
+          category={selectedCat}
+          onClose={() => { setIsOpenEdit(false); setSelectedCat(null); }}
+          onSubmit={handleEditCat}
+        />
+      )}
+      {isOpenDelete && selectedCat && (
+        <ModalDeleteCategory
+          category={selectedCat}
+          onClose={() => { setIsOpenDelete(false); setSelectedCat(null); }}
+          onConfirm={handleDeleteCat}
+        />
+      )}
     </div>
   );
 }
