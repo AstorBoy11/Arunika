@@ -1,43 +1,33 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI!;
 
-/**
- * Global is used here to maintain a cached connection across hot reloads
- * in development. This prevents connections growing exponentially
- * during API Route usage.
- */
-interface MongooseCache {
-  conn: typeof mongoose | null;
-  promise: Promise<typeof mongoose> | null;
+if (!MONGODB_URI) {
+  throw new Error('Tolong masukkan MONGODB_URI di dalam file .env.local');
 }
 
-declare global {
-  // eslint-disable-next-line no-var
-  var mongoose: MongooseCache;
-}
-
-let cached = global.mongoose;
+// Menggunakan global untuk menyimpan koneksi agar tidak terus-menerus 
+// membuat koneksi baru saat Next.js melakukan Hot Reload di mode Development.
+let cached = (global as any).mongoose;
 
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+  cached = (global as any).mongoose = { conn: null, promise: null };
 }
 
-async function dbConnect() {
-  if (!MONGODB_URI) {
-    throw new Error("Please define the MONGODB_URI environment variable inside .env");
-  }
-
+async function connectDB() {
+  // Kalau sudah ada koneksi yang terbuka, pakai yang itu saja
   if (cached.conn) {
     return cached.conn;
   }
 
+  // Kalau belum, buat koneksi baru
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+      console.log('✅ Berhasil terhubung ke MongoDB Atlas!');
       return mongoose;
     });
   }
@@ -52,4 +42,4 @@ async function dbConnect() {
   return cached.conn;
 }
 
-export default dbConnect;
+export default connectDB;

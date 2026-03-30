@@ -630,6 +630,10 @@ export default function CartPage() {
   const shipping = 5.00;
   const tax = subtotal * 0.1;
   const total = subtotal + shipping + tax;
+  const OPEN_HOUR = 8;
+  const CLOSE_HOUR = 22;
+  const currentHour = new Date().getHours();
+  const isStoreClosed = currentHour < OPEN_HOUR || currentHour >= CLOSE_HOUR;
 
   if (cartItems.length === 0) {
     return (
@@ -798,9 +802,26 @@ export default function CartPage() {
               </div>
             </div>
 
+            {isStoreClosed && (
+              <div
+                className={`mb-4 rounded-lg border px-3 py-2.5 text-xs ${
+                  isDark
+                    ? "bg-[#3a1c14]/40 border-[#7a3422] text-[#f2b8a0]"
+                    : "bg-[#fff4ee] border-[#f2c1ab] text-[#a64822]"
+                }`}
+              >
+                Toko Tutup. Anda tidak dapat melakukan pesanan di luar jam operasional (08:00 - 22:00)
+              </div>
+            )}
+
             <button
               onClick={() => setIsCheckoutOpen(true)}
-              className="w-full py-4 bg-[#ec6d13] hover:bg-[#d65c0b] text-white font-bold rounded-xl shadow-lg shadow-[#ec6d13]/20 transition-all hover:scale-[1.02] flex items-center justify-center gap-2 mb-3"
+              disabled={isStoreClosed}
+              className={`w-full py-4 text-white font-bold rounded-xl shadow-lg shadow-[#ec6d13]/20 transition-all flex items-center justify-center gap-2 mb-3 ${
+                isStoreClosed
+                  ? "bg-[#ec6d13] opacity-50 cursor-not-allowed"
+                  : "bg-[#ec6d13] hover:bg-[#d65c0b] hover:scale-[1.02]"
+              }`}
             >
               Checkout Sekarang
               <ArrowRight size={20} />
