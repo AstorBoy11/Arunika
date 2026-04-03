@@ -136,9 +136,12 @@ async function runSeed() {
     await Product.insertMany(productsData);
     console.log(`✅ Berhasil menyisipkan ${productsData.length} data Product dummy!`);
 
+    await mongoose.disconnect();
+    console.log("🔌 Koneksi MongoDB ditutup.");
     process.exit(0);
   } catch (err) {
     console.error("❌ Terjadi kesalahan saat proses seeding:", err);
+    await mongoose.disconnect();
     process.exit(1);
   }
 }

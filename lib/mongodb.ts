@@ -1,11 +1,5 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI!;
-
-if (!MONGODB_URI) {
-  throw new Error("Tolong masukkan MONGODB_URI di dalam file .env.local (Periksa .env.example sebagai referensi).");
-}
-
 // Global declaration caching untuk Next.js Development Environment Hot Reloading (HMR)
 // Hal ini mencegah Next.js memakan semua connection slots MongoDB saat compiler merender ulang komponen.
 declare global {
@@ -23,6 +17,11 @@ if (!cached) {
 }
 
 async function connectDB() {
+  const MONGODB_URI = process.env.MONGODB_URI!;
+  if (!MONGODB_URI) {
+    throw new Error("Tolong masukkan MONGODB_URI di dalam file .env (Periksa .env.example sebagai referensi).");
+  }
+
   if (cached.conn) {
     return cached.conn;
   }
