@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Trash2,
   Minus,
   Plus,
   ShoppingBag,
   ArrowRight,
-  Truck,
   X,
   MapPin,
   Wallet,
@@ -20,10 +20,12 @@ import {
   Package,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+import { useUser } from "@/lib/hooks/useUser";
+import type { IAddress } from "@/lib/models";
 
 // Tipe Data & Data Dummy
 interface CartItem {
-  id: number;
+  _id: string;
   name: string;
   roast: string;
   price: number;
@@ -31,75 +33,192 @@ interface CartItem {
   quantity: number;
 }
 
-// ─── Dummy data untuk modal ───────────────────────────────────────────────────
-
 interface Address {
-  id: string;
+  id: number;
   label: string;
+  type?: "home" | "office";
+  isDefault?: boolean;
   recipient: string;
+  street: string;
+  city: string;
+  province: string;
+  postalCode?: string;
   phone: string;
   full: string;
 }
 
-const ADDRESSES: Address[] = [
-  {
-    id: "addr-1",
-    label: "Rumah",
-    recipient: "Budi Santoso",
-    phone: "+62 812-3456-7890",
-    full: "Jl. Melati No. 12, Kel. Sukamaju, Kec. Cilandak, Jakarta Selatan, 12560",
-  },
-  {
-    id: "addr-2",
-    label: "Kantor",
-    recipient: "Budi Santoso",
-    phone: "+62 812-3456-7890",
-    full: "Gedung Anindita Lt. 5, Jl. Sudirman Kav. 25, Jakarta Pusat, 10220",
-  },
-];
+type PaymentMethod = "cash" | "qris";
 
-type PaymentMethod = "cash" | "qris" | null;
+type CheckoutRequestBody = {
+  userId: string;
+  items: Array<{
+    productId: string;
+    quantity: number;
+  }>;
+  shippingAddress: {
+    recipient: string;
+    street: string;
+    city: string;
+    province: string;
+    postalCode: string;
+    phone: string;
+  };
+  paymentMethod: PaymentMethod;
+};
+
+type CheckoutApiResponse = {
+  success: boolean;
+  data?: {
+    _id: string;
+    orderNumber: string;
+  };
+  message?: string;
+};
+
+const formatRupiah = (n: number) =>
+  new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(n);
 
 // ─── Checkout Modal ───────────────────────────────────────────────────────────
 
 interface CheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
+  addresses: Address[];
   items: CartItem[];
   subtotal: number;
   shipping: number;
   tax: number;
   total: number;
+  userId: string | null;
+  onCheckoutSuccess: (orderNumber: string) => void;
+  onCheckoutError: (message: string) => void;
 }
 
 function CheckoutModal({
   isOpen,
   onClose,
+  addresses,
   items,
   subtotal,
   shipping,
   tax,
   total,
+  userId,
+  onCheckoutSuccess,
+  onCheckoutError,
 }: CheckoutModalProps) {
   const { theme, mounted } = useTheme();
   const isDark = mounted && theme === "dark";
 
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
-  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>(null);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>("qris");
   const [confirmed, setConfirmed] = useState(false);
+  const [orderNumber, setOrderNumber] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string>("");
 
-  const canConfirm = selectedAddress !== null && selectedPayment !== null;
+  useEffect(() => {
+    if (!isOpen || addresses.length === 0) return;
+    const defaultAddress = addresses.find((address) => address.isDefault) ?? addresses[0];
+    setSelectedAddress(String(defaultAddress.id));
+  }, [addresses, isOpen]);
 
-  const handleConfirm = () => {
-    if (!canConfirm) return;
-    setConfirmed(true);
+  useEffect(() => {
+    if (!isOpen) return;
+    setSelectedPayment("qris");
+    setSubmitError("");
+    setIsSubmitting(false);
+  }, [isOpen]);
+
+  const canConfirm = selectedAddress !== null;
+
+  const handleCheckout = async () => {
+    if (!canConfirm || isSubmitting) return;
+
+    if (items.length === 0) {
+      const message = "Keranjang kosong. Silakan tambah produk terlebih dahulu.";
+      setSubmitError(message);
+      onCheckoutError(message);
+      return;
+    }
+
+    if (!userId) {
+      const message = "Silakan login terlebih dahulu untuk melanjutkan checkout.";
+      setSubmitError(message);
+      onCheckoutError(message);
+      return;
+    }
+
+    const chosenAddress = addresses.find((addr) => String(addr.id) === selectedAddress);
+    if (!chosenAddress) {
+      const message = "Alamat pengiriman tidak ditemukan. Silakan pilih alamat lain.";
+      setSubmitError(message);
+      onCheckoutError(message);
+      return;
+    }
+
+    const payload: CheckoutRequestBody = {
+      userId,
+      items: items.map((item) => ({
+        productId: item._id,
+        quantity: item.quantity,
+      })),
+      shippingAddress: {
+        recipient: chosenAddress.recipient,
+        street: chosenAddress.street,
+        city: chosenAddress.city,
+        province: chosenAddress.province,
+        postalCode: chosenAddress.postalCode ?? "",
+        phone: chosenAddress.phone,
+      },
+      paymentMethod: selectedPayment,
+    };
+
+    setIsSubmitting(true);
+    setSubmitError("");
+
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result: CheckoutApiResponse = (await response.json()) as CheckoutApiResponse;
+
+      if (!response.ok || !result.success || !result.data) {
+        const message = result.message ?? "Checkout gagal. Silakan coba lagi.";
+        setSubmitError(message);
+        onCheckoutError(message);
+        return;
+      }
+
+      setOrderNumber(result.data.orderNumber);
+      setConfirmed(true);
+      onCheckoutSuccess(result.data.orderNumber);
+    } catch {
+      const message = "Terjadi kesalahan jaringan saat checkout. Silakan coba lagi.";
+      setSubmitError(message);
+      onCheckoutError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
     // Reset state saat modal ditutup
     setSelectedAddress(null);
-    setSelectedPayment(null);
+    setSelectedPayment("qris");
     setConfirmed(false);
+    setOrderNumber("");
+    setSubmitError("");
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -126,7 +245,7 @@ function CheckoutModal({
             Nomor Pesanan
           </p>
           <p className="text-[#ec6d13] font-bold text-lg mb-4">
-            #ARN-{Math.floor(100000 + Math.random() * 900000)}
+            #{orderNumber}
           </p>
           <p className={`text-sm mb-6 ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
             Terima kasih! Pesananmu sedang diproses dan akan segera dikirim ke alamat yang kamu pilih.
@@ -169,7 +288,7 @@ function CheckoutModal({
               </h2>
               <p className={`text-xs ${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"}`}>
                 {items.length} item · Total{" "}
-                <span className="text-[#ec6d13] font-bold">${total.toFixed(2)}</span>
+                <span className="text-[#ec6d13] font-bold">{formatRupiah(total)}</span>
               </p>
             </div>
           </div>
@@ -204,7 +323,7 @@ function CheckoutModal({
             >
               {items.map((item) => (
                 <div
-                  key={item.id}
+                  key={item._id}
                   className={`flex items-center gap-3 px-4 py-3 ${
                     isDark ? "bg-[#1a140e]" : "bg-white"
                   }`}
@@ -234,10 +353,10 @@ function CheckoutModal({
                         isDark ? "text-white" : "text-[#1a140e]"
                       }`}
                     >
-                      ${(item.price * item.quantity).toFixed(2)}
+                      {formatRupiah(item.price * item.quantity)}
                     </p>
                     <p className={`text-xs ${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"}`}>
-                      {item.quantity} × ${item.price.toFixed(2)}
+                      {item.quantity} × {formatRupiah(item.price)}
                     </p>
                   </div>
                 </div>
@@ -248,12 +367,12 @@ function CheckoutModal({
                 {[
                   { label: "Subtotal", value: subtotal },
                   { label: "Pengiriman", value: shipping },
-                  { label: "Pajak (10%)", value: tax },
+                  { label: "Pajak (11%)", value: tax },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex justify-between text-xs">
                     <span className={isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"}>{label}</span>
                     <span className={isDark ? "text-[#b9a89d]" : "text-[#5a4535]"}>
-                      ${value.toFixed(2)}
+                      {formatRupiah(value)}
                     </span>
                   </div>
                 ))}
@@ -261,7 +380,7 @@ function CheckoutModal({
                   <span className={`text-sm font-bold ${isDark ? "text-white" : "text-[#1a140e]"}`}>
                     Total
                   </span>
-                  <span className="text-[#ec6d13] font-black text-base">${total.toFixed(2)}</span>
+                  <span className="text-[#ec6d13] font-black text-base">{formatRupiah(total)}</span>
                 </div>
               </div>
             </div>
@@ -284,12 +403,18 @@ function CheckoutModal({
             </h3>
 
             <div className="flex flex-col gap-3">
-              {ADDRESSES.map((addr) => {
-                const isSelected = selectedAddress === addr.id;
+              {addresses.length === 0 && (
+                <div className={`text-xs ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
+                  Belum ada alamat pengiriman. Tambahkan alamat di halaman profil.
+                </div>
+              )}
+
+              {addresses.map((addr) => {
+                const isSelected = selectedAddress === String(addr.id);
                 return (
                   <button
                     key={addr.id}
-                    onClick={() => setSelectedAddress(addr.id)}
+                    onClick={() => setSelectedAddress(String(addr.id))}
                     className={`w-full text-left rounded-xl border-2 p-4 transition-all duration-200 group relative ${
                       isSelected
                         ? "border-[#ec6d13] bg-[#ec6d13]/5 shadow-md shadow-[#ec6d13]/10"
@@ -508,6 +633,18 @@ function CheckoutModal({
                 </div>
               </div>
             )}
+
+            {submitError && (
+              <div
+                className={`mt-4 rounded-lg border px-3 py-2.5 text-xs ${
+                  isDark
+                    ? "bg-[#3a1c14]/40 border-[#7a3422] text-[#f2b8a0]"
+                    : "bg-[#fff4ee] border-[#f2c1ab] text-[#a64822]"
+                }`}
+              >
+                {submitError}
+              </div>
+            )}
           </section>
         </div>
 
@@ -519,6 +656,7 @@ function CheckoutModal({
         >
           <button
             onClick={handleClose}
+            disabled={isSubmitting}
             className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-colors ${
               isDark
                 ? "border-[#3e342b] text-[#b9a89d] hover:bg-[#3e342b] hover:text-white"
@@ -529,15 +667,16 @@ function CheckoutModal({
           </button>
 
           <button
-            onClick={handleConfirm}
-            disabled={!canConfirm}
+            onClick={handleCheckout}
+            disabled={!canConfirm || isSubmitting}
             className={`flex-2 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
-              canConfirm
+              canConfirm && !isSubmitting
                 ? "bg-[#ec6d13] hover:bg-[#d65c0b] text-white shadow-lg shadow-[#ec6d13]/25 hover:scale-[1.02]"
                 : "bg-[#ec6d13]/30 text-white/50 cursor-not-allowed"
             }`}
           >
-            {!canConfirm && (
+            {isSubmitting && <span>Memproses...</span>}
+            {!canConfirm && !isSubmitting && (
               <span className="text-[11px] font-normal">
                 {!selectedAddress && !selectedPayment
                   ? "Pilih alamat & pembayaran"
@@ -546,7 +685,7 @@ function CheckoutModal({
                   : "Pilih metode pembayaran"}
               </span>
             )}
-            {canConfirm && (
+            {canConfirm && !isSubmitting && (
               <>
                 Konfirmasi Pesanan
                 <ChevronRight size={16} />
@@ -561,59 +700,43 @@ function CheckoutModal({
 
 // ─── Cart Page ────────────────────────────────────────────────────────────────
 
-const initialCart: CartItem[] = [
-  {
-    id: 1,
-    name: "Ethiopian Yirgacheffe",
-    roast: "Light Roast",
-    price: 22.00,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuB06jAOy0e6VpbUp6hOlshceiORePg0Pvs54Ms1qza9ov8vm15VJSj1Eb1JC77MblwiNTKnzB2nPHoFeAxeU4MGM3NBLBP4BJ4p5wWGyqGo9VhyUJcfiLe3UPyu62xbnZ9gDf5Ix_8i4XZzJiO02V51N2DdLf8Lcz0fsub86I5w_CooD2yzLy7W74c0gRgMhXPmyYyVdk6RpoGm__Oobfw8F6ajbFBcleBXcQcupgr37UVMWcWnGKD-LTNbV06oSBM2fWSHaKEwlvEs",
-    quantity: 1,
-  },
-  {
-    id: 2,
-    name: "Sumatra Mandheling",
-    roast: "Dark Roast",
-    price: 19.50,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAMFtMAcIKaVPvQYctBLheaTsf6inh5kusmEPv8dAtt5CAkGFWWo3JLMGqvsOnwsKqi028amHlsFfvdsDauUTrhZ4p9KHwImj23Z7D-WDj4SCW4iWt1Wr9Y5Jph1l-Zl1w9ADQaiC2qomr4HoWL21tPCxi1pECQY05QzaoGHraPUvMxPeGzCw9nIA5jlZmDT3WWLtVLtfDZd7rx7UZfDdyOoTFOdZU8CPjMVmrN7-uhc7Sb4fPLXQYgmJ3XVPIw9U61Dcm6pKtOeFUe",
-    quantity: 2,
-  },
-  {
-    id: 4,
-    name: "Espresso House Blend",
-    roast: "Espresso",
-    price: 20.00,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBDqGbCu-PjW8XJl7mlArgoi-f-vnEr1jU24YXaLBZy3GtN0Lpg58p-6XoCoqpy5_AGJSfQG9zMwACIs__tFEvH5DqvoOdJqpZh9TGgDYUVU7Ov0hzL4DFjymyw63rxvgXxfvW0W8yV6BlkRXmF7ehphhQ7ikj-ZRhDBaeOOeqoKncRZmcGf6fZFXo9cjZwnMjJIMuVONl1NXJEyg6Tch3KRqypH06M9t_xZMHsQrEUUt-XNBfLsduQ2W2yfM_itJUavmr_te7l5Kkk",
-    quantity: 1,
-  },
-  {
-    id: 5,
-    name: "Kenya AA",
-    roast: "Light Roast",
-    price: 24.00,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCg8ODvWlvkdaCvcwj4ZDEyB-nN7KV-94P5awGyPN2gMvB3JGDpnsh0TO1gPLbdCx21TCitKds-hOq5hRVz6XQzCM-Etep_5yy1SY65yJxnRcoHD7ccQCe1XILPKbCA52qnIqTIsAwlyIarKkASw9peo8Gr9ZNXkbsOpedWJQ3nnUM7KBXojrR4JKeXrPqLb-wX7hQMaoT31wgpBKtZTdkIzCqvlpoJGmuERvsL--ezS3KvzkV2hwpVIIWUVErh1MssRTUs_xojG5Ct",
-    quantity: 1,
-  },
-  {
-    id: 6,
-    name: "Costa Rica Tarrazu",
-    roast: "Medium Roast",
-    price: 21.00,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDvGk1zhDtmMOqQ1x_HziqscnUUvGCn5mHFopvl78tlL12hsu3SzzsueoNdvOgF-eqL5RJG5woPgo4sXYgZtzAqAYKqKHicJF7QzwCDXoVAvz6hc3IuvOkdJ93PGBc7aRTxRT4Bk2FrnndhdIm3e8Y6bxlG8BAardAVERopssnsjru_0RbmwoIUEY4l1KFrTC4YBq721wzRMk5fWlvQIVKvFZ3rdRhneSC1r0AUiOXYy4wCWugITCovUwTCJlvFD2xDyYbqYWo5J84s",
-    quantity: 1,
-  },
-];
-
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState<CartItem[]>(initialCart);
+  const router = useRouter();
+  const { user } = useUser();
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [hasHydratedCart, setHasHydratedCart] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string>("");
+  const [checkoutSuccess, setCheckoutSuccess] = useState<string>("");
   const { theme, mounted } = useTheme();
   const isDark = mounted && theme === "dark";
 
-  const updateQuantity = (id: number, type: "plus" | "minus") => {
+  useEffect(() => {
+    const stored = window.localStorage.getItem("arunika-cart");
+    if (!stored) {
+      setHasHydratedCart(true);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(stored) as CartItem[];
+      setCartItems(parsed);
+    } catch {
+      setCartItems([]);
+    }
+
+    setHasHydratedCart(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydratedCart) return;
+    window.localStorage.setItem("arunika-cart", JSON.stringify(cartItems));
+  }, [cartItems, hasHydratedCart]);
+
+  const updateQuantity = (_id: string, type: "plus" | "minus") => {
     setCartItems((prev) =>
       prev.map((item) => {
-        if (item.id === id) {
+        if (item._id === _id) {
           const newQty = type === "plus" ? item.quantity + 1 : item.quantity - 1;
           return { ...item, quantity: newQty < 1 ? 1 : newQty };
         }
@@ -622,14 +745,72 @@ export default function CartPage() {
     );
   };
 
-  const removeItem = (id: number) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  const removeItem = (_id: string) => {
+    setCartItems((prev) => prev.filter((item) => item._id !== _id));
+  };
+
+  const handleCheckoutOpen = () => {
+    if (cartItems.length === 0) {
+      setCheckoutError("Keranjang kosong. Silakan tambah produk terlebih dahulu.");
+      return;
+    }
+
+    if (!user?._id) {
+      setCheckoutError("Silakan login terlebih dahulu untuk checkout.");
+      return;
+    }
+
+    if (!user.addresses || user.addresses.length === 0) {
+      setCheckoutError("Silakan tambahkan alamat pengiriman di halaman profil");
+      return;
+    }
+
+    setCheckoutError("");
+    setCheckoutSuccess("");
+    setIsCheckoutOpen(true);
+  };
+
+  const handleCheckoutSuccess = (orderNumber: string) => {
+    setCheckoutSuccess(`Checkout berhasil. Nomor pesanan: ${orderNumber}`);
+    setCheckoutError("");
+    setCartItems([]);
+    window.localStorage.setItem("arunika-cart", JSON.stringify([]));
+
+    window.setTimeout(() => {
+      setIsCheckoutOpen(false);
+      router.push("/user/profile");
+    }, 1200);
+  };
+
+  const handleCheckoutError = (message: string) => {
+    setCheckoutError(message);
   };
 
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const shipping = 5.00;
-  const tax = subtotal * 0.1;
+  const shipping = 15000;
+  const tax = Number((subtotal * 0.11).toFixed(2));
   const total = subtotal + shipping + tax;
+  const OPEN_HOUR = 8;
+  const CLOSE_HOUR = 22;
+  const currentHour = new Date().getHours();
+  const isStoreClosed = currentHour < OPEN_HOUR || currentHour >= CLOSE_HOUR;
+
+  const checkoutAddresses: Address[] = (user?.addresses || [])
+    .slice()
+    .sort((a: IAddress, b: IAddress) => Number(b.isDefault) - Number(a.isDefault))
+    .map((addr: IAddress) => ({
+      id: addr.id,
+      label: addr.label,
+      type: addr.type,
+      isDefault: addr.isDefault,
+      recipient: addr.recipient,
+      street: addr.street,
+      city: addr.city,
+      province: addr.province,
+      postalCode: addr.postalCode,
+      phone: addr.phone,
+      full: `${addr.street}, ${addr.city}, ${addr.province}${addr.postalCode ? `, ${addr.postalCode}` : ""}`,
+    }));
 
   if (cartItems.length === 0) {
     return (
@@ -639,7 +820,7 @@ export default function CartPage() {
           <ShoppingBag size={48} className="text-[#ec6d13] opacity-50" />
         </div>
         <h2 className={`text-2xl font-bold mb-2 ${isDark ? "text-white" : "text-[#1a140e]"}`}>
-          Keranjangmu Kosong
+          Keranjang kosong
         </h2>
         <Link href="/user/dashboard">
           <button className="mt-4 px-8 py-3 bg-[#ec6d13] text-white font-bold rounded-xl hover:bg-[#d65c0b] transition-colors">
@@ -670,7 +851,7 @@ export default function CartPage() {
           <div className="flex flex-col gap-6">
             {cartItems.map((item) => (
               <div
-                key={item.id}
+                key={item._id}
                 className={`border rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-6 group transition-all ${isDark
                     ? "bg-[#1a140e] border-[#3e342b] hover:border-[#ec6d13]/30"
                     : "bg-white border-[#e5ddd5] hover:border-[#ec6d13]/30"
@@ -695,7 +876,7 @@ export default function CartPage() {
                         {item.name}
                       </h3>
                       <button
-                        onClick={() => removeItem(item.id)}
+                        onClick={() => removeItem(item._id)}
                         className={`transition-colors p-1 ${isDark ? "text-[#b9a89d] hover:text-red-500" : "text-[#8b7355] hover:text-red-500"
                           }`}
                       >
@@ -712,7 +893,7 @@ export default function CartPage() {
                         : "bg-[#f5f0eb] border-[#e5ddd5]"
                       }`}>
                       <button
-                        onClick={() => updateQuantity(item.id, "minus")}
+                        onClick={() => updateQuantity(item._id, "minus")}
                         className={`w-8 h-8 flex items-center justify-center rounded-md disabled:opacity-50 ${isDark
                             ? "hover:bg-[#2c241b] text-white"
                             : "hover:bg-[#ebe3db] text-[#1a140e]"
@@ -725,7 +906,7 @@ export default function CartPage() {
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() => updateQuantity(item.id, "plus")}
+                        onClick={() => updateQuantity(item._id, "plus")}
                         className={`w-8 h-8 flex items-center justify-center rounded-md ${isDark
                             ? "hover:bg-[#2c241b] text-white"
                             : "hover:bg-[#ebe3db] text-[#1a140e]"
@@ -735,7 +916,7 @@ export default function CartPage() {
                       </button>
                     </div>
                     <p className={`text-xl font-bold ${isDark ? "text-white" : "text-[#1a140e]"}`}>
-                      ${(item.price * item.quantity).toFixed(2)}
+                      {formatRupiah(item.price * item.quantity)}
                     </p>
                   </div>
                 </div>
@@ -758,49 +939,77 @@ export default function CartPage() {
               <div className={`flex justify-between ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
                 <span>Subtotal</span>
                 <span className={`font-medium ${isDark ? "text-white" : "text-[#1a140e]"}`}>
-                  ${subtotal.toFixed(2)}
+                  {formatRupiah(subtotal)}
                 </span>
               </div>
               <div className={`flex justify-between ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
                 <span>Pengiriman</span>
                 <span className={`font-medium ${isDark ? "text-white" : "text-[#1a140e]"}`}>
-                  ${shipping.toFixed(2)}
+                  {formatRupiah(shipping)}
                 </span>
               </div>
               <div className={`flex justify-between ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
-                <span>Pajak (10%)</span>
+                <span>Pajak (11%)</span>
                 <span className={`font-medium ${isDark ? "text-white" : "text-[#1a140e]"}`}>
-                  ${tax.toFixed(2)}
+                  {formatRupiah(tax)}
                 </span>
               </div>
             </div>
 
             <div className="flex justify-between items-center mb-8">
               <span className={`font-bold text-lg ${isDark ? "text-white" : "text-[#1a140e]"}`}>Total</span>
-              <span className="text-[#ec6d13] font-black text-2xl">${total.toFixed(2)}</span>
+              <span className="text-[#ec6d13] font-black text-2xl">{formatRupiah(total)}</span>
             </div>
 
-            <div className={`p-3 rounded-lg flex items-start gap-3 mb-4 ${isDark ? "bg-[#2a221b]/50" : "bg-[#fdf5ee]"
-              }`}>
-              <Truck size={20} className="text-[#ec6d13] mt-0.5 shrink-0" />
-              <div className="w-full">
-                <p className={`text-xs mb-2 ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
-                  {subtotal >= 50
-                    ? "Kamu mendapat gratis ongkir!"
-                    : `Belanja $${(50 - subtotal).toFixed(2)} lagi untuk gratis ongkir.`}
-                </p>
-                <div className={`w-full h-1.5 rounded-full overflow-hidden ${isDark ? "bg-[#3e342b]" : "bg-[#e5ddd5]"}`}>
-                  <div
-                    className="h-full bg-[#ec6d13] rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min((subtotal / 50) * 100, 100)}%` }}
-                  />
-                </div>
+            {isStoreClosed && (
+              <div
+                className={`mb-4 rounded-lg border px-3 py-2.5 text-xs ${
+                  isDark
+                    ? "bg-[#3a1c14]/40 border-[#7a3422] text-[#f2b8a0]"
+                    : "bg-[#fff4ee] border-[#f2c1ab] text-[#a64822]"
+                }`}
+              >
+                Toko Tutup. Anda tidak dapat melakukan pesanan di luar jam operasional (08:00 - 22:00)
               </div>
-            </div>
+            )}
+
+            {checkoutError && (
+              <div
+                className={`mb-4 rounded-lg border px-3 py-2.5 text-xs ${
+                  isDark
+                    ? "bg-[#3a1c14]/40 border-[#7a3422] text-[#f2b8a0]"
+                    : "bg-[#fff4ee] border-[#f2c1ab] text-[#a64822]"
+                }`}
+              >
+                {checkoutError}
+                {checkoutError === "Silakan tambahkan alamat pengiriman di halaman profil" && (
+                  <Link href="/user/profile" className="underline font-semibold ml-1">
+                    Buka Profil
+                  </Link>
+                )}
+              </div>
+            )}
+
+            {checkoutSuccess && (
+              <div
+                className={`mb-4 rounded-lg border px-3 py-2.5 text-xs ${
+                  isDark
+                    ? "bg-[#1c3a24]/40 border-[#2f7a45] text-[#b8f2c9]"
+                    : "bg-[#ecfdf3] border-[#86efac] text-[#166534]"
+                }`}
+              >
+                {checkoutSuccess}
+              </div>
+            )}
 
             <button
-              onClick={() => setIsCheckoutOpen(true)}
-              className="w-full py-4 bg-[#ec6d13] hover:bg-[#d65c0b] text-white font-bold rounded-xl shadow-lg shadow-[#ec6d13]/20 transition-all hover:scale-[1.02] flex items-center justify-center gap-2 mb-3"
+              onClick={handleCheckoutOpen}
+              disabled={isStoreClosed}
+              className={`w-full py-4 text-white font-bold rounded-xl shadow-lg shadow-[#ec6d13]/20 transition-all flex items-center justify-center gap-2 mb-3 ${
+                isStoreClosed
+                  ? "bg-[#ec6d13] opacity-50 cursor-not-allowed"
+                  : "bg-[#ec6d13] hover:bg-[#d65c0b] hover:scale-[1.02]"
+              }`}
             >
               Checkout Sekarang
               <ArrowRight size={20} />
@@ -813,11 +1022,15 @@ export default function CartPage() {
       <CheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
+        addresses={checkoutAddresses}
         items={cartItems}
         subtotal={subtotal}
         shipping={shipping}
         tax={tax}
         total={total}
+        userId={user?._id ? String(user._id) : null}
+        onCheckoutSuccess={handleCheckoutSuccess}
+        onCheckoutError={handleCheckoutError}
       />
     </div>
   );

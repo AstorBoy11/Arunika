@@ -1,0 +1,82 @@
+﻿{
+    "timestamp":  "2026-04-03T18:42:47",
+    "step1_add_product":  {
+                              "createdResponse":  {
+                                                      "success":  true,
+                                                      "data":  {
+                                                                   "name":  "Produk Baru 184246",
+                                                                   "category":  "TempCat-184246",
+                                                                   "price":  123000,
+                                                                   "stock":  7,
+                                                                   "shortDescription":  "Produk uji sinkronisasi",
+                                                                   "longDescription":  "Produk uji sinkronisasi admin ke user dashboard",
+                                                                   "badge":  "Baru",
+                                                                   "rating":  0,
+                                                                   "image":  "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800\u0026q=80",
+                                                                   "roast":  "Medium Roast",
+                                                                   "_id":  "69cfa7b7845c6600f0daa41d",
+                                                                   "createdAt":  "2026-04-03T11:42:47.010Z",
+                                                                   "updatedAt":  "2026-04-03T11:42:47.010Z",
+                                                                   "__v":  0
+                                                               }
+                                                  },
+                              "appearsInGetProducts":  true
+                          },
+    "step2_edit_product_name":  {
+                                    "patchResponse":  {
+                                                          "success":  true,
+                                                          "data":  {
+                                                                       "_id":  "69cfa7b7845c6600f0daa41d",
+                                                                       "name":  "Produk Baru Updated 184246",
+                                                                       "category":  "TempCat-184246",
+                                                                       "price":  123000,
+                                                                       "stock":  7,
+                                                                       "shortDescription":  "Produk uji sinkronisasi",
+                                                                       "longDescription":  "Produk uji sinkronisasi admin ke user dashboard",
+                                                                       "badge":  "Baru",
+                                                                       "rating":  0,
+                                                                       "image":  "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800\u0026q=80",
+                                                                       "roast":  "Medium Roast",
+                                                                       "createdAt":  "2026-04-03T11:42:47.010Z",
+                                                                       "updatedAt":  "2026-04-03T11:42:47.113Z",
+                                                                       "__v":  0
+                                                                   }
+                                                      },
+                                    "getByIdAfterEdit":  {
+                                                             "success":  true,
+                                                             "data":  {
+                                                                          "_id":  "69cfa7b7845c6600f0daa41d",
+                                                                          "name":  "Produk Baru Updated 184246",
+                                                                          "category":  "TempCat-184246",
+                                                                          "price":  123000,
+                                                                          "stock":  7,
+                                                                          "shortDescription":  "Produk uji sinkronisasi",
+                                                                          "longDescription":  "Produk uji sinkronisasi admin ke user dashboard",
+                                                                          "badge":  "Baru",
+                                                                          "rating":  0,
+                                                                          "image":  "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800\u0026q=80",
+                                                                          "roast":  "Medium Roast",
+                                                                          "createdAt":  "2026-04-03T11:42:47.010Z",
+                                                                          "updatedAt":  "2026-04-03T11:42:47.113Z",
+                                                                          "__v":  0
+                                                                      }
+                                                         }
+                                },
+    "step3_rename_category":  {
+                                  "affectedProductsCount":  1,
+                                  "categoriesAfterRename":  {
+                                                                "success":  true,
+                                                                "data":  [
+                                                                             "Coffee Beans",
+                                                                             "Dairy Alternative",
+                                                                             "Equipment",
+                                                                             "Paper Goods",
+                                                                             "Syrups",
+                                                                             "TempCatRenamed-184211",
+                                                                             "TempCatRenamed-184227",
+                                                                             "TempCatRenamed-184246"
+                                                                         ]
+                                                            },
+                                  "newCategoryExists":  true
+                              }
+}

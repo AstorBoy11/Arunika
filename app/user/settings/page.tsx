@@ -26,6 +26,8 @@ import {
   Settings,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+import { useUser } from "@/lib/hooks/useUser";
+import type { IAddress } from "@/lib/models";
 
 // Types
 interface Address {
@@ -43,7 +45,9 @@ interface Address {
 
 export default function SettingsPage() {
   const { theme } = useTheme();
+  const { user, loading, actionLoading, error, clearError, addAddress, updateAddress, deleteAddress } = useUser();
   const isDark = theme === "dark";
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Modal States
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -56,33 +60,18 @@ export default function SettingsPage() {
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Address data
-  const [addresses, setAddresses] = useState<Address[]>([
-    {
-      id: 1,
-      label: "Rumah",
-      type: "home",
-      name: "Alex Morgan",
-      street: "Jl. Kopi Robusta No. 45, Blok C",
-      city: "Kecamatan Lowokwaru, Kota Malang",
-      province: "Jawa Timur",
-      postalCode: "65141",
-      phone: "(+62) 812-3456-7890",
-      isDefault: true,
-    },
-    {
-      id: 2,
-      label: "Kantor Pusat",
-      type: "office",
-      name: "Alex Morgan (Divisi IT)",
-      street: "Gedung Cyber Coffee Lt. 3",
-      city: "Jl. Jendral Sudirman Kav. 10",
-      province: "Jakarta Selatan",
-      postalCode: "12190",
-      phone: "(+62) 812-3456-7890",
-      isDefault: false,
-    },
-  ]);
+  const addresses: Address[] = (user?.addresses || []).map((address: IAddress) => ({
+    id: address.id,
+    label: address.label,
+    type: address.type,
+    name: address.recipient,
+    street: address.street,
+    city: address.city,
+    province: address.province,
+    postalCode: address.postalCode || "",
+    phone: address.phone,
+    isDefault: address.isDefault,
+  }));
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -95,11 +84,88 @@ export default function SettingsPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (!successMessage) return;
+    const timeout = window.setTimeout(() => setSuccessMessage(null), 2500);
+    return () => window.clearTimeout(timeout);
+  }, [successMessage]);
+
+  const showSuccess = (message: string) => {
+    clearError();
+    setSuccessMessage(message);
+  };
+
   // Delete address
-  const handleDeleteAddress = (id: number) => {
-    setAddresses(prev => prev.filter(addr => addr.id !== id));
-    setShowDeleteConfirm(false);
-    setAddressToDelete(null);
+  const handleDeleteAddress = async (id: number) => {
+    if (!user) return;
+    const result = await deleteAddress(user._id, id);
+    if (result) {
+      showSuccess("Alamat berhasil dihapus");
+      setShowDeleteConfirm(false);
+      setAddressToDelete(null);
+    }
+  };
+
+  const handleAddAddress = async (data: {
+    label: string;
+    type: "home" | "office";
+    recipient: string;
+    phone: string;
+    street: string;
+    city: string;
+    postalCode: string;
+    isDefault: boolean;
+  }) => {
+    if (!user) return;
+    const result = await addAddress(user._id, {
+      label: data.label,
+      type: data.type,
+      recipient: data.recipient,
+      phone: data.phone,
+      street: data.street,
+      city: data.city,
+      province: data.city,
+      postalCode: data.postalCode,
+      isDefault: data.isDefault,
+    });
+
+    if (result) {
+      showSuccess("Alamat berhasil ditambahkan");
+      setShowAddressModal(false);
+    }
+  };
+
+  const handleEditAddress = async (
+    id: number,
+    data: {
+      label: string;
+      type: "home" | "office";
+      recipient: string;
+      phone: string;
+      street: string;
+      city: string;
+      postalCode: string;
+      isDefault: boolean;
+    }
+  ) => {
+    if (!user) return;
+    const result = await updateAddress(user._id, id, {
+      label: data.label,
+      type: data.type,
+      recipient: data.recipient,
+      phone: data.phone,
+      street: data.street,
+      city: data.city,
+      province: data.city,
+      postalCode: data.postalCode,
+      isDefault: data.isDefault,
+    });
+
+    if (result) {
+      showSuccess("Alamat berhasil diperbarui");
+      setShowEditModal(false);
+      setSelectedAddress(null);
+    }
   };
 
   // Open delete confirmation
@@ -118,6 +184,11 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-250 w-full mx-auto flex flex-col gap-10 pb-20">
+      {(error || successMessage) && (
+        <div className={`text-sm ${error ? "text-red-500" : "text-emerald-500"}`}>
+          {error || successMessage}
+        </div>
+      )}
 
       {/* Header Halaman */}
       <div>
@@ -130,7 +201,9 @@ export default function SettingsPage() {
           </h2>
         </div>
         <p className={isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}>
-          Kelola keamanan, alamat pengirimanmu, dan akun.
+          {loading
+            ? "Memuat data user..."
+            : `Kelola keamanan, alamat pengirimanmu, dan akun. (${user?.name || "Guest"} • ${user?.email || "-"} • ${user?.phone || "-"})`}
         </p>
       </div>
 
@@ -159,6 +232,7 @@ export default function SettingsPage() {
                 </div>
               </div>
               <button
+                disabled={actionLoading || loading}
                 onClick={() => setShowPasswordModal(true)}
                 className={`px-5 py-2 rounded-xl border text-sm font-medium transition-all whitespace-nowrap ${isDark
                   ? "bg-[#2a221b] border-[#3e342b] text-white hover:bg-[#3e342b] hover:text-[#ec6d13]"
@@ -180,6 +254,7 @@ export default function SettingsPage() {
             Alamat Pengiriman
           </h3>
           <button
+            disabled={actionLoading || loading || !user}
             onClick={() => setShowAddressModal(true)}
             className="flex items-center gap-2 text-[#ec6d13] hover:text-[#d65c0b] transition-colors text-sm font-semibold"
           >
@@ -223,6 +298,7 @@ export default function SettingsPage() {
                 {/* Dropdown trigger */}
                 <div className="relative" ref={activeDropdown === address.id ? dropdownRef : null}>
                   <button
+                    disabled={actionLoading}
                     onClick={() => setActiveDropdown(activeDropdown === address.id ? null : address.id)}
                     className={`transition-colors p-1 rounded-lg ${isDark
                       ? "text-[#b9a89d] hover:text-white hover:bg-[#2a221b]"
@@ -239,6 +315,7 @@ export default function SettingsPage() {
                         : "bg-white border-[#e5ddd5]"
                       }`}>
                       <button
+                        disabled={actionLoading}
                         onClick={() => openEditModal(address)}
                         className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isDark
                             ? "text-[#b9a89d] hover:bg-[#2a221b] hover:text-white"
@@ -249,6 +326,7 @@ export default function SettingsPage() {
                         Edit
                       </button>
                       <button
+                        disabled={actionLoading}
                         onClick={() => openDeleteConfirm(address.id)}
                         className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                       >
@@ -302,6 +380,8 @@ export default function SettingsPage() {
       {(showPasswordModal || showAddressModal || showEditModal || showDeleteConfirm || showDeleteAccountModal) && (
         <SettingsModals
           isDark={isDark}
+          isLoading={actionLoading}
+          message={error || successMessage}
           showPassword={showPasswordModal}
           showAddress={showAddressModal}
           showEdit={showEditModal}
@@ -315,7 +395,17 @@ export default function SettingsPage() {
           onCloseDeleteConfirm={() => setShowDeleteConfirm(false)}
           onCloseDeleteAccount={() => setShowDeleteAccountModal(false)}
           onSetSelectedAddress={setSelectedAddress}
-          onConfirmDeleteAddress={() => handleDeleteAddress(addressToDelete!)}
+          onConfirmDeleteAddress={() => {
+            if (addressToDelete !== null) {
+              void handleDeleteAddress(addressToDelete);
+            }
+          }}
+          onSaveAddress={(data) => {
+            void handleAddAddress(data);
+          }}
+          onSaveEditAddress={(id, data) => {
+            void handleEditAddress(id, data);
+          }}
         />
       )}
 

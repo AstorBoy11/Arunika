@@ -5,11 +5,12 @@ import type { Product } from "./InventoryClient";
 
 interface Props {
   product: Product;
+  isSubmitting: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
 }
 
-export default function ModalDeleteProduct({ product, onClose, onConfirm }: Props) {
+export default function ModalDeleteProduct({ product, isSubmitting, onClose, onConfirm }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
@@ -71,15 +72,17 @@ export default function ModalDeleteProduct({ product, onClose, onConfirm }: Prop
           <div className="flex gap-3 pt-1">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] text-sm font-medium hover:bg-gray-50 dark:hover:bg-[#231910] transition-colors"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] text-sm font-medium hover:bg-gray-50 dark:hover:bg-[#231910] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Batal
             </button>
             <button
               onClick={onConfirm}
-              className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-bold shadow-md shadow-red-500/20 transition-all active:scale-95"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-bold shadow-md shadow-red-500/20 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Hapus Produk
+              {isSubmitting ? "Menghapus..." : "Hapus Produk"}
             </button>
           </div>
         </div>

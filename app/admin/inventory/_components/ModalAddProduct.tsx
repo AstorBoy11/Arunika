@@ -6,19 +6,30 @@ import type { Product } from "./InventoryClient";
 
 interface Props {
   categories: string[];
+  isSubmitting: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<Product, "id">) => void;
+  onSubmit: (data: Omit<Product, "_id">) => void | Promise<void>;
 }
 
 const inputClass =
   "w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all placeholder-gray-400 dark:placeholder-[#8e7f72]";
 
+const PRODUCT_NAMES = [
+  "Kopi Susu Aren",
+  "Americano",
+  "Cappuccino",
+  "Matcha Latte",
+  "Croissant",
+  "Kentang Goreng",
+  "Brownies",
+];
+
 const labelClass =
   "text-xs font-medium text-gray-500 dark:text-[#8e7f72] uppercase tracking-wider";
 
-export default function ModalAddProduct({ categories, onClose, onSubmit }: Props) {
+export default function ModalAddProduct({ categories, isSubmitting, onClose, onSubmit }: Props) {
   const [name, setName]         = useState("");
-  const [category, setCategory] = useState(categories[0]);
+  const [category, setCategory] = useState(categories[0] || "Uncategorized");
   const [stock, setStock] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -26,7 +37,14 @@ export default function ModalAddProduct({ categories, onClose, onSubmit }: Props
     onSubmit({
       name,
       category,
+      price: 0,
       stock: parseInt(stock) || 0,
+      shortDescription: `${name} - deskripsi singkat.`,
+      longDescription: `${name} - deskripsi lengkap untuk kebutuhan katalog.`,
+      badge: undefined,
+      rating: 0,
+      image: "https://images.unsplash.com/photo-1447933601403-0c6688de566e?q=80&w=1000&auto=format&fit=crop",
+      roast: "Medium Roast",
     });
   };
 
@@ -62,13 +80,21 @@ export default function ModalAddProduct({ categories, onClose, onSubmit }: Props
           {/* Nama Produk */}
           <div className="space-y-1.5">
             <label className={labelClass}>Nama Produk</label>
-            <input
+            <select
               className={inputClass}
-              placeholder="cth: Ethiopian Yirgacheffe"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-            />
+            >
+              <option value="" disabled hidden>
+                Pilih Nama Produk
+              </option>
+              {PRODUCT_NAMES.map((productName) => (
+                <option key={productName} value={productName}>
+                  {productName}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Kategori */}
@@ -79,9 +105,13 @@ export default function ModalAddProduct({ categories, onClose, onSubmit }: Props
               value={category}
               onChange={(e) => setCategory(e.target.value)}
             >
-              {categories.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
+              {categories.length === 0 ? (
+                <option value="Uncategorized">Uncategorized</option>
+              ) : (
+                categories.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))
+              )}
             </select>
           </div>
 
@@ -104,15 +134,17 @@ export default function ModalAddProduct({ categories, onClose, onSubmit }: Props
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] text-sm font-medium hover:bg-gray-50 dark:hover:bg-[#231910] transition-colors"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] text-sm font-medium hover:bg-gray-50 dark:hover:bg-[#231910] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2.5 rounded-lg bg-[#ec6d13] hover:bg-[#d65c0b] text-white text-sm font-bold shadow-md shadow-[#ec6d13]/20 transition-all active:scale-95"
+              disabled={isSubmitting || !category}
+              className="flex-1 px-4 py-2.5 rounded-lg bg-[#ec6d13] hover:bg-[#d65c0b] text-white text-sm font-bold shadow-md shadow-[#ec6d13]/20 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Simpan Produk
+              {isSubmitting ? "Menyimpan..." : "Simpan Produk"}
             </button>
           </div>
         </form>

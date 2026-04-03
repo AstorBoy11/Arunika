@@ -5,7 +5,7 @@ import { X, Star, ShoppingCart } from "lucide-react";
 
 // Shared product type – imported by DashboardClient too
 export interface Product {
-  id: number;
+  _id: string;
   name: string;
   priceNum: number;
   desc: string;
@@ -13,11 +13,13 @@ export interface Product {
   badge: string | null;
   rating: number;
   image: string;
+  roast: string;
 }
 
 interface Props {
   product: Product;
   isDark: boolean;
+  onAddToCart: (product: Product) => void;
   onClose: () => void;
 }
 
@@ -28,7 +30,7 @@ const formatRupiah = (n: number) =>
     minimumFractionDigits: 0,
   }).format(n);
 
-export default function ProductQuickViewModal({ product, isDark, onClose }: Props) {
+export default function ProductQuickViewModal({ product, isDark, onAddToCart, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
@@ -147,7 +149,10 @@ export default function ProductQuickViewModal({ product, isDark, onClose }: Prop
             >
               Tutup
             </button>
-            <button className="flex-1 py-3 px-4 rounded-xl bg-[#ec6d13] hover:bg-[#d65c0b] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#ec6d13]/25">
+            <button
+              onClick={() => onAddToCart(product)}
+              className="flex-1 py-3 px-4 rounded-xl bg-[#ec6d13] hover:bg-[#d65c0b] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#ec6d13]/25"
+            >
               <ShoppingCart size={16} />
               Tambah ke Keranjang
             </button>

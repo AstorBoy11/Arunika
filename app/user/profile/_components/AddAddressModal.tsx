@@ -16,6 +16,8 @@ interface AddressData {
 
 interface Props {
   isDark: boolean;
+  isLoading?: boolean;
+  errorMessage?: string | null;
   onClose: () => void;
   onSave: (data: AddressData) => void;
 }
@@ -30,7 +32,7 @@ const inputCls = (isDark: boolean) =>
 const labelCls = (isDark: boolean) =>
   `block text-sm font-medium mb-2 ${isDark ? "text-white" : "text-[#1a140e]"}`;
 
-export default function AddAddressModal({ isDark, onClose, onSave }: Props) {
+export default function AddAddressModal({ isDark, isLoading = false, errorMessage = null, onClose, onSave }: Props) {
   const [label, setLabel] = useState("");
   const [type, setType] = useState<"home" | "office">("home");
   const [recipient, setRecipient] = useState("");
@@ -90,6 +92,8 @@ export default function AddAddressModal({ isDark, onClose, onSave }: Props) {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {errorMessage && <p className="text-sm text-red-500">{errorMessage}</p>}
+
           {/* Address type */}
           <div>
             <label className={labelCls(isDark)}>Jenis Alamat</label>
@@ -199,19 +203,21 @@ export default function AddAddressModal({ isDark, onClose, onSave }: Props) {
             <button
               type="button"
               onClick={onClose}
+              disabled={isLoading}
               className={`flex-1 py-3 rounded-xl border font-medium text-sm transition-all ${
                 isDark
                   ? "border-[#3e342b] text-[#b9a89d] hover:bg-[#2a221b]"
                   : "border-[#e5ddd5] text-[#8b7355] hover:bg-[#f5f0eb]"
-              }`}
+              } disabled:opacity-60 disabled:cursor-not-allowed`}
             >
               Batal
             </button>
             <button
               type="submit"
-              className="flex-1 py-3 rounded-xl bg-[#ec6d13] hover:bg-[#d65c0b] text-white font-bold text-sm transition-all"
+              disabled={isLoading}
+              className="flex-1 py-3 rounded-xl bg-[#ec6d13] hover:bg-[#d65c0b] text-white font-bold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Simpan Alamat
+              {isLoading ? "Menyimpan..." : "Simpan Alamat"}
             </button>
           </div>
         </form>

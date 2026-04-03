@@ -8,6 +8,8 @@ interface Props {
   initialName: string;
   initialEmail: string;
   initialPhone: string;
+  isLoading?: boolean;
+  errorMessage?: string | null;
   onClose: () => void;
   onSave: (data: { name: string; email: string; phone: string }) => void;
 }
@@ -27,6 +29,8 @@ export default function EditProfileModal({
   initialName,
   initialEmail,
   initialPhone,
+  isLoading = false,
+  errorMessage = null,
   onClose,
   onSave,
 }: Props) {
@@ -89,6 +93,8 @@ export default function EditProfileModal({
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {errorMessage && <p className="text-sm text-red-500">{errorMessage}</p>}
+
           <div>
             <label className={labelCls(isDark)}>
               <span className="flex items-center gap-1.5">
@@ -140,19 +146,21 @@ export default function EditProfileModal({
             <button
               type="button"
               onClick={onClose}
+              disabled={isLoading}
               className={`flex-1 py-3 rounded-xl border font-medium text-sm transition-all ${
                 isDark
                   ? "border-[#3e342b] text-[#b9a89d] hover:bg-[#2a221b]"
                   : "border-[#e5ddd5] text-[#8b7355] hover:bg-[#f5f0eb]"
-              }`}
+              } disabled:opacity-60 disabled:cursor-not-allowed`}
             >
               Batal
             </button>
             <button
               type="submit"
-              className="flex-1 py-3 rounded-xl bg-[#ec6d13] hover:bg-[#d65c0b] text-white font-bold text-sm transition-all"
+              disabled={isLoading}
+              className="flex-1 py-3 rounded-xl bg-[#ec6d13] hover:bg-[#d65c0b] text-white font-bold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Simpan Perubahan
+              {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
             </button>
           </div>
         </form>

@@ -2,22 +2,54 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Search, Menu, User, Moon, Sun, LogOut } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useSidebar } from "./sidebar";
 import { useTheme } from "@/context/ThemeContext";
+import { useUser } from "@/lib/hooks/useUser";
 
 export default function Header() {
   const { setIsOpen } = useSidebar();
   const { theme, toggleTheme } = useTheme();
+  const { user } = useUser();
+  const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isDark = theme === "dark";
 
   // Search bar hanya muncul di halaman dashboard (shop)
   const showSearch = pathname === "/user/dashboard";
+
+  useEffect(() => {
+    if (!showSearch) return;
+    setSearchValue(searchParams.get("search") || "");
+  }, [searchParams, showSearch]);
+
+  useEffect(() => {
+    if (!showSearch) return;
+
+    const timeout = window.setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      if (searchValue.trim() === "") {
+        params.delete("search");
+      } else {
+        params.set("search", searchValue.trim());
+      }
+
+      const query = params.toString();
+      const currentQuery = searchParams.toString();
+      if (query !== currentQuery) {
+        router.replace(query ? `${pathname}?${query}` : pathname);
+      }
+    }, 300);
+
+    return () => window.clearTimeout(timeout);
+  }, [pathname, router, searchParams, searchValue, showSearch]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -41,7 +73,7 @@ export default function Header() {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setIsOpen(true)}
-          className={`lg:hidden p-2 rounded-lg border transition-all flex-shrink-0 ${isDark
+          className={`lg:hidden p-2 rounded-lg border transition-all shrink-0 ${isDark
               ? "bg-[#231910] border-[#3e342b] text-white hover:bg-[#2a221b]"
               : "bg-[#f5f0eb] border-[#e5ddd5] text-[#1a140e] hover:bg-[#ebe3db]"
             }`}
@@ -57,6 +89,8 @@ export default function Header() {
               <Search className={isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"} size={16} />
             </div>
             <input
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
               className={`w-full border text-xs rounded-lg focus:outline-none block pl-9 p-2.5 transition-colors ${isDark
                   ? "bg-[#120d0a] border-[#3e342b] text-white focus:border-[#ec6d13] placeholder-[#9a6c4c]"
                   : "bg-[#f5f0eb] border-[#e5ddd5] text-[#1a140e] focus:border-[#ec6d13] placeholder-[#8b7355]"
@@ -73,13 +107,13 @@ export default function Header() {
         {/* Avatar Button */}
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
-          className={`h-9 w-9 rounded-full border-2 overflow-hidden flex-shrink-0 transition-all duration-200 flex items-center justify-center ${isDark
+          className={`h-9 w-9 rounded-full border-2 overflow-hidden shrink-0 transition-all duration-200 flex items-center justify-center ${isDark
               ? "bg-[#2c241b] border-[#3e342b] hover:border-[#ec6d13]"
               : "bg-[#f5f0eb] border-[#e5ddd5] hover:border-[#ec6d13]"
             }`}
         >
           <div className="w-full h-full bg-[#ec6d13] flex items-center justify-center text-white font-bold text-sm">
-            A
+            {(user?.name?.charAt(0) || "A").toUpperCase()}
           </div>
         </button>
 
@@ -92,10 +126,10 @@ export default function Header() {
             {/* User Info */}
             <div className={`px-4 py-3 border-b ${isDark ? "border-[#3e342b]" : "border-[#e5ddd5]"}`}>
               <p className={`font-semibold text-sm ${isDark ? "text-white" : "text-[#1a140e]"}`}>
-                Alex Morgan
+                {user?.name || "Guest"}
               </p>
               <p className={`text-xs truncate ${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"}`}>
-                alex@example.com
+                {user?.email || "-"}
               </p>
             </div>
 

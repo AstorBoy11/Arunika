@@ -1,31 +1,25 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-/**
- * Global is used here to maintain a cached connection across hot reloads
- * in development. This prevents connections growing exponentially
- * during API Route usage.
- */
-interface MongooseCache {
-  conn: typeof mongoose | null;
-  promise: Promise<typeof mongoose> | null;
-}
-
+// Global declaration caching untuk Next.js Development Environment Hot Reloading (HMR)
+// Hal ini mencegah Next.js memakan semua connection slots MongoDB saat compiler merender ulang komponen.
 declare global {
   // eslint-disable-next-line no-var
-  var mongoose: MongooseCache;
+  var mongooseConnection: {
+    conn: typeof mongoose | null;
+    promise: Promise<typeof mongoose> | null;
+  };
 }
 
-let cached = global.mongoose;
+let cached = global.mongooseConnection;
 
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+  cached = global.mongooseConnection = { conn: null, promise: null };
 }
 
-async function dbConnect() {
+async function connectDB() {
+  const MONGODB_URI = process.env.MONGODB_URI!;
   if (!MONGODB_URI) {
-    throw new Error("Please define the MONGODB_URI environment variable inside .env");
+    throw new Error("Tolong masukkan MONGODB_URI di dalam file .env (Periksa .env.example sebagai referensi).");
   }
 
   if (cached.conn) {
@@ -37,14 +31,17 @@ async function dbConnect() {
       bufferCommands: false,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
-      return mongoose;
+    console.log("⏳ Menghubungkan ke MongoDB Atlas...");
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
+      console.log("✅ Berhasil terhubung ke MongoDB Atlas!");
+      return mongooseInstance;
     });
   }
 
   try {
     cached.conn = await cached.promise;
   } catch (e) {
+    console.error("❌ Gagal terhubung ke MongoDB:", e);
     cached.promise = null;
     throw e;
   }
@@ -52,4 +49,4 @@ async function dbConnect() {
   return cached.conn;
 }
 
-export default dbConnect;
+export default connectDB;

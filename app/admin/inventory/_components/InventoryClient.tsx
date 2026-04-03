@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   Plus,
@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import type { IProduct } from "@/lib/models";
 
 // Type-only imports give the TS language server an explicit module→type link,
 // which fixes "Cannot find module" false positives when using next/dynamic.
@@ -28,19 +29,31 @@ const ModalDeleteProduct = dynamic(() => import("@/app/admin/inventory/_componen
 // ─── Shared types & constants (exported for use in modal files) ──────────────
 
 export type Product = {
-  id: number;
+  _id: string;
   name: string;
   category: string;
+  price: number;
   stock: number;
+  shortDescription: string;
+  longDescription: string;
+  badge?: string;
+  rating?: number;
+  image: string;
+  roast?: string;
 };
 
-export const CATEGORIES = [
-  "Coffee Beans",
-  "Dairy Alternative",
-  "Syrups",
-  "Paper Goods",
-  "Equipment",
-];
+type InventoryProduct = Pick<
+  IProduct,
+  "name" | "category" | "price" | "stock" | "shortDescription" | "longDescription" | "badge" | "rating" | "image" | "roast"
+> & {
+  _id: string;
+};
+
+type ProductsApiResponse = {
+  success: boolean;
+  data: InventoryProduct[];
+  message?: string;
+};
 
 // Thumbnail colour per category
 const CATEGORY_COLORS: Record<string, string> = {
@@ -50,14 +63,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Paper Goods": "bg-slate-500/10 text-slate-600 dark:text-slate-400",
   Equipment: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
 };
-
-const initialProducts: Product[] = [
-  { id: 1, name: "Ethiopian Yirgacheffe", category: "Coffee Beans",      stock: 42  },
-  { id: 2, name: "Oatly Barista Edition", category: "Dairy Alternative", stock: 12  },
-  { id: 3, name: "Paper Cups (12oz)",     category: "Paper Goods",       stock: 300 },
-  { id: 4, name: "Vanilla Syrup",         category: "Syrups",            stock: 18  },
-  { id: 5, name: "Espresso Blend",        category: "Coffee Beans",      stock: 8   },
-];
 
 function getStockStatus(stock: number) {
   if (stock === 0)
@@ -76,12 +81,49 @@ function getStockStatus(stock: number) {
 // ─── Main component ────────────────────────────────────────────────────────────
 
 export default function InventoryClient() {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpenAdd, setIsOpenAdd] = useState(false);
   const [isOpenEdit, setIsOpenEdit] = useState(false);
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const categories = useMemo(
+    () => Array.from(new Set(products.map((product) => product.category))),
+    [products]
+  );
+
+  const fetchProducts = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await fetch("/api/products", { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("Gagal memuat data inventory");
+      }
+
+      const json = (await response.json()) as ProductsApiResponse;
+      if (!json.success) {
+        throw new Error(json.message || "Gagal memuat data inventory");
+      }
+
+      setProducts(json.data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Gagal memuat data inventory";
+      setError(message);
+      setProducts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void fetchProducts();
+  }, []);
 
   const filtered = products.filter(
     (p) =>
@@ -89,21 +131,79 @@ export default function InventoryClient() {
       p.category.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleAdd = (data: Omit<Product, "id">) => {
-    setProducts((prev) => [...prev, { ...data, id: Date.now() }]);
-    setIsOpenAdd(false);
+  const handleAdd = async (data: Omit<Product, "_id">) => {
+    try {
+      setIsSubmitting(true);
+      const response = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error("Gagal menambahkan produk");
+      }
+
+      setIsOpenAdd(false);
+      await fetchProducts();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Gagal menambahkan produk";
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleEdit = (data: Product) => {
-    setProducts((prev) => prev.map((p) => (p.id === data.id ? data : p)));
-    setIsOpenEdit(false);
+  const handleEdit = async (data: Product) => {
+    try {
+      setIsSubmitting(true);
+      const response = await fetch(`/api/products/${data._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.name,
+          category: data.category,
+          stock: data.stock,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Gagal memperbarui produk");
+      }
+
+      setIsOpenEdit(false);
+      setSelectedProduct(null);
+      await fetchProducts();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Gagal memperbarui produk";
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!selectedProduct) return;
-    setProducts((prev) => prev.filter((p) => p.id !== selectedProduct.id));
-    setIsOpenDelete(false);
-    setSelectedProduct(null);
+
+    try {
+      setIsSubmitting(true);
+      const response = await fetch(`/api/products/${selectedProduct._id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Gagal menghapus produk");
+      }
+
+      setIsOpenDelete(false);
+      setSelectedProduct(null);
+      await fetchProducts();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Gagal menghapus produk";
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const lowStockCount = products.filter((p) => p.stock > 0 && p.stock < 15).length;
@@ -137,6 +237,10 @@ export default function InventoryClient() {
         ))}
       </div>
 
+      {error && (
+        <div className="mb-4 text-sm text-red-500">{error}</div>
+      )}
+
       {/* ── Table Card ─────────────────────────────────────────────────────── */}
       <div className="bg-white dark:bg-[#1a140e] rounded-xl border border-gray-200 dark:border-[#3e342b] overflow-hidden shadow-sm dark:shadow-black/40 flex flex-col">
 
@@ -153,11 +257,12 @@ export default function InventoryClient() {
             />
           </div>
           <button
+            disabled={isSubmitting}
             onClick={() => setIsOpenAdd(true)}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#ec6d13] hover:bg-[#d65c0b] text-white px-5 py-2.5 rounded-lg font-bold shadow-lg shadow-[#ec6d13]/20 transition-all active:scale-95"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#ec6d13] hover:bg-[#d65c0b] text-white px-5 py-2.5 rounded-lg font-bold shadow-lg shadow-[#ec6d13]/20 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <Plus size={20} />
-            <span>Tambah Produk</span>
+            <span>{isSubmitting ? "Memproses..." : "Tambah Produk"}</span>
           </button>
         </div>
 
@@ -174,7 +279,13 @@ export default function InventoryClient() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-[#3e342b]">
-              {filtered.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="py-16 text-center">
+                    <p className="text-sm text-gray-400 dark:text-[#8e7f72]">Memuat data inventory...</p>
+                  </td>
+                </tr>
+              ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-16 text-center">
                     <Package size={32} className="mx-auto mb-3 text-gray-300 dark:text-[#4a3f35]" />
@@ -187,7 +298,7 @@ export default function InventoryClient() {
                   const thumbColor = CATEGORY_COLORS[product.category] ?? "bg-gray-100 text-gray-500";
                   return (
                     <tr
-                      key={product.id}
+                      key={product._id}
                       className="bg-white dark:bg-[#1a140e] hover:bg-gray-50 dark:hover:bg-[#2a221c] transition-colors"
                     >
                       {/* Produk */}
@@ -224,15 +335,17 @@ export default function InventoryClient() {
                       <td className="py-4 px-6">
                         <div className="flex items-center justify-center gap-1">
                           <button
+                            disabled={isSubmitting}
                             onClick={() => { setSelectedProduct(product); setIsOpenEdit(true); }}
-                            className="p-2 rounded-lg text-gray-500 dark:text-[#8e7f72] hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                            className="p-2 rounded-lg text-gray-500 dark:text-[#8e7f72] hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Edit produk"
                           >
                             <Pencil size={15} />
                           </button>
                           <button
+                            disabled={isSubmitting}
                             onClick={() => { setSelectedProduct(product); setIsOpenDelete(true); }}
-                            className="p-2 rounded-lg text-gray-500 dark:text-[#8e7f72] hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                            className="p-2 rounded-lg text-gray-500 dark:text-[#8e7f72] hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Hapus produk"
                           >
                             <Trash2 size={15} />
@@ -273,7 +386,8 @@ export default function InventoryClient() {
       {/* ── Modals ─────────────────────────────────────────────────────────── */}
       {isOpenAdd && (
         <ModalAddProduct
-          categories={CATEGORIES}
+          categories={categories}
+          isSubmitting={isSubmitting}
           onClose={() => setIsOpenAdd(false)}
           onSubmit={handleAdd}
         />
@@ -281,7 +395,8 @@ export default function InventoryClient() {
       {isOpenEdit && selectedProduct && (
         <ModalEditProduct
           product={selectedProduct}
-          categories={CATEGORIES}
+          categories={categories}
+          isSubmitting={isSubmitting}
           onClose={() => setIsOpenEdit(false)}
           onSubmit={handleEdit}
         />
@@ -289,6 +404,7 @@ export default function InventoryClient() {
       {isOpenDelete && selectedProduct && (
         <ModalDeleteProduct
           product={selectedProduct}
+          isSubmitting={isSubmitting}
           onClose={() => { setIsOpenDelete(false); setSelectedProduct(null); }}
           onConfirm={handleDelete}
         />
