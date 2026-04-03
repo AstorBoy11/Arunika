@@ -6,11 +6,13 @@ type Category = { id: number; name: string; description: string };
 
 interface Props {
   category: Category;
+  affectedCount: number;
+  isLoading?: boolean;
   onClose: () => void;
   onConfirm: () => void;
 }
 
-export default function ModalDeleteCategory({ category, onClose, onConfirm }: Props) {
+export default function ModalDeleteCategory({ category, affectedCount, isLoading = false, onClose, onConfirm }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
@@ -29,7 +31,7 @@ export default function ModalDeleteCategory({ category, onClose, onConfirm }: Pr
             <div>
               <p className="text-sm font-semibold text-red-700 dark:text-red-400">Tindakan ini tidak dapat dibatalkan</p>
               <p className="text-xs text-red-600/70 dark:text-red-400/70 mt-1 leading-relaxed">
-                Kategori <strong>&ldquo;{category.name}&rdquo;</strong> akan dihapus permanen dari sistem.
+                Kategori <strong>&ldquo;{category.name}&rdquo;</strong> akan dihapus permanen dari sistem. {affectedCount} produk akan dipindahkan ke kategori Uncategorized.
               </p>
             </div>
           </div>
@@ -50,8 +52,8 @@ export default function ModalDeleteCategory({ category, onClose, onConfirm }: Pr
             <button onClick={onClose} className="flex-1 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] text-sm font-medium hover:bg-gray-50 dark:hover:bg-[#231910] transition-colors">
               Batal
             </button>
-            <button onClick={onConfirm} className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-bold shadow-md shadow-red-500/20 transition-all active:scale-95">
-              Hapus
+            <button onClick={onConfirm} disabled={isLoading} className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-bold shadow-md shadow-red-500/20 transition-all active:scale-95 disabled:opacity-60">
+              {isLoading ? "Menghapus..." : "Hapus"}
             </button>
           </div>
         </div>

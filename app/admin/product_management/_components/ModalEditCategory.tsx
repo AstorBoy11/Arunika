@@ -7,6 +7,8 @@ type Category = { id: number; name: string; description: string };
 
 interface Props {
   category: Category;
+  affectedCount: number;
+  isLoading?: boolean;
   onClose: () => void;
   onSubmit: (data: Category) => void;
 }
@@ -15,7 +17,7 @@ const inputClass =
   "w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all placeholder-gray-400 dark:placeholder-[#8e7f72]";
 const labelClass = "text-xs font-medium text-gray-500 dark:text-[#8e7f72] uppercase tracking-wider";
 
-export default function ModalEditCategory({ category, onClose, onSubmit }: Props) {
+export default function ModalEditCategory({ category, affectedCount, isLoading = false, onClose, onSubmit }: Props) {
   const [name, setName]               = useState(category.name);
   const [description, setDescription] = useState(category.description);
 
@@ -37,6 +39,9 @@ export default function ModalEditCategory({ category, onClose, onSubmit }: Props
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <p className="text-xs text-gray-500 dark:text-[#8e7f72]">
+            Kategori ini digunakan oleh {affectedCount} produk.
+          </p>
           <div className="space-y-1.5">
             <label className={labelClass}>Nama Kategori</label>
             <input className={inputClass} placeholder="cth: Coffee Based" value={name} onChange={(e) => setName(e.target.value)} required />
@@ -49,8 +54,8 @@ export default function ModalEditCategory({ category, onClose, onSubmit }: Props
             <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] text-sm font-medium hover:bg-gray-50 dark:hover:bg-[#231910] transition-colors">
               Batal
             </button>
-            <button type="submit" className="flex-1 px-4 py-2.5 rounded-lg bg-[#ec6d13] hover:bg-[#d65c0b] text-white text-sm font-bold shadow-md shadow-[#ec6d13]/20 transition-all active:scale-95">
-              Simpan Perubahan
+            <button type="submit" disabled={isLoading} className="flex-1 px-4 py-2.5 rounded-lg bg-[#ec6d13] hover:bg-[#d65c0b] text-white text-sm font-bold shadow-md shadow-[#ec6d13]/20 transition-all active:scale-95 disabled:opacity-60">
+              {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
             </button>
           </div>
         </form>
