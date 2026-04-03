@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X, Eye, EyeOff, Home, Building2, Trash2 } from "lucide-react";
 
 interface Address {
@@ -18,6 +18,8 @@ interface Address {
 
 interface Props {
   isDark: boolean;
+  isLoading: boolean;
+  message: string | null;
   // Which modals are open
   showPassword: boolean;
   showAddress: boolean;
@@ -36,6 +38,29 @@ interface Props {
   // Action callbacks
   onSetSelectedAddress: (addr: Address) => void;
   onConfirmDeleteAddress: () => void;
+  onSaveAddress: (data: {
+    label: string;
+    type: "home" | "office";
+    recipient: string;
+    phone: string;
+    street: string;
+    city: string;
+    postalCode: string;
+    isDefault: boolean;
+  }) => void;
+  onSaveEditAddress: (
+    id: number,
+    data: {
+      label: string;
+      type: "home" | "office";
+      recipient: string;
+      phone: string;
+      street: string;
+      city: string;
+      postalCode: string;
+      isDefault: boolean;
+    }
+  ) => void;
 }
 
 const inputCls = (isDark: boolean) =>
@@ -55,6 +80,8 @@ const closeBtnCls = (isDark: boolean) =>
 
 export default function SettingsModals({
   isDark,
+  isLoading,
+  message,
   showPassword,
   showAddress,
   showEdit,
@@ -69,11 +96,43 @@ export default function SettingsModals({
   onCloseDeleteAccount,
   onSetSelectedAddress,
   onConfirmDeleteAddress,
+  onSaveAddress,
+  onSaveEditAddress,
 }: Props) {
   // Password visibility — local to this component
   const [showCurrentPass, setShowCurrentPass] = useState(false);
   const [showNewPass, setShowNewPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
+
+  const [addLabel, setAddLabel] = useState("");
+  const [addType, setAddType] = useState<"home" | "office">("home");
+  const [addRecipient, setAddRecipient] = useState("");
+  const [addPhone, setAddPhone] = useState("");
+  const [addStreet, setAddStreet] = useState("");
+  const [addCity, setAddCity] = useState("");
+  const [addPostalCode, setAddPostalCode] = useState("");
+  const [addIsDefault, setAddIsDefault] = useState(false);
+
+  const [editLabel, setEditLabel] = useState("");
+  const [editType, setEditType] = useState<"home" | "office">("home");
+  const [editRecipient, setEditRecipient] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editStreet, setEditStreet] = useState("");
+  const [editCity, setEditCity] = useState("");
+  const [editPostalCode, setEditPostalCode] = useState("");
+  const [editIsDefault, setEditIsDefault] = useState(false);
+
+  useEffect(() => {
+    if (!showEdit || !selectedAddress) return;
+    setEditLabel(selectedAddress.label);
+    setEditType(selectedAddress.type);
+    setEditRecipient(selectedAddress.name);
+    setEditPhone(selectedAddress.phone);
+    setEditStreet(selectedAddress.street);
+    setEditCity(selectedAddress.city);
+    setEditPostalCode(selectedAddress.postalCode);
+    setEditIsDefault(selectedAddress.isDefault);
+  }, [selectedAddress, showEdit]);
 
   return (
     <>
@@ -173,18 +232,48 @@ export default function SettingsModals({
               </p>
             </div>
 
+            {message && <p className="text-sm text-red-500 mb-4">{message}</p>}
+
             <form
               className="flex flex-col gap-4"
-              onSubmit={(e) => { e.preventDefault(); onCloseAddress(); }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                onSaveAddress({
+                  label: addLabel || "Alamat Baru",
+                  type: addType,
+                  recipient: addRecipient,
+                  phone: addPhone,
+                  street: addStreet,
+                  city: addCity,
+                  postalCode: addPostalCode,
+                  isDefault: addIsDefault,
+                });
+              }}
             >
               {[
-                { label: "Label Alamat", type: "text", placeholder: "Contoh: Rumah, Apartemen" },
-                { label: "Nama Penerima", type: "text", placeholder: "Nama lengkap penerima" },
-                { label: "Nomor Telepon", type: "tel", placeholder: "08xx-xxxx-xxxx" },
+                { label: "Label Alamat", type: "text", placeholder: "Contoh: Rumah, Apartemen", value: addLabel, onChange: setAddLabel },
+                { label: "Nama Penerima", type: "text", placeholder: "Nama lengkap penerima", value: addRecipient, onChange: setAddRecipient },
+                { label: "Nomor Telepon", type: "tel", placeholder: "08xx-xxxx-xxxx", value: addPhone, onChange: setAddPhone },
               ].map(({ label, type, placeholder }) => (
                 <div key={label}>
                   <label className={labelCls(isDark)}>{label}</label>
-                  <input type={type} placeholder={placeholder} className={inputCls(isDark)} />
+                  <input
+                    type={type}
+                    value={
+                      label === "Label Alamat"
+                        ? addLabel
+                        : label === "Nama Penerima"
+                        ? addRecipient
+                        : addPhone
+                    }
+                    onChange={(event) => {
+                      if (label === "Label Alamat") setAddLabel(event.target.value);
+                      if (label === "Nama Penerima") setAddRecipient(event.target.value);
+                      if (label === "Nomor Telepon") setAddPhone(event.target.value);
+                    }}
+                    placeholder={placeholder}
+                    className={inputCls(isDark)}
+                  />
                 </div>
               ))}
 
@@ -192,6 +281,8 @@ export default function SettingsModals({
                 <label className={labelCls(isDark)}>Alamat Lengkap</label>
                 <textarea
                   rows={3}
+                  value={addStreet}
+                  onChange={(event) => setAddStreet(event.target.value)}
                   placeholder="Jalan, nomor rumah, RT/RW, kelurahan, kecamatan"
                   className={`${inputCls(isDark)} resize-none`}
                 />
@@ -200,16 +291,33 @@ export default function SettingsModals({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className={labelCls(isDark)}>Kota</label>
-                  <input type="text" placeholder="Nama kota" className={inputCls(isDark)} />
+                  <input
+                    type="text"
+                    value={addCity}
+                    onChange={(event) => setAddCity(event.target.value)}
+                    placeholder="Nama kota"
+                    className={inputCls(isDark)}
+                  />
                 </div>
                 <div>
                   <label className={labelCls(isDark)}>Kode Pos</label>
-                  <input type="text" placeholder="00000" className={inputCls(isDark)} />
+                  <input
+                    type="text"
+                    value={addPostalCode}
+                    onChange={(event) => setAddPostalCode(event.target.value)}
+                    placeholder="00000"
+                    className={inputCls(isDark)}
+                  />
                 </div>
               </div>
 
               <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" className="w-5 h-5 rounded border-2 text-[#ec6d13] focus:ring-[#ec6d13]" />
+                <input
+                  type="checkbox"
+                  checked={addIsDefault}
+                  onChange={(event) => setAddIsDefault(event.target.checked)}
+                  className="w-5 h-5 rounded border-2 text-[#ec6d13] focus:ring-[#ec6d13]"
+                />
                 <span className={`text-sm ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
                   Jadikan sebagai alamat utama
                 </span>
@@ -218,6 +326,7 @@ export default function SettingsModals({
               <div className="flex gap-3 mt-4">
                 <button
                   type="button"
+                  disabled={isLoading}
                   onClick={onCloseAddress}
                   className={`flex-1 py-3 rounded-xl border font-medium text-sm transition-all ${
                     isDark
@@ -229,9 +338,10 @@ export default function SettingsModals({
                 </button>
                 <button
                   type="submit"
+                  disabled={isLoading}
                   className="flex-1 py-3 rounded-xl bg-[#ec6d13] hover:bg-[#d65c0b] text-white font-bold text-sm transition-all"
                 >
-                  Simpan Alamat
+                  {isLoading ? "Menyimpan..." : "Simpan Alamat"}
                 </button>
               </div>
             </form>
@@ -262,9 +372,23 @@ export default function SettingsModals({
               </p>
             </div>
 
+            {message && <p className="text-sm text-red-500 mb-4">{message}</p>}
+
             <form
               className="flex flex-col gap-4"
-              onSubmit={(e) => { e.preventDefault(); onCloseEdit(); }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                onSaveEditAddress(selectedAddress.id, {
+                  label: editLabel,
+                  type: editType,
+                  recipient: editRecipient,
+                  phone: editPhone,
+                  street: editStreet,
+                  city: editCity,
+                  postalCode: editPostalCode,
+                  isDefault: editIsDefault,
+                });
+              }}
             >
               {/* Address type */}
               <div>
@@ -272,9 +396,12 @@ export default function SettingsModals({
                 <div className="flex gap-3">
                   <button
                     type="button"
-                    onClick={() => onSetSelectedAddress({ ...selectedAddress, type: "home" })}
+                    onClick={() => {
+                      onSetSelectedAddress({ ...selectedAddress, type: "home" });
+                      setEditType("home");
+                    }}
                     className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-medium transition-all ${
-                      selectedAddress.type === "home"
+                      editType === "home"
                         ? "bg-[#ec6d13]/10 border-[#ec6d13] text-[#ec6d13]"
                         : isDark
                         ? "border-[#3e342b] text-[#b9a89d] hover:border-[#ec6d13]"
@@ -285,9 +412,12 @@ export default function SettingsModals({
                   </button>
                   <button
                     type="button"
-                    onClick={() => onSetSelectedAddress({ ...selectedAddress, type: "office" })}
+                    onClick={() => {
+                      onSetSelectedAddress({ ...selectedAddress, type: "office" });
+                      setEditType("office");
+                    }}
                     className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-medium transition-all ${
-                      selectedAddress.type === "office"
+                      editType === "office"
                         ? "bg-[#ec6d13]/10 border-[#ec6d13] text-[#ec6d13]"
                         : isDark
                         ? "border-[#3e342b] text-[#b9a89d] hover:border-[#ec6d13]"
@@ -300,13 +430,28 @@ export default function SettingsModals({
               </div>
 
               {[
-                { label: "Label Alamat",    defaultValue: selectedAddress.label,      type: "text" },
-                { label: "Nama Penerima",   defaultValue: selectedAddress.name,       type: "text" },
-                { label: "Nomor Telepon",   defaultValue: selectedAddress.phone,      type: "tel"  },
-              ].map(({ label, defaultValue, type }) => (
+                { label: "Label Alamat", type: "text" },
+                { label: "Nama Penerima", type: "text" },
+                { label: "Nomor Telepon", type: "tel"  },
+              ].map(({ label, type }) => (
                 <div key={label}>
                   <label className={labelCls(isDark)}>{label}</label>
-                  <input type={type} defaultValue={defaultValue} className={inputCls(isDark)} />
+                  <input
+                    type={type}
+                    value={
+                      label === "Label Alamat"
+                        ? editLabel
+                        : label === "Nama Penerima"
+                        ? editRecipient
+                        : editPhone
+                    }
+                    onChange={(event) => {
+                      if (label === "Label Alamat") setEditLabel(event.target.value);
+                      if (label === "Nama Penerima") setEditRecipient(event.target.value);
+                      if (label === "Nomor Telepon") setEditPhone(event.target.value);
+                    }}
+                    className={inputCls(isDark)}
+                  />
                 </div>
               ))}
 
@@ -314,7 +459,8 @@ export default function SettingsModals({
                 <label className={labelCls(isDark)}>Alamat Lengkap</label>
                 <textarea
                   rows={3}
-                  defaultValue={selectedAddress.street}
+                  value={editStreet}
+                  onChange={(event) => setEditStreet(event.target.value)}
                   className={`${inputCls(isDark)} resize-none`}
                 />
               </div>
@@ -322,18 +468,29 @@ export default function SettingsModals({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className={labelCls(isDark)}>Kota</label>
-                  <input type="text" defaultValue={selectedAddress.city} className={inputCls(isDark)} />
+                  <input
+                    type="text"
+                    value={editCity}
+                    onChange={(event) => setEditCity(event.target.value)}
+                    className={inputCls(isDark)}
+                  />
                 </div>
                 <div>
                   <label className={labelCls(isDark)}>Kode Pos</label>
-                  <input type="text" defaultValue={selectedAddress.postalCode} className={inputCls(isDark)} />
+                  <input
+                    type="text"
+                    value={editPostalCode}
+                    onChange={(event) => setEditPostalCode(event.target.value)}
+                    className={inputCls(isDark)}
+                  />
                 </div>
               </div>
 
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
-                  defaultChecked={selectedAddress.isDefault}
+                  checked={editIsDefault}
+                  onChange={(event) => setEditIsDefault(event.target.checked)}
                   className="w-5 h-5 rounded border-2 text-[#ec6d13] focus:ring-[#ec6d13]"
                 />
                 <span className={`text-sm ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
@@ -344,6 +501,7 @@ export default function SettingsModals({
               <div className="flex gap-3 mt-4">
                 <button
                   type="button"
+                  disabled={isLoading}
                   onClick={onCloseEdit}
                   className={`flex-1 py-3 rounded-xl border font-medium text-sm transition-all ${
                     isDark
@@ -355,9 +513,10 @@ export default function SettingsModals({
                 </button>
                 <button
                   type="submit"
+                  disabled={isLoading}
                   className="flex-1 py-3 rounded-xl bg-[#ec6d13] hover:bg-[#d65c0b] text-white font-bold text-sm transition-all"
                 >
-                  Simpan Perubahan
+                  {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
                 </button>
               </div>
             </form>
@@ -392,6 +551,7 @@ export default function SettingsModals({
             </div>
             <div className="flex gap-3">
               <button
+                disabled={isLoading}
                 onClick={onCloseDeleteConfirm}
                 className={`flex-1 py-3 rounded-xl border font-medium text-sm transition-all ${
                   isDark
@@ -402,6 +562,7 @@ export default function SettingsModals({
                 Batal
               </button>
               <button
+                disabled={isLoading}
                 onClick={onConfirmDeleteAddress}
                 className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm transition-all"
               >
@@ -464,6 +625,7 @@ export default function SettingsModals({
 
             <div className="flex gap-3">
               <button
+                disabled={isLoading}
                 onClick={onCloseDeleteAccount}
                 className={`flex-1 py-3 rounded-xl border font-medium text-sm transition-all ${
                   isDark
@@ -474,6 +636,7 @@ export default function SettingsModals({
                 Batal, Kembali
               </button>
               <button
+                disabled={isLoading}
                 onClick={() => {
                   onCloseDeleteAccount();
                   // TODO: panggil API delete account di sini
