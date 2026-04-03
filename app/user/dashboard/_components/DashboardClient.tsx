@@ -2,9 +2,11 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Heart, ShoppingCart, ChevronDown, Star } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useTheme } from "@/context/ThemeContext";
+import type { IProduct } from "@/lib/models";
 import type { Product } from "./ProductQuickViewModal";
 
 // ─── Lazy-load modal: its JS is only downloaded when the user first clicks a product ───
@@ -13,75 +15,33 @@ const ProductQuickViewModal = dynamic(
   { ssr: false }
 );
 
-// ─── Product data (static – defined outside component so it's not recreated) ───
-const products: Product[] = [
-  {
-    id: 1,
-    name: "Ethiopian Yirgacheffe",
-    priceNum: 280000,
-    desc: "Floral aroma with notes of jasmine and lemon. A bright, tea-like body.",
-    description:
-      "Sourced from the highlands of Yirgacheffe, this single-origin bean is celebrated for its delicate floral notes of jasmine and bergamot, complemented by bright lemon citrus. The cup is light-to-medium bodied with a clean, tea-like finish that lingers beautifully.",
-    badge: "Best Seller",
-    rating: 4.9,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuB06jAOy0e6VpbUp6hOlshceiORePg0Pvs54Ms1qza9ov8vm15VJSj1Eb1JC77MblwiNTKnzB2nPHoFeAxeU4MGM3NBLBP4BJ4p5wWGyqGo9VhyUJcfiLe3UPyu62xbnZ9gDf5Ix_8i4XZzJiO02V51N2DdLf8Lcz0fsub86I5w_CooD2yzLy7W74c0gRgMhXPmyYyVdk6RpoGm__Oobfw8F6ajbFBcleBXcQcupgr37UVMWcWnGKD-LTNbV06oSBM2fWSHaKEwlvEs",
-  },
-  {
-    id: 2,
-    name: "Sumatra Mandheling",
-    priceNum: 195000,
-    desc: "Full body with an intense, earthy aroma and herbal nuances. Low acidity.",
-    description:
-      "Grown at 1,500 m altitude in the volcanic soils of West Sumatra, Mandheling delivers a signature wet-hulled profile. Expect bold earthiness, dark chocolate undertones, and a syrupy body with remarkably low acidity — perfect for afternoon brewing.",
-    badge: null,
-    rating: 4.8,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAMFtMAcIKaVPvQYctBLheaTsf6inh5kusmEPv8dAtt5CAkGFWWo3JLMGqvsOnwsKqi028amHlsFfvdsDauUTrhZ4p9KHwImj23Z7D-WDj4SCW4iWt1Wr9Y5Jph1l-Zl1w9ADQaiC2qomr4HoWL21tPCxi1pECQY05QzaoGHraPUvMxPeGzCw9nIA5jlZmDT3WWLtVLtfDZd7rx7UZfDdyOoTFOdZU8CPjMVmrN7-uhc7Sb4fPLXQYgmJ3XVPIw9U61Dcm6pKtOeFUe",
-  },
-  {
-    id: 3,
-    name: "Colombia Supremo",
-    priceNum: 175000,
-    desc: "Smooth and sweet with notes of caramel and fruit. Perfectly balanced.",
-    description:
-      "Hand-picked from Colombia's premier coffee estates, this Supremo grade bean strikes a perfect balance between sweetness and complexity. Notes of brown sugar, red apple, and milk chocolate make it ideal for any brewing method from pour-over to French press.",
-    badge: "Baru",
-    rating: 4.7,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuD6Rtnqc0knxLE0r6zNwSbxxLmdh0ae94THdw8aYmdqKQHlmXJ92jN4e8Vvv43VKMHu22zHUS2K2ZayLP-iNNcbihw9FoQssku8mEx5G5C53iEWRK0DvM7Z__UYBi5gi57IQfSIZcq51AzlbLhXSOnGSWPMX-D63RhH6tFjUNPe5FMuFy-MoRKJeORdOS_kZ_vwFOBhkxgi1CsVfLoFRxFog7gF6LgsiDFT7-gnY98VwJ5DrXITR2F4rE7qMC_K48Ul714wdJLlFi7X",
-  },
-  {
-    id: 4,
-    name: "Espresso House Blend",
-    priceNum: 210000,
-    desc: "Our signature blend crafted for the perfect crema. Bold, rich, and syrupy.",
-    description:
-      "Our master blender's signature creation — a precise ratio of Brazilian Santos and Colombian Excelso, designed to pull a perfect espresso with a rich, hazelnut-hued crema. Equally exceptional as a lungo, flat white, or cold brew concentrate.",
-    badge: null,
-    rating: 4.6,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBDqGbCu-PjW8XJl7mlArgoi-f-vnEr1jU24YXaLBZy3GtN0Lpg58p-6XoCoqpy5_AGJSfQG9zMwACIs__tFEvH5DqvoOdJqpZh9TGgDYUVU7Ov0hzL4DFjymyw63rxvgXxfvW0W8yV6BlkRXmF7ehphhQ7ikj-ZRhDBaeOOeqoKncRZmcGf6fZFXo9cjZwnMjJIMuVONl1NXJEyg6Tch3KRqypH06M9t_xZMHsQrEUUt-XNBfLsduQ2W2yfM_itJUavmr_te7l5Kkk",
-  },
-  {
-    id: 5,
-    name: "Kenya AA",
-    priceNum: 320000,
-    desc: "Complex flavor profile with distinct blackcurrant notes and wine-like acidity.",
-    description:
-      "Kenya AA is the country's highest screen size grade, sourced from the fertile red soil of the Central Province. Bold and wine-like with a pronounced blackcurrant acidity, it finishes with a lingering, grape-like sweetness that coffee connoisseurs treasure.",
-    badge: null,
-    rating: 4.9,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCg8ODvWlvkdaCvcwj4ZDEyB-nN7KV-94P5awGyPN2gMvB3JGDpnsh0TO1gPLbdCx21TCitKds-hOq5hRVz6XQzCM-Etep_5yy1SY65yJxnRcoHD7ccQCe1XILPKbCA52qnIqTIsAwlyIarKkASw9peo8Gr9ZNXkbsOpedWJQ3nnUM7KBXojrR4JKeXrPqLb-wX7hQMaoT31wgpBKtZTdkIzCqvlpoJGmuERvsL--ezS3KvzkV2hwpVIIWUVErh1MssRTUs_xojG5Ct",
-  },
-  {
-    id: 6,
-    name: "Costa Rica Tarrazu",
-    priceNum: 240000,
-    desc: "Crisp and clean with hints of citrus and chocolate. High altitude grown.",
-    description:
-      "From the renowned Tarrazu valley — one of Costa Rica's most celebrated micro-regions — this bean is solar-dried and precisely light-roasted to highlight bright grapefruit zest, smooth milk chocolate, and a lingering honey-sweet finish.",
-    badge: null,
-    rating: 4.5,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDvGk1zhDtmMOqQ1x_HziqscnUUvGCn5mHFopvl78tlL12hsu3SzzsueoNdvOgF-eqL5RJG5woPgo4sXYgZtzAqAYKqKHicJF7QzwCDXoVAvz6hc3IuvOkdJ93PGBc7aRTxRT4Bk2FrnndhdIm3e8Y6bxlG8BAardAVERopssnsjru_0RbmwoIUEY4l1KFrTC4YBq721wzRMk5fWlvQIVKvFZ3rdRhneSC1r0AUiOXYy4wCWugITCovUwTCJlvFD2xDyYbqYWo5J84s",
-  },
-];
+type DashboardProduct = Pick<
+  IProduct,
+  "name" | "price" | "shortDescription" | "longDescription" | "badge" | "rating" | "image" | "roast" | "category"
+> & {
+  _id: string;
+};
+
+type ProductsApiResponse = {
+  success: boolean;
+  data: DashboardProduct[];
+  message?: string;
+};
+
+type CategoriesApiResponse = {
+  success: boolean;
+  data: string[];
+  message?: string;
+};
+
+type CartStorageItem = {
+  _id: string;
+  name: string;
+  price: number;
+  image: string;
+  roast: string;
+  quantity: number;
+};
 
 type SortOption = "default" | "price-asc" | "price-desc";
 
@@ -101,8 +61,20 @@ const formatRupiah = (n: number) =>
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function DashboardClient() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const selectedCategory = searchParams.get("category") || "all";
+  const searchKeyword = searchParams.get("search") || "";
+
+  const [products, setProducts] = useState<DashboardProduct[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [productsError, setProductsError] = useState<string | null>(null);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
 
   // ── Sort state ──
   const [sortOption, setSortOption] = useState<SortOption>("default");
@@ -117,6 +89,74 @@ export default function DashboardClient() {
     };
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setProductsLoading(true);
+        setProductsError(null);
+
+        const params = new URLSearchParams();
+        if (selectedCategory !== "all") {
+          params.set("category", selectedCategory);
+        }
+        if (searchKeyword.trim()) {
+          params.set("search", searchKeyword.trim());
+        }
+
+        const endpoint = params.toString() ? `/api/products?${params.toString()}` : "/api/products";
+        const response = await fetch(endpoint, { cache: "no-store" });
+
+        if (!response.ok) {
+          throw new Error("Gagal memuat produk");
+        }
+
+        const json = (await response.json()) as ProductsApiResponse;
+        if (!json.success) {
+          throw new Error(json.message || "Gagal memuat produk");
+        }
+
+        setProducts(json.data);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Gagal memuat produk";
+        setProductsError(message);
+        setProducts([]);
+      } finally {
+        setProductsLoading(false);
+      }
+    };
+
+    void fetchProducts();
+  }, [selectedCategory, searchKeyword]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setCategoriesLoading(true);
+        setCategoriesError(null);
+
+        const response = await fetch("/api/products/categories", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error("Gagal memuat kategori");
+        }
+
+        const json = (await response.json()) as CategoriesApiResponse;
+        if (!json.success) {
+          throw new Error(json.message || "Gagal memuat kategori");
+        }
+
+        setCategories(json.data);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Gagal memuat kategori";
+        setCategoriesError(message);
+        setCategories([]);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    void fetchCategories();
   }, []);
 
   // ── Quick View state ──
@@ -136,12 +176,84 @@ export default function DashboardClient() {
     };
   }, [selectedProduct]);
 
+  const upsertQueryParam = (key: "category" | "search", value: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (!value || value.trim() === "") {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname);
+  };
+
+  const handleCategoryChange = (category: string) => {
+    if (category === "all") {
+      upsertQueryParam("category", null);
+      return;
+    }
+
+    upsertQueryParam("category", category);
+  };
+
+  const toModalProduct = (product: DashboardProduct): Product => ({
+    _id: product._id,
+    name: product.name,
+    priceNum: product.price,
+    desc: product.shortDescription,
+    description: product.longDescription,
+    badge: product.badge || null,
+    rating: product.rating || 0,
+    image: product.image,
+    roast: product.roast || "",
+  });
+
+  const addToCart = (product: Product) => {
+    const stored = window.localStorage.getItem("arunika-cart");
+    let existingItems: CartStorageItem[] = [];
+
+    if (stored) {
+      try {
+        existingItems = JSON.parse(stored) as CartStorageItem[];
+      } catch {
+        existingItems = [];
+      }
+    }
+
+    const existingIndex = existingItems.findIndex((item) => item._id === product._id);
+    if (existingIndex >= 0) {
+      existingItems[existingIndex] = {
+        ...existingItems[existingIndex],
+        quantity: existingItems[existingIndex].quantity + 1,
+      };
+    } else {
+      existingItems.push({
+        _id: product._id,
+        name: product.name,
+        price: product.priceNum,
+        image: product.image,
+        roast: product.roast,
+        quantity: 1,
+      });
+    }
+
+    window.localStorage.setItem("arunika-cart", JSON.stringify(existingItems));
+  };
+
   const sortedProducts = useMemo(() => {
     const arr = [...products];
-    if (sortOption === "price-asc")  return arr.sort((a, b) => a.priceNum - b.priceNum);
-    if (sortOption === "price-desc") return arr.sort((a, b) => b.priceNum - a.priceNum);
+    if (sortOption === "price-asc")  return arr.sort((a, b) => a.price - b.price);
+    if (sortOption === "price-desc") return arr.sort((a, b) => b.price - a.price);
     return arr;
-  }, [sortOption]);
+  }, [products, sortOption]);
+
+  const sortedAndMappedProducts = useMemo(
+    () => sortedProducts.map((product) => toModalProduct(product)),
+    [sortedProducts]
+  );
+
+  const filterButtons = ["all", ...categories] as const;
 
   return (
     <>
@@ -149,18 +261,19 @@ export default function DashboardClient() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Filter Buttons */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-          {["Coffee Based", "Milk Based"].map((filter, index) => (
+          {filterButtons.map((filter) => (
             <button
               key={filter}
+              onClick={() => handleCategoryChange(filter)}
               className={`px-5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
-                index === 0
+                selectedCategory === filter
                   ? "bg-[#ec6d13] text-white shadow-lg shadow-[#ec6d13]/20"
                   : isDark
                   ? "bg-[#1a140e] border border-[#3e342b] text-[#b9a89d] hover:text-white hover:border-[#ec6d13]/50"
                   : "bg-white border border-[#e5ddd5] text-[#8b7355] hover:text-[#1a140e] hover:border-[#ec6d13]/50"
               }`}
             >
-              {filter}
+              {filter === "all" ? "Semua" : filter}
             </button>
           ))}
         </div>
@@ -220,9 +333,29 @@ export default function DashboardClient() {
 
       {/* --- PRODUCT GRID --- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {sortedProducts.map((product, index) => (
+        {(productsLoading || categoriesLoading) && (
+          <div className={`col-span-full text-sm ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
+            Memuat produk...
+          </div>
+        )}
+
+        {!productsLoading && productsError && (
+          <div className="col-span-full text-sm text-red-500">{productsError}</div>
+        )}
+
+        {!categoriesLoading && categoriesError && (
+          <div className="col-span-full text-sm text-red-500">{categoriesError}</div>
+        )}
+
+        {!productsLoading && !productsError && sortedAndMappedProducts.length === 0 && (
+          <div className={`col-span-full text-sm ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
+            Tidak ada produk ditemukan.
+          </div>
+        )}
+
+        {!productsLoading && !productsError && sortedAndMappedProducts.map((product, index) => (
           <div
-            key={product.id}
+            key={product._id}
             onClick={() => setSelectedProduct(product)}
             className={`group rounded-2xl p-3 border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col cursor-pointer ${
               isDark
@@ -298,7 +431,10 @@ export default function DashboardClient() {
 
               <div className="mt-auto">
                 <button
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    addToCart(product);
+                  }}
                   className={`w-full py-2.5 rounded-xl font-bold text-sm hover:bg-[#ec6d13] hover:text-white transition-colors flex items-center justify-center gap-2 group/btn ${
                     isDark ? "bg-white text-[#231910]" : "bg-[#1a140e] text-white"
                   }`}
@@ -317,6 +453,7 @@ export default function DashboardClient() {
         <ProductQuickViewModal
           product={selectedProduct}
           isDark={isDark}
+          onAddToCart={addToCart}
           onClose={() => setSelectedProduct(null)}
         />
       )}

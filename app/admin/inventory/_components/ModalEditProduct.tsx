@@ -7,8 +7,9 @@ import type { Product } from "./InventoryClient";
 interface Props {
   product: Product;
   categories: string[];
+  isSubmitting: boolean;
   onClose: () => void;
-  onSubmit: (data: Product) => void;
+  onSubmit: (data: Product) => void | Promise<void>;
 }
 
 const inputClass =
@@ -27,7 +28,7 @@ const PRODUCT_NAMES = [
 const labelClass =
   "text-xs font-medium text-gray-500 dark:text-[#8e7f72] uppercase tracking-wider";
 
-export default function ModalEditProduct({ product, categories, onClose, onSubmit }: Props) {
+export default function ModalEditProduct({ product, categories, isSubmitting, onClose, onSubmit }: Props) {
   const productNameOptions = PRODUCT_NAMES.includes(product.name)
     ? PRODUCT_NAMES
     : [product.name, ...PRODUCT_NAMES];
@@ -39,7 +40,7 @@ export default function ModalEditProduct({ product, categories, onClose, onSubmi
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
-      id: product.id,
+      ...product,
       name,
       category,
       stock: parseInt(stock) || 0,
@@ -98,9 +99,13 @@ export default function ModalEditProduct({ product, categories, onClose, onSubmi
               value={category}
               onChange={(e) => setCategory(e.target.value)}
             >
-              {categories.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
+              {categories.length === 0 ? (
+                <option value={category}>{category}</option>
+              ) : (
+                categories.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))
+              )}
             </select>
           </div>
 
@@ -122,15 +127,17 @@ export default function ModalEditProduct({ product, categories, onClose, onSubmi
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] text-sm font-medium hover:bg-gray-50 dark:hover:bg-[#231910] transition-colors"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] text-sm font-medium hover:bg-gray-50 dark:hover:bg-[#231910] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2.5 rounded-lg bg-[#ec6d13] hover:bg-[#d65c0b] text-white text-sm font-bold shadow-md shadow-[#ec6d13]/20 transition-all active:scale-95"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-2.5 rounded-lg bg-[#ec6d13] hover:bg-[#d65c0b] text-white text-sm font-bold shadow-md shadow-[#ec6d13]/20 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Simpan Perubahan
+              {isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
             </button>
           </div>
         </form>

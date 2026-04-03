@@ -23,45 +23,35 @@ import {
   X,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+import type { IProduct } from "@/lib/models";
 
 const workSans = Work_Sans({
   subsets: ["latin"],
   variable: "--font-work-sans",
 });
 
-const bestSellers = [
-  {
-    id: 1,
-    name: "Ethiopian Yirgacheffe",
-    price: "Rp 85.000",
-    rating: 4.9,
-    reviews: 128,
-    tag: "Best Seller",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuB06jAOy0e6VpbUp6hOlshceiORePg0Pvs54Ms1qza9ov8vm15VJSj1Eb1JC77MblwiNTKnzB2nPHoFeAxeU4MGM3NBLBP4BJ4p5wWGyqGo9VhyUJcfiLe3UPyu62xbnZ9gDf5Ix_8i4XZzJiO02V51N2DdLf8Lcz0fsub86I5w_CooD2yzLy7W74c0gRgMhXPmyYyVdk6RpoGm__Oobfw8F6ajbFBcleBXcQcupgr37UVMWcWnGKD-LTNbV06oSBM2fWSHaKEwlvEs",
-  },
-  {
-    id: 2,
-    name: "Sumatra Mandheling",
-    price: "Rp 72.000",
-    rating: 4.8,
-    reviews: 96,
-    tag: "Populer",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAMFtMAcIKaVPvQYctBLheaTsf6inh5kusmEPv8dAtt5CAkGFWWo3JLMGqvsOnwsKqi028amHlsFfvdsDauUTrhZ4p9KHwImj23Z7D-WDj4SCW4iWt1Wr9Y5Jph1l-Zl1w9ADQaiC2qomr4HoWL21tPCxi1pECQY05QzaoGHraPUvMxPeGzCw9nIA5jlZmDT3WWLtVLtfDZd7rx7UZfDdyOoTFOdZU8CPjMVmrN7-uhc7Sb4fPLXQYgmJ3XVPIw9U61Dcm6pKtOeFUe",
-  },
-  {
-    id: 3,
-    name: "Colombia Supremo",
-    price: "Rp 68.000",
-    rating: 4.7,
-    reviews: 84,
-    tag: "Baru",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuD6Rtnqc0knxLE0r6zNwSbxxLmdh0ae94THdw8aYmdqKQHlmXJ92jN4e8Vvv43VKMHu22zHUS2K2ZayLP-iNNcbihw9FoQssku8mEx5G5C53iEWRK0DvM7Z__UYBi5gi57IQfSIZcq51AzlbLhXSOnGSWPMX-D63RhH6tFjUNPe5FMuFy-MoRKJeORdOS_kZ_vwFOBhkxgi1CsVfLoFRxFog7gF6LgsiDFT7-gnY98VwJ5DrXITR2F4rE7qMC_K48Ul714wdJLlFi7X",
-  },
-];
+type LandingProduct = Pick<IProduct, "name" | "price" | "rating" | "badge" | "image"> & {
+  _id: string;
+};
+
+type ProductsApiResponse = {
+  success: boolean;
+  data: LandingProduct[];
+  message?: string;
+};
+
+const formatRupiah = (value: number) =>
+  new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(value);
 
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [bestSellers, setBestSellers] = useState<LandingProduct[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
 
@@ -71,6 +61,35 @@ export default function LandingPage() {
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const fetchBestSellers = async () => {
+      try {
+        setIsLoadingProducts(true);
+        const response = await fetch("/api/products?badge=Best%20Seller", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Gagal memuat produk best seller");
+        }
+
+        const json = (await response.json()) as ProductsApiResponse;
+        if (!json.success) {
+          throw new Error(json.message || "Gagal memuat produk best seller");
+        }
+
+        setBestSellers(json.data.slice(0, 3));
+      } catch (error) {
+        console.error("Failed to fetch best seller products:", error);
+        setBestSellers([]);
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    };
+
+    void fetchBestSellers();
   }, []);
 
   const navLinks = [
@@ -322,9 +341,14 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {bestSellers.map((product) => (
+            {isLoadingProducts ? (
+              <div className={`col-span-full text-sm ${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"}`}>
+                Memuat produk best seller...
+              </div>
+            ) : (
+              bestSellers.map((product) => (
               <div
-                key={product.id}
+                key={product._id}
                 className={`group rounded-2xl overflow-hidden border transition-all duration-300 hover:shadow-xl ${isDark
                   ? "bg-[#1a140e] border-[#2c241b] hover:border-[#ec6d13]/40 hover:shadow-[#ec6d13]/5"
                   : "bg-white border-[#e5ddd5] hover:border-[#ec6d13]/40 hover:shadow-[#ec6d13]/10"
@@ -339,7 +363,7 @@ export default function LandingPage() {
                   />
                   <div className="absolute top-4 left-4">
                     <span className="px-3 py-1.5 bg-[#ec6d13] text-white text-xs font-bold rounded-full shadow-lg">
-                      {product.tag}
+                      {product.badge || "Best Seller"}
                     </span>
                   </div>
                 </div>
@@ -349,20 +373,21 @@ export default function LandingPage() {
                       <Star
                         key={i}
                         size={14}
-                        className={i < Math.floor(product.rating) ? "fill-[#ec6d13] text-[#ec6d13]" : isDark ? "text-[#3e3025]" : "text-[#e5ddd5]"}
+                        className={i < Math.floor(product.rating || 0) ? "fill-[#ec6d13] text-[#ec6d13]" : isDark ? "text-[#3e3025]" : "text-[#e5ddd5]"}
                       />
                     ))}
                     <span className={`text-xs ml-1 ${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"}`}>
-                      {product.rating} ({product.reviews})
+                      {product.rating || 0}
                     </span>
                   </div>
                   <h3 className={`text-lg font-bold mb-1 group-hover:text-[#ec6d13] transition-colors ${isDark ? "text-white" : "text-[#1a140e]"}`}>
                     {product.name}
                   </h3>
-                  <p className="text-[#ec6d13] font-black text-xl">{product.price}</p>
+                  <p className="text-[#ec6d13] font-black text-xl">{formatRupiah(product.price)}</p>
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </section>
