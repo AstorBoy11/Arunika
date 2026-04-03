@@ -1,45 +1,39 @@
-import mongoose, { Model, Schema } from "mongoose";
+// Product Schema untuk menyimpan katalog kopi dan barang di toko
+// Field diambil dari DashboardClient, UI Cart, dan InventoryClient
 
-export interface IProduct {
+import mongoose, { Schema, Document } from "mongoose";
+
+export interface IProduct extends Document {
   name: string;
   category: string;
-  stock: number;
   price: number;
-  createdAt?: Date;
-  updatedAt?: Date;
+  stock: number;
+  shortDescription: string;
+  longDescription: string;
+  badge?: string;
+  rating?: number;
+  image: string;
+  roast?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const ProductSchema = new Schema<IProduct>(
   {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    category: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    stock: {
-      type: Number,
-      required: true,
-      default: 0,
-      min: 0,
-    },
-    price: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
+    name: { type: String, required: true, trim: true },
+    category: { type: String, required: true, trim: true },
+    price: { type: Number, required: true, min: 0 },
+    stock: { type: Number, required: true, min: 0 },
+    shortDescription: { type: String, required: true, trim: true },
+    longDescription: { type: String, required: true, trim: true },
+    badge: { type: String }, // optional, e.g., "Best Seller", "Baru"
+    rating: { type: Number, default: 0, min: 0, max: 5 },
+    image: { type: String, required: true, match: /^https?:\/\/.+/ },
+    roast: { type: String }, // optional, e.g., "Light Roast", "Espresso"
   },
   {
     timestamps: true,
   }
 );
 
-const Product: Model<IProduct> =
-  (mongoose.models.Product as Model<IProduct>) ||
-  mongoose.model<IProduct>("Product", ProductSchema);
-
-export default Product;
+export default mongoose.models.Product || mongoose.model<IProduct>("Product", ProductSchema);

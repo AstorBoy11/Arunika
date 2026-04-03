@@ -1,40 +1,48 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI!;
 
 if (!MONGODB_URI) {
-  throw new Error('Tolong masukkan MONGODB_URI di dalam file .env.local');
+  throw new Error("Tolong masukkan MONGODB_URI di dalam file .env.local (Periksa .env.example sebagai referensi).");
 }
 
-// Menggunakan global untuk menyimpan koneksi agar tidak terus-menerus 
-// membuat koneksi baru saat Next.js melakukan Hot Reload di mode Development.
-let cached = (global as any).mongoose;
+// Global declaration caching untuk Next.js Development Environment Hot Reloading (HMR)
+// Hal ini mencegah Next.js memakan semua connection slots MongoDB saat compiler merender ulang komponen.
+declare global {
+  // eslint-disable-next-line no-var
+  var mongooseConnection: {
+    conn: typeof mongoose | null;
+    promise: Promise<typeof mongoose> | null;
+  };
+}
+
+let cached = global.mongooseConnection;
 
 if (!cached) {
-  cached = (global as any).mongoose = { conn: null, promise: null };
+  cached = global.mongooseConnection = { conn: null, promise: null };
 }
 
 async function connectDB() {
-  // Kalau sudah ada koneksi yang terbuka, pakai yang itu saja
   if (cached.conn) {
     return cached.conn;
   }
 
-  // Kalau belum, buat koneksi baru
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      console.log('✅ Berhasil terhubung ke MongoDB Atlas!');
-      return mongoose;
+    console.log("⏳ Menghubungkan ke MongoDB Atlas...");
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
+      console.log("✅ Berhasil terhubung ke MongoDB Atlas!");
+      return mongooseInstance;
     });
   }
 
   try {
     cached.conn = await cached.promise;
   } catch (e) {
+    console.error("❌ Gagal terhubung ke MongoDB:", e);
     cached.promise = null;
     throw e;
   }
