@@ -1,0 +1,160 @@
+{
+  "userId": "69cf874f845c6600f0daa1c5",
+  "ordersCount": 3,
+  "sampleOrders": [
+    {
+      "_id": "69cf965e845c6600f0daa2d7",
+      "orderNumber": "ORD-030426003",
+      "user": "69cf874f845c6600f0daa1c5",
+      "items": [
+        {
+          "product": {
+            "_id": "69cf8487be577a33a376bf63",
+            "name": "Ethiopian Yirgacheffe",
+            "category": "Coffee Beans",
+            "price": 280000,
+            "stock": 37,
+            "shortDescription": "Floral aroma with notes of jasmine and lemon. A bright, tea-like body.",
+            "longDescription": "Sourced from the highlands of Yirgacheffe, this single-origin bean is celebrated for its delicate floral notes of jasmine and bergamot, complemented by bright lemon citrus. The cup is light-to-medium bodied with a clean, tea-like finish that lingers beautifully.",
+            "badge": "Best Seller",
+            "rating": 4.9,
+            "image": "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&q=80",
+            "roast": "Light Roast",
+            "__v": 0,
+            "createdAt": "2026-04-03T09:12:39.171Z",
+            "updatedAt": "2026-04-03T10:28:46.564Z"
+          },
+          "name": "Ethiopian Yirgacheffe",
+          "roast": "Light Roast",
+          "price": 280000,
+          "image": "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&q=80",
+          "quantity": 1,
+          "_id": "69cf965e845c6600f0daa2d8"
+        },
+        {
+          "product": {
+            "_id": "69cf8487be577a33a376bf64",
+            "name": "Sumatra Mandheling",
+            "category": "Coffee Beans",
+            "price": 195000,
+            "stock": 22,
+            "shortDescription": "Full body with an intense, earthy aroma and herbal nuances. Low acidity.",
+            "longDescription": "Grown at 1,500 m altitude in the volcanic soils of West Sumatra, Mandheling delivers a signature wet-hulled profile. Expect bold earthiness, dark chocolate undertones, and a syrupy body with remarkably low acidity â perfect for afternoon brewing.",
+            "rating": 4.8,
+            "image": "https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=800&q=80",
+            "roast": "Dark Roast",
+            "__v": 0,
+            "createdAt": "2026-04-03T09:12:39.175Z",
+            "updatedAt": "2026-04-03T10:28:46.611Z"
+          },
+          "name": "Sumatra Mandheling",
+          "roast": "Dark Roast",
+          "price": 195000,
+          "image": "https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=800&q=80",
+          "quantity": 1,
+          "_id": "69cf965e845c6600f0daa2d9"
+        }
+      ],
+      "shippingAddress": {
+        "id": 1,
+        "label": "Alamat Pengiriman",
+        "type": "home",
+        "recipient": "Budi Santoso",
+        "street": "Jl. Melati No. 12",
+        "city": "Jakarta Selatan",
+        "province": "DKI Jakarta",
+        "postalCode": "12345",
+        "phone": "081234567890",
+        "isDefault": true,
+        "_id": "69cf965e845c6600f0daa2da"
+      },
+      "paymentMethod": "qris",
+      "paymentStatus": "pending",
+      "orderStatus": "processing",
+      "subtotal": 475000,
+      "shipping": 15000,
+      "tax": 52250,
+      "total": 542250,
+      "createdAt": "2026-04-03T10:28:46.666Z",
+      "updatedAt": "2026-04-03T10:28:46.666Z",
+      "__v": 0
+    },
+    {
+      "_id": "69cf9131845c6600f0daa277",
+      "orderNumber": "ORD-030426002",
+      "user": "69cf874f845c6600f0daa1c5",
+      "items": [
+        {
+          "product": {
+            "_id": "69cf8487be577a33a376bf63",
+            "name": "Ethiopian Yirgacheffe",
+            "category": "Coffee Beans",
+            "price": 280000,
+            "stock": 37,
+            "shortDescription": "Floral aroma with notes of jasmine and lemon. A bright, tea-like body.",
+            "longDescription": "Sourced from the highlands of Yirgacheffe, this single-origin bean is celebrated for its delicate floral notes of jasmine and bergamot, complemented by bright lemon citrus. The cup is light-to-medium bodied with a clean, tea-like finish that lingers beautifully.",
+            "badge": "Best Seller",
+            "rating": 4.9,
+            "image": "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&q=80",
+            "roast": "Light Roast",
+            "__v": 0,
+            "createdAt": "2026-04-03T09:12:39.171Z",
+            "updatedAt": "2026-04-03T10:28:46.564Z"
+          },
+          "name": "Ethiopian Yirgacheffe",
+          "roast": "Light Roast",
+          "price": 280000,
+          "image": "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&q=80",
+          "quantity": 2,
+          "_id": "69cf9131845c6600f0daa278"
+        },
+        {
+          "product": {
+            "_id": "69cf8487be577a33a376bf64",
+            "name": "Sumatra Mandheling",
+            "category": "Coffee Beans",
+            "price": 195000,
+            "stock": 22,
+            "shortDescription": "Full body with an intense, earthy aroma and herbal nuances. Low acidity.",
+            "longDescription": "Grown at 1,500 m altitude in the volcanic soils of West Sumatra, Mandheling delivers a signature wet-hulled profile. Expect bold earthiness, dark chocolate undertones, and a syrupy body with remarkably low acidity â perfect for afternoon brewing.",
+            "rating": 4.8,
+            "image": "https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=800&q=80",
+            "roast": "Dark Roast",
+            "__v": 0,
+            "createdAt": "2026-04-03T09:12:39.175Z",
+            "updatedAt": "2026-04-03T10:28:46.611Z"
+          },
+          "name": "Sumatra Mandheling",
+          "roast": "Dark Roast",
+          "price": 195000,
+          "image": "https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=800&q=80",
+          "quantity": 1,
+          "_id": "69cf9131845c6600f0daa279"
+        }
+      ],
+      "shippingAddress": {
+        "id": 1,
+        "label": "Alamat Pengiriman",
+        "type": "home",
+        "recipient": "Budi Santoso",
+        "street": "Jl. Melati No. 12",
+        "city": "Jakarta Selatan",
+        "province": "DKI Jakarta",
+        "postalCode": "12345",
+        "phone": "081234567890",
+        "isDefault": true,
+        "_id": "69cf9131845c6600f0daa27a"
+      },
+      "paymentMethod": "qris",
+      "paymentStatus": "paid",
+      "orderStatus": "processing",
+      "subtotal": 755000,
+      "shipping": 15000,
+      "tax": 83050,
+      "total": 853050,
+      "createdAt": "2026-04-03T10:06:41.823Z",
+      "updatedAt": "2026-04-03T10:06:42.029Z",
+      "__v": 0
+    }
+  ]
+}

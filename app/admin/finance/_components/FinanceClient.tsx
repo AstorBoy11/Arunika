@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { Plus, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+import { Loader2, Plus, TrendingDown, TrendingUp } from "lucide-react";
 
 type ExpenseItem = {
   id: number;
@@ -17,12 +17,22 @@ type NewExpensePayload = {
   tanggal: string;
 };
 
+type PaidOrder = {
+  _id: string;
+  total: number;
+  createdAt: string;
+};
+
+type OrdersResponse = {
+  success: boolean;
+  data?: PaidOrder[];
+  message?: string;
+};
+
 const ModalAddExpense = dynamic(() => import("./ModalAddExpense"), {
   ssr: false,
   loading: () => null,
 });
-
-const TOTAL_PEMASUKAN = 15000000;
 
 const INITIAL_EXPENSES: ExpenseItem[] = [
   {
@@ -65,11 +75,74 @@ function formatDate(dateString: string) {
 export default function FinanceClient() {
   const [expenses, setExpenses] = useState<ExpenseItem[]>(INITIAL_EXPENSES);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+  const [paidOrders, setPaidOrders] = useState<PaidOrder[]>([]);
+  const [loadingIncome, setLoadingIncome] = useState(true);
+  const [incomeError, setIncomeError] = useState("");
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const fetchPaidOrders = async () => {
+      setLoadingIncome(true);
+      setIncomeError("");
+
+      try {
+        const response = await fetch("/api/orders?paymentStatus=paid");
+        const result: OrdersResponse = (await response.json()) as OrdersResponse;
+
+        if (!response.ok || !result.success) {
+          if (!isCancelled) {
+            setIncomeError(result.message ?? "Gagal memuat data pendapatan.");
+            setPaidOrders([]);
+          }
+          return;
+        }
+
+        if (!isCancelled) {
+          setPaidOrders(result.data ?? []);
+        }
+      } catch {
+        if (!isCancelled) {
+          setIncomeError("Terjadi kesalahan jaringan saat memuat pendapatan.");
+          setPaidOrders([]);
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoadingIncome(false);
+        }
+      }
+    };
+
+    void fetchPaidOrders();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
 
   const totalPengeluaran = useMemo(
     () => expenses.reduce((acc, item) => acc + item.nominal, 0),
     [expenses]
   );
+
+  const totalPemasukan = useMemo(
+    () => paidOrders.reduce((acc, order) => acc + order.total, 0),
+    [paidOrders]
+  );
+
+  const incomeByDate = useMemo(() => {
+    const grouped = new Map<string, number>();
+
+    for (const order of paidOrders) {
+      const dateKey = new Date(order.createdAt).toISOString().split("T")[0];
+      const current = grouped.get(dateKey) ?? 0;
+      grouped.set(dateKey, current + order.total);
+    }
+
+    return Array.from(grouped.entries())
+      .map(([tanggal, total]) => ({ tanggal, total }))
+      .sort((a, b) => (a.tanggal < b.tanggal ? 1 : -1));
+  }, [paidOrders]);
 
   const handleAddExpense = (payload: NewExpensePayload) => {
     setExpenses((prev) => {
@@ -96,7 +169,7 @@ export default function FinanceClient() {
                 Total Pemasukan
               </p>
               <h3 className="mt-2 text-2xl font-black text-gray-900 dark:text-white">
-                {formatIDR(TOTAL_PEMASUKAN)}
+                {loadingIncome ? "..." : formatIDR(totalPemasukan)}
               </h3>
             </div>
             <div className="p-2.5 rounded-xl bg-[#0bda16]/10 border border-[#0bda16]/20">
@@ -120,6 +193,60 @@ export default function FinanceClient() {
             </div>
           </div>
         </div>
+      </div>
+
+      {incomeError && (
+        <div className="mt-6 rounded-lg border px-3 py-2.5 text-xs bg-[#fff4ee] border-[#f2c1ab] text-[#a64822] dark:bg-[#3a1c14]/40 dark:border-[#7a3422] dark:text-[#f2b8a0]">
+          {incomeError}
+        </div>
+      )}
+
+      <div className="mt-6 bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-2xl shadow-sm dark:shadow-none overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-[#3e342b]">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Riwayat Pendapatan Order</h3>
+          <p className="text-sm text-gray-500 dark:text-[#8e7f72]">
+            Akumulasi order berstatus paid berdasarkan tanggal.
+          </p>
+        </div>
+
+        {loadingIncome ? (
+          <div className="px-6 py-8 text-sm text-gray-500 dark:text-[#8e7f72] flex items-center gap-2">
+            <Loader2 size={16} className="animate-spin text-[#ec6d13]" />
+            Memuat pendapatan order...
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-sm">
+              <thead>
+                <tr className="bg-gray-50 dark:bg-[#231910] border-b border-gray-200 dark:border-[#3e342b]">
+                  <th className="text-left px-6 py-3 font-semibold text-gray-500 dark:text-[#8e7f72]">Tanggal</th>
+                  <th className="text-right px-6 py-3 font-semibold text-gray-500 dark:text-[#8e7f72]">Total Pendapatan</th>
+                </tr>
+              </thead>
+              <tbody>
+                {incomeByDate.map((item) => (
+                  <tr
+                    key={item.tanggal}
+                    className="border-b border-gray-200 dark:border-[#3e342b] last:border-0"
+                  >
+                    <td className="px-6 py-4 text-gray-700 dark:text-[#EAE0D5] whitespace-nowrap">
+                      {formatDate(item.tanggal)}
+                    </td>
+                    <td className="px-6 py-4 text-right text-[#0bda16] font-bold whitespace-nowrap">
+                      {formatIDR(item.total)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {!loadingIncome && incomeByDate.length === 0 && (
+          <div className="px-6 py-10 text-center text-sm text-gray-500 dark:text-[#8e7f72]">
+            Belum ada order paid untuk ditampilkan.
+          </div>
+        )}
       </div>
 
       <div className="mt-6 bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-2xl shadow-sm dark:shadow-none overflow-hidden">

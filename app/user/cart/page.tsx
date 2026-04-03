@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Trash2,
   Minus,
@@ -36,12 +37,44 @@ interface CartItem {
 interface Address {
   id: number;
   label: string;
+  type?: "home" | "office";
+  isDefault?: boolean;
   recipient: string;
+  street: string;
+  city: string;
+  province: string;
+  postalCode?: string;
   phone: string;
   full: string;
 }
 
-type PaymentMethod = "cash" | "qris" | null;
+type PaymentMethod = "cash" | "qris";
+
+type CheckoutRequestBody = {
+  userId: string;
+  items: Array<{
+    productId: string;
+    quantity: number;
+  }>;
+  shippingAddress: {
+    recipient: string;
+    street: string;
+    city: string;
+    province: string;
+    postalCode: string;
+    phone: string;
+  };
+  paymentMethod: PaymentMethod;
+};
+
+type CheckoutApiResponse = {
+  success: boolean;
+  data?: {
+    _id: string;
+    orderNumber: string;
+  };
+  message?: string;
+};
 
 // ─── Checkout Modal ───────────────────────────────────────────────────────────
 
@@ -54,6 +87,9 @@ interface CheckoutModalProps {
   shipping: number;
   tax: number;
   total: number;
+  userId: string | null;
+  onCheckoutSuccess: (orderNumber: string) => void;
+  onCheckoutError: (message: string) => void;
 }
 
 function CheckoutModal({
@@ -65,31 +101,118 @@ function CheckoutModal({
   shipping,
   tax,
   total,
+  userId,
+  onCheckoutSuccess,
+  onCheckoutError,
 }: CheckoutModalProps) {
   const { theme, mounted } = useTheme();
   const isDark = mounted && theme === "dark";
 
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
-  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>(null);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>("qris");
   const [confirmed, setConfirmed] = useState(false);
+  const [orderNumber, setOrderNumber] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string>("");
 
   useEffect(() => {
     if (!isOpen || addresses.length === 0) return;
-    setSelectedAddress(String(addresses[0].id));
+    const defaultAddress = addresses.find((address) => address.isDefault) ?? addresses[0];
+    setSelectedAddress(String(defaultAddress.id));
   }, [addresses, isOpen]);
 
-  const canConfirm = selectedAddress !== null && selectedPayment !== null;
+  useEffect(() => {
+    if (!isOpen) return;
+    setSelectedPayment("qris");
+    setSubmitError("");
+    setIsSubmitting(false);
+  }, [isOpen]);
 
-  const handleConfirm = () => {
-    if (!canConfirm) return;
-    setConfirmed(true);
+  const canConfirm = selectedAddress !== null;
+
+  const handleCheckout = async () => {
+    if (!canConfirm || isSubmitting) return;
+
+    if (items.length === 0) {
+      const message = "Keranjang kosong. Silakan tambah produk terlebih dahulu.";
+      setSubmitError(message);
+      onCheckoutError(message);
+      return;
+    }
+
+    if (!userId) {
+      const message = "Silakan login terlebih dahulu untuk melanjutkan checkout.";
+      setSubmitError(message);
+      onCheckoutError(message);
+      return;
+    }
+
+    const chosenAddress = addresses.find((addr) => String(addr.id) === selectedAddress);
+    if (!chosenAddress) {
+      const message = "Alamat pengiriman tidak ditemukan. Silakan pilih alamat lain.";
+      setSubmitError(message);
+      onCheckoutError(message);
+      return;
+    }
+
+    const payload: CheckoutRequestBody = {
+      userId,
+      items: items.map((item) => ({
+        productId: item._id,
+        quantity: item.quantity,
+      })),
+      shippingAddress: {
+        recipient: chosenAddress.recipient,
+        street: chosenAddress.street,
+        city: chosenAddress.city,
+        province: chosenAddress.province,
+        postalCode: chosenAddress.postalCode ?? "",
+        phone: chosenAddress.phone,
+      },
+      paymentMethod: selectedPayment,
+    };
+
+    setIsSubmitting(true);
+    setSubmitError("");
+
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result: CheckoutApiResponse = (await response.json()) as CheckoutApiResponse;
+
+      if (!response.ok || !result.success || !result.data) {
+        const message = result.message ?? "Checkout gagal. Silakan coba lagi.";
+        setSubmitError(message);
+        onCheckoutError(message);
+        return;
+      }
+
+      setOrderNumber(result.data.orderNumber);
+      setConfirmed(true);
+      onCheckoutSuccess(result.data.orderNumber);
+    } catch {
+      const message = "Terjadi kesalahan jaringan saat checkout. Silakan coba lagi.";
+      setSubmitError(message);
+      onCheckoutError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
     // Reset state saat modal ditutup
     setSelectedAddress(null);
-    setSelectedPayment(null);
+    setSelectedPayment("qris");
     setConfirmed(false);
+    setOrderNumber("");
+    setSubmitError("");
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -116,7 +239,7 @@ function CheckoutModal({
             Nomor Pesanan
           </p>
           <p className="text-[#ec6d13] font-bold text-lg mb-4">
-            #ARN-{Math.floor(100000 + Math.random() * 900000)}
+            #{orderNumber}
           </p>
           <p className={`text-sm mb-6 ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
             Terima kasih! Pesananmu sedang diproses dan akan segera dikirim ke alamat yang kamu pilih.
@@ -238,7 +361,7 @@ function CheckoutModal({
                 {[
                   { label: "Subtotal", value: subtotal },
                   { label: "Pengiriman", value: shipping },
-                  { label: "Pajak (10%)", value: tax },
+                  { label: "Pajak (11%)", value: tax },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex justify-between text-xs">
                     <span className={isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"}>{label}</span>
@@ -504,6 +627,18 @@ function CheckoutModal({
                 </div>
               </div>
             )}
+
+            {submitError && (
+              <div
+                className={`mt-4 rounded-lg border px-3 py-2.5 text-xs ${
+                  isDark
+                    ? "bg-[#3a1c14]/40 border-[#7a3422] text-[#f2b8a0]"
+                    : "bg-[#fff4ee] border-[#f2c1ab] text-[#a64822]"
+                }`}
+              >
+                {submitError}
+              </div>
+            )}
           </section>
         </div>
 
@@ -515,6 +650,7 @@ function CheckoutModal({
         >
           <button
             onClick={handleClose}
+            disabled={isSubmitting}
             className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-colors ${
               isDark
                 ? "border-[#3e342b] text-[#b9a89d] hover:bg-[#3e342b] hover:text-white"
@@ -525,15 +661,16 @@ function CheckoutModal({
           </button>
 
           <button
-            onClick={handleConfirm}
-            disabled={!canConfirm}
+            onClick={handleCheckout}
+            disabled={!canConfirm || isSubmitting}
             className={`flex-2 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
-              canConfirm
+              canConfirm && !isSubmitting
                 ? "bg-[#ec6d13] hover:bg-[#d65c0b] text-white shadow-lg shadow-[#ec6d13]/25 hover:scale-[1.02]"
                 : "bg-[#ec6d13]/30 text-white/50 cursor-not-allowed"
             }`}
           >
-            {!canConfirm && (
+            {isSubmitting && <span>Memproses...</span>}
+            {!canConfirm && !isSubmitting && (
               <span className="text-[11px] font-normal">
                 {!selectedAddress && !selectedPayment
                   ? "Pilih alamat & pembayaran"
@@ -542,7 +679,7 @@ function CheckoutModal({
                   : "Pilih metode pembayaran"}
               </span>
             )}
-            {canConfirm && (
+            {canConfirm && !isSubmitting && (
               <>
                 Konfirmasi Pesanan
                 <ChevronRight size={16} />
@@ -558,10 +695,13 @@ function CheckoutModal({
 // ─── Cart Page ────────────────────────────────────────────────────────────────
 
 export default function CartPage() {
+  const router = useRouter();
   const { user } = useUser();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [hasHydratedCart, setHasHydratedCart] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string>("");
+  const [checkoutSuccess, setCheckoutSuccess] = useState<string>("");
   const { theme, mounted } = useTheme();
   const isDark = mounted && theme === "dark";
 
@@ -603,9 +743,46 @@ export default function CartPage() {
     setCartItems((prev) => prev.filter((item) => item._id !== _id));
   };
 
+  const handleCheckoutOpen = () => {
+    if (cartItems.length === 0) {
+      setCheckoutError("Keranjang kosong. Silakan tambah produk terlebih dahulu.");
+      return;
+    }
+
+    if (!user?._id) {
+      setCheckoutError("Silakan login terlebih dahulu untuk checkout.");
+      return;
+    }
+
+    if (!user.addresses || user.addresses.length === 0) {
+      setCheckoutError("Silakan tambahkan alamat pengiriman di halaman profil");
+      return;
+    }
+
+    setCheckoutError("");
+    setCheckoutSuccess("");
+    setIsCheckoutOpen(true);
+  };
+
+  const handleCheckoutSuccess = (orderNumber: string) => {
+    setCheckoutSuccess(`Checkout berhasil. Nomor pesanan: ${orderNumber}`);
+    setCheckoutError("");
+    setCartItems([]);
+    window.localStorage.setItem("arunika-cart", JSON.stringify([]));
+
+    window.setTimeout(() => {
+      setIsCheckoutOpen(false);
+      router.push("/user/profile");
+    }, 1200);
+  };
+
+  const handleCheckoutError = (message: string) => {
+    setCheckoutError(message);
+  };
+
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const shipping = 5.00;
-  const tax = subtotal * 0.1;
+  const shipping = 15000;
+  const tax = Number((subtotal * 0.11).toFixed(2));
   const total = subtotal + shipping + tax;
   const OPEN_HOUR = 8;
   const CLOSE_HOUR = 22;
@@ -618,7 +795,13 @@ export default function CartPage() {
     .map((addr: IAddress) => ({
       id: addr.id,
       label: addr.label,
+      type: addr.type,
+      isDefault: addr.isDefault,
       recipient: addr.recipient,
+      street: addr.street,
+      city: addr.city,
+      province: addr.province,
+      postalCode: addr.postalCode,
       phone: addr.phone,
       full: `${addr.street}, ${addr.city}, ${addr.province}${addr.postalCode ? `, ${addr.postalCode}` : ""}`,
     }));
@@ -760,7 +943,7 @@ export default function CartPage() {
                 </span>
               </div>
               <div className={`flex justify-between ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
-                <span>Pajak (10%)</span>
+                <span>Pajak (11%)</span>
                 <span className={`font-medium ${isDark ? "text-white" : "text-[#1a140e]"}`}>
                   ${tax.toFixed(2)}
                 </span>
@@ -802,8 +985,37 @@ export default function CartPage() {
               </div>
             )}
 
+            {checkoutError && (
+              <div
+                className={`mb-4 rounded-lg border px-3 py-2.5 text-xs ${
+                  isDark
+                    ? "bg-[#3a1c14]/40 border-[#7a3422] text-[#f2b8a0]"
+                    : "bg-[#fff4ee] border-[#f2c1ab] text-[#a64822]"
+                }`}
+              >
+                {checkoutError}
+                {checkoutError === "Silakan tambahkan alamat pengiriman di halaman profil" && (
+                  <Link href="/user/profile" className="underline font-semibold ml-1">
+                    Buka Profil
+                  </Link>
+                )}
+              </div>
+            )}
+
+            {checkoutSuccess && (
+              <div
+                className={`mb-4 rounded-lg border px-3 py-2.5 text-xs ${
+                  isDark
+                    ? "bg-[#1c3a24]/40 border-[#2f7a45] text-[#b8f2c9]"
+                    : "bg-[#ecfdf3] border-[#86efac] text-[#166534]"
+                }`}
+              >
+                {checkoutSuccess}
+              </div>
+            )}
+
             <button
-              onClick={() => setIsCheckoutOpen(true)}
+              onClick={handleCheckoutOpen}
               disabled={isStoreClosed}
               className={`w-full py-4 text-white font-bold rounded-xl shadow-lg shadow-[#ec6d13]/20 transition-all flex items-center justify-center gap-2 mb-3 ${
                 isStoreClosed
@@ -828,6 +1040,9 @@ export default function CartPage() {
         shipping={shipping}
         tax={tax}
         total={total}
+        userId={user?._id ? String(user._id) : null}
+        onCheckoutSuccess={handleCheckoutSuccess}
+        onCheckoutError={handleCheckoutError}
       />
     </div>
   );

@@ -10,7 +10,8 @@ import {
   Settings,
   LogOut,
   X,
-  ShoppingCart
+  ShoppingCart,
+  ClipboardList
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/lib/hooks/useUser";
@@ -57,6 +58,11 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
       name: "Cart",
       href: "/user/cart",
       icon: ShoppingCart
+    },
+    {
+      name: "Orders",
+      href: "/user/orders",
+      icon: ClipboardList
     },
     {
       name: "Settings",
