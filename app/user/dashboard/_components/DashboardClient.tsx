@@ -43,6 +43,8 @@ type CartStorageItem = {
   quantity: number;
 };
 
+type CartItem = CartStorageItem;
+
 type SortOption = "default" | "price-asc" | "price-desc";
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
@@ -161,6 +163,17 @@ export default function DashboardClient() {
 
   // ── Quick View state ──
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showCartToast, setShowCartToast] = useState(false);
+
+  useEffect(() => {
+    if (!showCartToast) return;
+
+    const timeout = window.setTimeout(() => {
+      setShowCartToast(false);
+    }, 2000);
+
+    return () => window.clearTimeout(timeout);
+  }, [showCartToast]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -209,23 +222,47 @@ export default function DashboardClient() {
     roast: product.roast || "",
   });
 
-  const addToCart = (product: Product) => {
+  const readCartItems = (): CartItem[] => {
     const stored = window.localStorage.getItem("arunika-cart");
-    let existingItems: CartStorageItem[] = [];
+    if (!stored) return [];
 
-    if (stored) {
-      try {
-        existingItems = JSON.parse(stored) as CartStorageItem[];
-      } catch {
-        existingItems = [];
-      }
+    try {
+      const parsed: unknown = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return [];
+
+      return parsed
+        .filter((item): item is CartItem => {
+          if (typeof item !== "object" || item === null) return false;
+
+          return (
+            "_id" in item &&
+            "name" in item &&
+            "price" in item &&
+            "image" in item &&
+            "roast" in item &&
+            "quantity" in item &&
+            typeof item._id === "string" &&
+            typeof item.name === "string" &&
+            typeof item.price === "number" &&
+            typeof item.image === "string" &&
+            typeof item.roast === "string" &&
+            typeof item.quantity === "number"
+          );
+        });
+    } catch {
+      return [];
     }
+  };
+
+  const handleAddToCart = (product: Product, closeModal: boolean = false) => {
+    const existingItems = readCartItems();
 
     const existingIndex = existingItems.findIndex((item) => item._id === product._id);
     if (existingIndex >= 0) {
+      const currentItem = existingItems[existingIndex];
       existingItems[existingIndex] = {
-        ...existingItems[existingIndex],
-        quantity: existingItems[existingIndex].quantity + 1,
+        ...currentItem,
+        quantity: currentItem.quantity + 1,
       };
     } else {
       existingItems.push({
@@ -239,6 +276,12 @@ export default function DashboardClient() {
     }
 
     window.localStorage.setItem("arunika-cart", JSON.stringify(existingItems));
+
+    if (closeModal) {
+      setSelectedProduct(null);
+    }
+
+    setShowCartToast(true);
   };
 
   const sortedProducts = useMemo(() => {
@@ -433,7 +476,7 @@ export default function DashboardClient() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    addToCart(product);
+                    handleAddToCart(product);
                   }}
                   className={`w-full py-2.5 rounded-xl font-bold text-sm hover:bg-[#ec6d13] hover:text-white transition-colors flex items-center justify-center gap-2 group/btn ${
                     isDark ? "bg-white text-[#231910]" : "bg-[#1a140e] text-white"
@@ -453,9 +496,15 @@ export default function DashboardClient() {
         <ProductQuickViewModal
           product={selectedProduct}
           isDark={isDark}
-          onAddToCart={addToCart}
+          onAddToCart={(product) => handleAddToCart(product, true)}
           onClose={() => setSelectedProduct(null)}
         />
+      )}
+
+      {showCartToast && (
+        <div className="fixed right-4 bottom-4 z-[60] px-4 py-3 rounded-xl bg-[#ec6d13] text-white text-sm font-bold shadow-lg shadow-[#ec6d13]/30">
+          Produk berhasil ditambahkan ke keranjang!
+        </div>
       )}
     </>
   );

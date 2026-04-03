@@ -10,7 +10,6 @@ import {
   Plus,
   ShoppingBag,
   ArrowRight,
-  Truck,
   X,
   MapPin,
   Wallet,
@@ -75,6 +74,13 @@ type CheckoutApiResponse = {
   };
   message?: string;
 };
+
+const formatRupiah = (n: number) =>
+  new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(n);
 
 // ─── Checkout Modal ───────────────────────────────────────────────────────────
 
@@ -282,7 +288,7 @@ function CheckoutModal({
               </h2>
               <p className={`text-xs ${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"}`}>
                 {items.length} item · Total{" "}
-                <span className="text-[#ec6d13] font-bold">${total.toFixed(2)}</span>
+                <span className="text-[#ec6d13] font-bold">{formatRupiah(total)}</span>
               </p>
             </div>
           </div>
@@ -347,10 +353,10 @@ function CheckoutModal({
                         isDark ? "text-white" : "text-[#1a140e]"
                       }`}
                     >
-                      ${(item.price * item.quantity).toFixed(2)}
+                      {formatRupiah(item.price * item.quantity)}
                     </p>
                     <p className={`text-xs ${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"}`}>
-                      {item.quantity} × ${item.price.toFixed(2)}
+                      {item.quantity} × {formatRupiah(item.price)}
                     </p>
                   </div>
                 </div>
@@ -366,7 +372,7 @@ function CheckoutModal({
                   <div key={label} className="flex justify-between text-xs">
                     <span className={isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"}>{label}</span>
                     <span className={isDark ? "text-[#b9a89d]" : "text-[#5a4535]"}>
-                      ${value.toFixed(2)}
+                      {formatRupiah(value)}
                     </span>
                   </div>
                 ))}
@@ -374,7 +380,7 @@ function CheckoutModal({
                   <span className={`text-sm font-bold ${isDark ? "text-white" : "text-[#1a140e]"}`}>
                     Total
                   </span>
-                  <span className="text-[#ec6d13] font-black text-base">${total.toFixed(2)}</span>
+                  <span className="text-[#ec6d13] font-black text-base">{formatRupiah(total)}</span>
                 </div>
               </div>
             </div>
@@ -910,7 +916,7 @@ export default function CartPage() {
                       </button>
                     </div>
                     <p className={`text-xl font-bold ${isDark ? "text-white" : "text-[#1a140e]"}`}>
-                      ${(item.price * item.quantity).toFixed(2)}
+                      {formatRupiah(item.price * item.quantity)}
                     </p>
                   </div>
                 </div>
@@ -933,44 +939,26 @@ export default function CartPage() {
               <div className={`flex justify-between ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
                 <span>Subtotal</span>
                 <span className={`font-medium ${isDark ? "text-white" : "text-[#1a140e]"}`}>
-                  ${subtotal.toFixed(2)}
+                  {formatRupiah(subtotal)}
                 </span>
               </div>
               <div className={`flex justify-between ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
                 <span>Pengiriman</span>
                 <span className={`font-medium ${isDark ? "text-white" : "text-[#1a140e]"}`}>
-                  ${shipping.toFixed(2)}
+                  {formatRupiah(shipping)}
                 </span>
               </div>
               <div className={`flex justify-between ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
                 <span>Pajak (11%)</span>
                 <span className={`font-medium ${isDark ? "text-white" : "text-[#1a140e]"}`}>
-                  ${tax.toFixed(2)}
+                  {formatRupiah(tax)}
                 </span>
               </div>
             </div>
 
             <div className="flex justify-between items-center mb-8">
               <span className={`font-bold text-lg ${isDark ? "text-white" : "text-[#1a140e]"}`}>Total</span>
-              <span className="text-[#ec6d13] font-black text-2xl">${total.toFixed(2)}</span>
-            </div>
-
-            <div className={`p-3 rounded-lg flex items-start gap-3 mb-4 ${isDark ? "bg-[#2a221b]/50" : "bg-[#fdf5ee]"
-              }`}>
-              <Truck size={20} className="text-[#ec6d13] mt-0.5 shrink-0" />
-              <div className="w-full">
-                <p className={`text-xs mb-2 ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
-                  {subtotal >= 50
-                    ? "Kamu mendapat gratis ongkir!"
-                    : `Belanja $${(50 - subtotal).toFixed(2)} lagi untuk gratis ongkir.`}
-                </p>
-                <div className={`w-full h-1.5 rounded-full overflow-hidden ${isDark ? "bg-[#3e342b]" : "bg-[#e5ddd5]"}`}>
-                  <div
-                    className="h-full bg-[#ec6d13] rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min((subtotal / 50) * 100, 100)}%` }}
-                  />
-                </div>
-              </div>
+              <span className="text-[#ec6d13] font-black text-2xl">{formatRupiah(total)}</span>
             </div>
 
             {isStoreClosed && (
