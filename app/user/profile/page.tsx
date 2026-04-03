@@ -28,60 +28,10 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+import { useUser } from "@/lib/hooks/useUser";
+import type { IAddress } from "@/lib/models";
 
 // ─── Types & Dummy Data ───────────────────────────────────────────────────────
-
-interface ProfileData {
-  name: string;
-  email: string;
-  phone: string;
-}
-
-interface Address {
-  id: number;
-  label: string;
-  type: "home" | "office";
-  recipient: string;
-  street: string;
-  city: string;
-  province: string;
-  postalCode: string;
-  phone: string;
-  isDefault: boolean;
-}
-
-const INITIAL_PROFILE: ProfileData = {
-  name: "Alex Morgan",
-  email: "alex.morgan@coffee.com",
-  phone: "+62 812-3456-7890",
-};
-
-const INITIAL_ADDRESSES: Address[] = [
-  {
-    id: 1,
-    label: "Rumah",
-    type: "home",
-    recipient: "Alex Morgan",
-    street: "452 Pike Street, Apt 8B",
-    city: "Seattle, WA 98101",
-    province: "Washington",
-    postalCode: "98101",
-    phone: "+62 812-3456-7890",
-    isDefault: true,
-  },
-  {
-    id: 2,
-    label: "Kantor Pusat",
-    type: "office",
-    recipient: "Alex Morgan (Divisi IT)",
-    street: "2000 Tech Boulevard, Suite 500",
-    city: "Bellevue, WA 98004",
-    province: "Washington",
-    postalCode: "98004",
-    phone: "+62 812-3456-7890",
-    isDefault: false,
-  },
-];
 
 // ─── Input class helper ───────────────────────────────────────────────────────
 
@@ -99,10 +49,8 @@ const labelCls = (isDark: boolean) =>
 
 export default function UserProfile() {
   const { theme, mounted } = useTheme();
+  const { user, loading, actionLoading, error, updateProfile, addAddress, updateAddress, deleteAddress } = useUser();
   const isDark = mounted && theme === "dark";
-
-  const [profile, setProfile] = useState<ProfileData>(INITIAL_PROFILE);
-  const [addresses, setAddresses] = useState<Address[]>(INITIAL_ADDRESSES);
 
   // ── Modal visibility ──
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -111,12 +59,18 @@ export default function UserProfile() {
   // Form state now lives inside each modal component; the page just holds the
   // visibility flag and the save callbacks.
 
-  const handleSaveProfile = (data: { name: string; email: string; phone: string }) => {
-    setProfile(data);
+  const handleSaveProfile = async (data: { name: string; email: string; phone: string }) => {
+    if (!user) return;
+    const updated = await updateProfile(user._id, {
+      name: data.name,
+      phone: data.phone,
+    });
+
+    if (!updated) return;
     setShowEditProfile(false);
   };
 
-  const handleSaveAddress = (data: {
+  const handleSaveAddress = async (data: {
     label: string;
     type: "home" | "office";
     recipient: string;
@@ -126,17 +80,48 @@ export default function UserProfile() {
     postalCode: string;
     isDefault: boolean;
   }) => {
-    const newAddr: Address = { id: Date.now(), province: "", ...data };
-    setAddresses((prev) =>
-      data.isDefault
-        ? [newAddr, ...prev.map((a) => ({ ...a, isDefault: false }))]
-        : [...prev, newAddr],
-    );
+    if (!user) return;
+
+    const updated = await addAddress(user._id, {
+      label: data.label || "Alamat Baru",
+      type: data.type,
+      recipient: data.recipient,
+      phone: data.phone,
+      street: data.street,
+      city: data.city,
+      province: data.city,
+      postalCode: data.postalCode,
+      isDefault: data.isDefault,
+    });
+
+    if (!updated) return;
     setShowAddAddress(false);
   };
 
+  const addresses: IAddress[] = user?.addresses || [];
+
+  if (loading) {
+    return (
+      <div className={`max-w-300 mx-auto w-full py-10 text-sm ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
+        Memuat data profil...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className={`max-w-300 mx-auto w-full py-10 text-sm ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
+        User tidak ditemukan. Silakan tambahkan user terlebih dahulu.
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-300 mx-auto w-full flex flex-col gap-8 pb-20">
+      {error && (
+        <div className="text-sm text-red-500">{error}</div>
+      )}
+
       {/* ── HEADER ─────────────────────────────────────────────────────── */}
       <div
         className={`flex flex-col md:flex-row items-start md:items-end justify-between gap-6 pb-6 border-b ${
@@ -171,19 +156,20 @@ export default function UserProfile() {
                 isDark ? "text-white" : "text-[#1a140e]"
               }`}
             >
-              {profile.name}
+              {user.name}
             </h1>
             <p
               className={`text-sm ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}
             >
-              {profile.email}
+              {user.email}
             </p>
           </div>
         </div>
 
         <button
+          disabled={actionLoading}
           onClick={() => setShowEditProfile(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-[#ec6d13] text-white font-bold rounded-xl shadow-[0_4px_12px_rgba(236,109,19,0.3)] hover:shadow-[0_6px_16px_rgba(236,109,19,0.4)] hover:bg-[#d65d0a] transition-all"
+          className="flex items-center gap-2 px-6 py-3 bg-[#ec6d13] text-white font-bold rounded-xl shadow-[0_4px_12px_rgba(236,109,19,0.3)] hover:shadow-[0_6px_16px_rgba(236,109,19,0.4)] hover:bg-[#d65d0a] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <Edit size={20} />
           Edit Profil
@@ -211,17 +197,17 @@ export default function UserProfile() {
               {
                 icon: <UserIcon size={14} />,
                 label: "Nama Lengkap",
-                value: profile.name,
+                value: user.name,
               },
               {
                 icon: <Mail size={14} />,
                 label: "Alamat Email",
-                value: profile.email,
+                value: user.email,
               },
               {
                 icon: <Phone size={14} />,
                 label: "Nomor Telepon",
-                value: profile.phone,
+                value: user.phone,
               },
             ].map(({ icon, label, value }, i, arr) => (
               <div key={label}>
@@ -264,8 +250,9 @@ export default function UserProfile() {
               Alamat Pengiriman
             </h3>
             <button
+              disabled={actionLoading}
               onClick={() => setShowAddAddress(true)}
-              className="flex items-center gap-2 text-[#ec6d13] hover:text-[#d65c0b] transition-colors text-sm font-semibold"
+              className="flex items-center gap-2 text-[#ec6d13] hover:text-[#d65c0b] transition-colors text-sm font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <Plus size={18} />
               Tambah Alamat
@@ -359,14 +346,8 @@ export default function UserProfile() {
                 >
                   {!addr.isDefault && (
                     <button
-                      onClick={() =>
-                        setAddresses((prev) =>
-                          prev.map((a) => ({
-                            ...a,
-                            isDefault: a.id === addr.id,
-                          })),
-                        )
-                      }
+                      disabled={actionLoading}
+                      onClick={() => void updateAddress(user._id, addr.id, { isDefault: true })}
                       className={`text-xs font-bold hover:text-[#ec6d13] transition-colors ${
                         isDark ? "text-[#b9a89d]" : "text-[#8b7355]"
                       }`}
@@ -374,6 +355,15 @@ export default function UserProfile() {
                       Set Utama
                     </button>
                   )}
+                  <button
+                    disabled={actionLoading}
+                    onClick={() => void deleteAddress(user._id, addr.id)}
+                    className={`text-xs font-bold hover:text-red-500 transition-colors ${
+                      isDark ? "text-[#b9a89d]" : "text-[#8b7355]"
+                    }`}
+                  >
+                    Hapus
+                  </button>
                 </div>
               </div>
             ))}
@@ -388,9 +378,11 @@ export default function UserProfile() {
       {showEditProfile && (
         <EditProfileModal
           isDark={isDark}
-          initialName={profile.name}
-          initialEmail={profile.email}
-          initialPhone={profile.phone}
+          initialName={user.name}
+          initialEmail={user.email}
+          initialPhone={user.phone}
+          isLoading={actionLoading}
+          errorMessage={error}
           onClose={() => setShowEditProfile(false)}
           onSave={handleSaveProfile}
         />
@@ -400,6 +392,8 @@ export default function UserProfile() {
       {showAddAddress && (
         <AddAddressModal
           isDark={isDark}
+          isLoading={actionLoading}
+          errorMessage={error}
           onClose={() => setShowAddAddress(false)}
           onSave={handleSaveAddress}
         />

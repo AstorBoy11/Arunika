@@ -20,6 +20,8 @@ import {
   Package,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+import { useUser } from "@/lib/hooks/useUser";
+import type { IAddress } from "@/lib/models";
 
 // Tipe Data & Data Dummy
 interface CartItem {
@@ -31,32 +33,13 @@ interface CartItem {
   quantity: number;
 }
 
-// ─── Dummy data untuk modal ───────────────────────────────────────────────────
-
 interface Address {
-  id: string;
+  id: number;
   label: string;
   recipient: string;
   phone: string;
   full: string;
 }
-
-const ADDRESSES: Address[] = [
-  {
-    id: "addr-1",
-    label: "Rumah",
-    recipient: "Budi Santoso",
-    phone: "+62 812-3456-7890",
-    full: "Jl. Melati No. 12, Kel. Sukamaju, Kec. Cilandak, Jakarta Selatan, 12560",
-  },
-  {
-    id: "addr-2",
-    label: "Kantor",
-    recipient: "Budi Santoso",
-    phone: "+62 812-3456-7890",
-    full: "Gedung Anindita Lt. 5, Jl. Sudirman Kav. 25, Jakarta Pusat, 10220",
-  },
-];
 
 type PaymentMethod = "cash" | "qris" | null;
 
@@ -65,6 +48,7 @@ type PaymentMethod = "cash" | "qris" | null;
 interface CheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
+  addresses: Address[];
   items: CartItem[];
   subtotal: number;
   shipping: number;
@@ -75,6 +59,7 @@ interface CheckoutModalProps {
 function CheckoutModal({
   isOpen,
   onClose,
+  addresses,
   items,
   subtotal,
   shipping,
@@ -87,6 +72,11 @@ function CheckoutModal({
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>(null);
   const [confirmed, setConfirmed] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen || addresses.length === 0) return;
+    setSelectedAddress(String(addresses[0].id));
+  }, [addresses, isOpen]);
 
   const canConfirm = selectedAddress !== null && selectedPayment !== null;
 
@@ -284,12 +274,18 @@ function CheckoutModal({
             </h3>
 
             <div className="flex flex-col gap-3">
-              {ADDRESSES.map((addr) => {
-                const isSelected = selectedAddress === addr.id;
+              {addresses.length === 0 && (
+                <div className={`text-xs ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
+                  Belum ada alamat pengiriman. Tambahkan alamat di halaman profil.
+                </div>
+              )}
+
+              {addresses.map((addr) => {
+                const isSelected = selectedAddress === String(addr.id);
                 return (
                   <button
                     key={addr.id}
-                    onClick={() => setSelectedAddress(addr.id)}
+                    onClick={() => setSelectedAddress(String(addr.id))}
                     className={`w-full text-left rounded-xl border-2 p-4 transition-all duration-200 group relative ${
                       isSelected
                         ? "border-[#ec6d13] bg-[#ec6d13]/5 shadow-md shadow-[#ec6d13]/10"
@@ -562,6 +558,7 @@ function CheckoutModal({
 // ─── Cart Page ────────────────────────────────────────────────────────────────
 
 export default function CartPage() {
+  const { user } = useUser();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [hasHydratedCart, setHasHydratedCart] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -614,6 +611,17 @@ export default function CartPage() {
   const CLOSE_HOUR = 22;
   const currentHour = new Date().getHours();
   const isStoreClosed = currentHour < OPEN_HOUR || currentHour >= CLOSE_HOUR;
+
+  const checkoutAddresses: Address[] = (user?.addresses || [])
+    .slice()
+    .sort((a: IAddress, b: IAddress) => Number(b.isDefault) - Number(a.isDefault))
+    .map((addr: IAddress) => ({
+      id: addr.id,
+      label: addr.label,
+      recipient: addr.recipient,
+      phone: addr.phone,
+      full: `${addr.street}, ${addr.city}, ${addr.province}${addr.postalCode ? `, ${addr.postalCode}` : ""}`,
+    }));
 
   if (cartItems.length === 0) {
     return (
@@ -814,6 +822,7 @@ export default function CartPage() {
       <CheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
+        addresses={checkoutAddresses}
         items={cartItems}
         subtotal={subtotal}
         shipping={shipping}

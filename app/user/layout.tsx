@@ -3,6 +3,7 @@
 import Header from "@/components/header";
 import Sidebar, { SidebarProvider } from "@/components/sidebar";
 import { useTheme } from "@/context/ThemeContext";
+import { UserProvider } from "@/lib/hooks/useUser";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
@@ -39,8 +40,10 @@ export default function UserLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider>
-      <LayoutContent>{children}</LayoutContent>
-    </SidebarProvider>
+    <UserProvider>
+      <SidebarProvider>
+        <LayoutContent>{children}</LayoutContent>
+      </SidebarProvider>
+    </UserProvider>
   );
 }

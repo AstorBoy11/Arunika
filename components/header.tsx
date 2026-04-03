@@ -6,10 +6,12 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useSidebar } from "./sidebar";
 import { useTheme } from "@/context/ThemeContext";
+import { useUser } from "@/lib/hooks/useUser";
 
 export default function Header() {
   const { setIsOpen } = useSidebar();
   const { theme, toggleTheme } = useTheme();
+  const { user } = useUser();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -111,7 +113,7 @@ export default function Header() {
             }`}
         >
           <div className="w-full h-full bg-[#ec6d13] flex items-center justify-center text-white font-bold text-sm">
-            A
+            {(user?.name?.charAt(0) || "A").toUpperCase()}
           </div>
         </button>
 
@@ -124,10 +126,10 @@ export default function Header() {
             {/* User Info */}
             <div className={`px-4 py-3 border-b ${isDark ? "border-[#3e342b]" : "border-[#e5ddd5]"}`}>
               <p className={`font-semibold text-sm ${isDark ? "text-white" : "text-[#1a140e]"}`}>
-                Alex Morgan
+                {user?.name || "Guest"}
               </p>
               <p className={`text-xs truncate ${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"}`}>
-                alex@example.com
+                {user?.email || "-"}
               </p>
             </div>
 

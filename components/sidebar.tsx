@@ -13,6 +13,7 @@ import {
   ShoppingCart
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+import { useUser } from "@/lib/hooks/useUser";
 
 // --- CONTEXT SETUP ---
 export const SidebarContext = createContext<{
@@ -42,6 +43,7 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
   const { isOpen, setIsOpen } = useSidebar();
   const pathname = usePathname();
   const { theme } = useTheme();
+  const { user } = useUser();
 
   const isDark = theme === "dark";
 
@@ -158,7 +160,7 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
               </div>
               <div className="flex flex-col overflow-hidden">
                 <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-[#1a140e]"}`}>
-                  Alex Morgan
+                  {user?.name || "Guest"}
                 </p>
               </div>
             </div>
