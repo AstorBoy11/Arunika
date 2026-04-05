@@ -1,7 +1,10 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import AdminHeader from "@/components/admin-header";
 import Image from "next/image";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { 
   Camera, 
   Upload, 
@@ -13,7 +16,127 @@ import {
   Smartphone 
 } from "lucide-react";
 
+type Address = {
+  id: number;
+  label: string;
+  type: "home" | "office";
+  recipient: string;
+  street: string;
+  city: string;
+  province: string;
+  postalCode?: string;
+  phone: string;
+  isDefault: boolean;
+};
+
+type UserData = {
+  _id: string;
+  name: string;
+  email: string;
+  phone: string;
+  addresses: Address[];
+  createdAt?: string;
+};
+
+type ApiResponse<T> = {
+  success: boolean;
+  data?: T;
+  message?: string;
+};
+
 export default function AdminProfile() {
+  const [formName, setFormName] = useState("");
+  const [formPhone, setFormPhone] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackType, setFeedbackType] = useState<"success" | "error" | "">("");
+
+  const { data, error, isLoading, mutate } = useSWR<ApiResponse<UserData[]>>(
+    "/api/users",
+    fetcher<ApiResponse<UserData[]>>
+  );
+
+  const adminUser = useMemo(() => data?.data?.[0] ?? null, [data]);
+
+  useEffect(() => {
+    if (!adminUser) {
+      return;
+    }
+
+    setFormName(adminUser.name ?? "");
+    setFormPhone(adminUser.phone ?? "");
+  }, [adminUser]);
+
+  const createdAtLabel = useMemo(() => {
+    if (!adminUser?.createdAt) {
+      return "Belum tersedia";
+    }
+
+    const date = new Date(adminUser.createdAt);
+    if (Number.isNaN(date.getTime())) {
+      return "Belum tersedia";
+    }
+
+    return date.toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }, [adminUser?.createdAt]);
+
+  const handleUpdateProfile = async () => {
+    if (!adminUser?._id) {
+      setFeedbackType("error");
+      setFeedbackMessage("User admin belum tersedia.");
+      return;
+    }
+
+    const trimmedName = formName.trim();
+    const trimmedPhone = formPhone.trim();
+
+    if (trimmedName.length < 2) {
+      setFeedbackType("error");
+      setFeedbackMessage("Nama admin minimal 2 karakter.");
+      return;
+    }
+
+    if (trimmedPhone.length < 8) {
+      setFeedbackType("error");
+      setFeedbackMessage("Nomor kontak minimal 8 karakter.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setFeedbackType("");
+      setFeedbackMessage("");
+
+      const response = await fetch(`/api/users/${adminUser._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: trimmedName,
+          phone: trimmedPhone,
+        }),
+      });
+
+      const json = (await response.json()) as ApiResponse<UserData>;
+      if (!response.ok || !json.success) {
+        throw new Error(json.message ?? "Gagal memperbarui profil admin");
+      }
+
+      setFeedbackType("success");
+      setFeedbackMessage("Profil admin berhasil diperbarui.");
+      await mutate();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Gagal memperbarui profil admin";
+      setFeedbackType("error");
+      setFeedbackMessage(message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const cardClass =
     "bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-xl shadow-sm dark:shadow-none transition-colors";
 
@@ -27,6 +150,18 @@ export default function AdminProfile() {
 
       {/* 2. MAIN CONTENT */}
       <div className="flex-1 overflow-y-auto p-6 md:p-10 pb-24 custom-scrollbar">
+        {(error || feedbackMessage) && (
+          <div
+            className={`max-w-5xl mx-auto mb-6 rounded-lg border px-4 py-3 text-sm ${
+              error || feedbackType === "error"
+                ? "bg-[#fff4ee] border-[#f2c1ab] text-[#a64822] dark:bg-[#3a1c14]/40 dark:border-[#7a3422] dark:text-[#f2b8a0]"
+                : "bg-[#eefaf0] border-[#bde6c4] text-[#1f7a34] dark:bg-[#17331e] dark:border-[#2d6a3a] dark:text-[#97e0aa]"
+            }`}
+          >
+            {error ? error.message : feedbackMessage}
+          </div>
+        )}
+
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* LEFT COLUMN: Profile Card */}
@@ -48,7 +183,9 @@ export default function AdminProfile() {
                 </div>
               </div>
               
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Jane Doe</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                {isLoading ? "Memuat..." : adminUser?.name ?? "Admin"}
+              </h3>
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#ec6d13]/10 text-[#ec6d13] border border-[#ec6d13]/20 mb-6">
                 Super Admin
               </span>
@@ -68,7 +205,7 @@ export default function AdminProfile() {
               <div className="w-full bg-gray-200 dark:bg-[#3e342b] rounded-full h-1.5 mt-2">
                 <div className="bg-green-500 h-1.5 rounded-full" style={{ width: "100%" }}></div>
               </div>
-              <p className="text-gray-400 dark:text-[#b9a89d] text-xs mt-3">Member since Oct 2021</p>
+              <p className="text-gray-400 dark:text-[#b9a89d] text-xs mt-3">Member since {createdAtLabel}</p>
             </div>
           </div>
 
@@ -88,7 +225,9 @@ export default function AdminProfile() {
                   <input 
                     className="w-full bg-gray-50 dark:bg-[#2a221b] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] transition-all placeholder-gray-400" 
                     type="text" 
-                    defaultValue="Jane Doe"
+                    value={formName}
+                    onChange={(event) => setFormName(event.target.value)}
+                    disabled={isLoading || isSaving || !adminUser}
                   />
                 </label>
                 <label className="flex flex-col gap-2">
@@ -106,9 +245,10 @@ export default function AdminProfile() {
                 <label className="flex flex-col gap-2">
                   <span className="text-gray-500 dark:text-[#b9a89d] text-sm font-medium">Email Address</span>
                   <input 
-                    className="w-full bg-gray-50 dark:bg-[#2a221b] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] transition-all placeholder-gray-400" 
+                    className="w-full bg-gray-100 dark:bg-[#2a221b] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-3 text-gray-500 dark:text-[#b9a89d] cursor-not-allowed focus:outline-none" 
                     type="email" 
-                    defaultValue="jane.doe@coffeeconnect.com"
+                    value={adminUser?.email ?? ""}
+                    readOnly
                   />
                 </label>
                 <label className="flex flex-col gap-2">
@@ -116,14 +256,20 @@ export default function AdminProfile() {
                   <input 
                     className="w-full bg-gray-50 dark:bg-[#2a221b] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] transition-all placeholder-gray-400" 
                     type="tel" 
-                    defaultValue="+1 (555) 123-4567"
+                    value={formPhone}
+                    onChange={(event) => setFormPhone(event.target.value)}
+                    disabled={isLoading || isSaving || !adminUser}
                   />
                 </label>
               </div>
               
               <div className="mt-8 flex justify-end">
-                <button className="bg-[#ec6d13] hover:bg-[#d65f0e] text-white font-bold py-3 px-8 rounded-lg shadow-lg shadow-[#ec6d13]/20 transition-all transform hover:scale-[1.02] active:scale-[0.98]">
-                  Update Profile
+                <button
+                  onClick={handleUpdateProfile}
+                  disabled={isLoading || isSaving || !adminUser}
+                  className="bg-[#ec6d13] hover:bg-[#d65f0e] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-lg shadow-lg shadow-[#ec6d13]/20 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  {isSaving ? "Menyimpan..." : "Update Profile"}
                 </button>
               </div>
             </div>
