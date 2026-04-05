@@ -72,17 +72,40 @@ export default function LandingPage() {
         });
 
         if (!response.ok) {
-          throw new Error("Gagal memuat produk best seller");
+          console.warn("Gagal fetch best seller, tampilkan kosong");
+          setBestSellers([]);
+          return;
         }
 
         const json = (await response.json()) as ProductsApiResponse;
         if (!json.success) {
-          throw new Error(json.message || "Gagal memuat produk best seller");
+          setBestSellers([]);
+          return;
+        }
+
+        if (json.data.length === 0) {
+          const fallbackResponse = await fetch("/api/products", {
+            cache: "no-store",
+          });
+
+          if (!fallbackResponse.ok) {
+            setBestSellers([]);
+            return;
+          }
+
+          const fallbackJson = (await fallbackResponse.json()) as ProductsApiResponse;
+          if (!fallbackJson.success) {
+            setBestSellers([]);
+            return;
+          }
+
+          setBestSellers(fallbackJson.data.slice(0, 3));
+          return;
         }
 
         setBestSellers(json.data.slice(0, 3));
       } catch (error) {
-        console.error("Failed to fetch best seller products:", error);
+        console.warn("Error fetch best seller:", error);
         setBestSellers([]);
       } finally {
         setIsLoadingProducts(false);

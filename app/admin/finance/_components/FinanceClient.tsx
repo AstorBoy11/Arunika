@@ -1,20 +1,36 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { Loader2, Plus, TrendingDown, TrendingUp } from "lucide-react";
+import { Loader2, Plus, Trash2, TrendingDown, TrendingUp } from "lucide-react";
+import type { IExpense } from "@/lib/models";
 
-type ExpenseItem = {
-  id: number;
+type ExpenseItem = Pick<IExpense, "keterangan" | "nominal"> & {
+  _id: string;
   tanggal: string;
-  keterangan: string;
-  nominal: number;
 };
 
 type NewExpensePayload = {
   nominal: number;
   keterangan: string;
   tanggal: string;
+};
+
+type ExpenseApiItem = Pick<IExpense, "keterangan" | "nominal"> & {
+  _id: string;
+  tanggal: string | Date;
+};
+
+type ExpensesResponse = {
+  success: boolean;
+  data?: ExpenseApiItem[];
+  message?: string;
+};
+
+type ExpenseResponse = {
+  success: boolean;
+  data?: ExpenseApiItem;
+  message?: string;
 };
 
 type PaidOrder = {
@@ -34,26 +50,18 @@ const ModalAddExpense = dynamic(() => import("./ModalAddExpense"), {
   loading: () => null,
 });
 
-const INITIAL_EXPENSES: ExpenseItem[] = [
-  {
-    id: 1,
-    tanggal: "2026-03-26",
-    keterangan: "Pembelian biji kopi bulanan",
-    nominal: 2350000,
-  },
-  {
-    id: 2,
-    tanggal: "2026-03-27",
-    keterangan: "Perawatan mesin espresso",
-    nominal: 850000,
-  },
-  {
-    id: 3,
-    tanggal: "2026-03-29",
-    keterangan: "Biaya listrik dan internet",
-    nominal: 1250000,
-  },
-];
+function normalizeTanggal(value: string | Date): string {
+  if (value instanceof Date) {
+    return value.toISOString().split("T")[0];
+  }
+
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toISOString().split("T")[0];
+  }
+
+  return value;
+}
 
 function formatIDR(value: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -73,12 +81,47 @@ function formatDate(dateString: string) {
 }
 
 export default function FinanceClient() {
-  const [expenses, setExpenses] = useState<ExpenseItem[]>(INITIAL_EXPENSES);
+  const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+  const [loadingExpenses, setLoadingExpenses] = useState(true);
+  const [expenseError, setExpenseError] = useState("");
+  const [savingExpense, setSavingExpense] = useState(false);
+  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
   const [paidOrders, setPaidOrders] = useState<PaidOrder[]>([]);
   const [loadingIncome, setLoadingIncome] = useState(true);
   const [incomeError, setIncomeError] = useState("");
 
+  const fetchExpenses = useCallback(async () => {
+    setLoadingExpenses(true);
+    setExpenseError("");
+
+    try {
+      const response = await fetch("/api/expenses", {
+        cache: "no-store",
+      });
+      const result: ExpensesResponse = (await response.json()) as ExpensesResponse;
+
+      if (!response.ok || !result.success) {
+        setExpenseError(result.message ?? "Gagal memuat data pengeluaran.");
+        setExpenses([]);
+        return;
+      }
+
+      const normalized = (result.data ?? []).map((item) => ({
+        _id: item._id,
+        keterangan: item.keterangan,
+        nominal: item.nominal,
+        tanggal: normalizeTanggal(item.tanggal),
+      }));
+
+      setExpenses(normalized);
+    } catch {
+      setExpenseError("Terjadi kesalahan jaringan saat memuat pengeluaran.");
+      setExpenses([]);
+    } finally {
+      setLoadingExpenses(false);
+    }
+  }, []);
   useEffect(() => {
     let isCancelled = false;
 
@@ -120,6 +163,10 @@ export default function FinanceClient() {
     };
   }, []);
 
+  useEffect(() => {
+    void fetchExpenses();
+  }, [fetchExpenses]);
+
   const totalPengeluaran = useMemo(
     () => expenses.reduce((acc, item) => acc + item.nominal, 0),
     [expenses]
@@ -144,19 +191,67 @@ export default function FinanceClient() {
       .sort((a, b) => (a.tanggal < b.tanggal ? 1 : -1));
   }, [paidOrders]);
 
-  const handleAddExpense = (payload: NewExpensePayload) => {
-    setExpenses((prev) => {
-      const nextId = prev.length > 0 ? Math.max(...prev.map((item) => item.id)) + 1 : 1;
-      return [
-        {
-          id: nextId,
-          nominal: payload.nominal,
-          keterangan: payload.keterangan,
-          tanggal: payload.tanggal,
+  const handleAddExpense = async (payload: NewExpensePayload): Promise<boolean> => {
+    setSavingExpense(true);
+    setExpenseError("");
+
+    try {
+      const response = await fetch("/api/expenses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        ...prev,
-      ];
-    });
+        body: JSON.stringify(payload),
+      });
+
+      const result: ExpenseResponse = (await response.json()) as ExpenseResponse;
+
+      if (!response.ok || !result.success) {
+        setExpenseError(result.message ?? "Gagal menyimpan pengeluaran.");
+        return false;
+      }
+
+      setIsAddExpenseOpen(false);
+      await fetchExpenses();
+      return true;
+    } catch {
+      setExpenseError("Terjadi kesalahan jaringan saat menyimpan pengeluaran.");
+      return false;
+    } finally {
+      setSavingExpense(false);
+    }
+  };
+
+  const handleDeleteExpense = async (expenseId: string) => {
+    const confirmed = window.confirm("Hapus pengeluaran ini?");
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingExpenseId(expenseId);
+    setExpenseError("");
+
+    try {
+      const response = await fetch(`/api/expenses/${expenseId}`, {
+        method: "DELETE",
+      });
+
+      const result: { success: boolean; message?: string } = (await response.json()) as {
+        success: boolean;
+        message?: string;
+      };
+
+      if (!response.ok || !result.success) {
+        setExpenseError(result.message ?? "Gagal menghapus pengeluaran.");
+        return;
+      }
+
+      await fetchExpenses();
+    } catch {
+      setExpenseError("Terjadi kesalahan jaringan saat menghapus pengeluaran.");
+    } finally {
+      setDeletingExpenseId(null);
+    }
   };
 
   return (
@@ -198,6 +293,12 @@ export default function FinanceClient() {
       {incomeError && (
         <div className="mt-6 rounded-lg border px-3 py-2.5 text-xs bg-[#fff4ee] border-[#f2c1ab] text-[#a64822] dark:bg-[#3a1c14]/40 dark:border-[#7a3422] dark:text-[#f2b8a0]">
           {incomeError}
+        </div>
+      )}
+
+      {expenseError && (
+        <div className="mt-6 rounded-lg border px-3 py-2.5 text-xs bg-[#fff4ee] border-[#f2c1ab] text-[#a64822] dark:bg-[#3a1c14]/40 dark:border-[#7a3422] dark:text-[#f2b8a0]">
+          {expenseError}
         </div>
       )}
 
@@ -274,30 +375,59 @@ export default function FinanceClient() {
                 <th className="text-left px-6 py-3 font-semibold text-gray-500 dark:text-[#8e7f72]">Tanggal</th>
                 <th className="text-left px-6 py-3 font-semibold text-gray-500 dark:text-[#8e7f72]">Keterangan</th>
                 <th className="text-right px-6 py-3 font-semibold text-gray-500 dark:text-[#8e7f72]">Nominal</th>
+                <th className="text-right px-6 py-3 font-semibold text-gray-500 dark:text-[#8e7f72]">Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {expenses.map((expense) => (
-                <tr
-                  key={expense.id}
-                  className="border-b border-gray-200 dark:border-[#3e342b] last:border-0"
-                >
-                  <td className="px-6 py-4 text-gray-700 dark:text-[#EAE0D5] whitespace-nowrap">
-                    {formatDate(expense.tanggal)}
-                  </td>
-                  <td className="px-6 py-4 text-gray-900 dark:text-white">
-                    {expense.keterangan}
-                  </td>
-                  <td className="px-6 py-4 text-right text-[#ec6d13] font-bold whitespace-nowrap">
-                    {formatIDR(expense.nominal)}
+              {loadingExpenses ? (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-6 py-8 text-sm text-gray-500 dark:text-[#8e7f72]"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Loader2 size={16} className="animate-spin text-[#ec6d13]" />
+                      Memuat data pengeluaran...
+                    </div>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                expenses.map((expense) => (
+                  <tr
+                    key={expense._id}
+                    className="border-b border-gray-200 dark:border-[#3e342b] last:border-0"
+                  >
+                    <td className="px-6 py-4 text-gray-700 dark:text-[#EAE0D5] whitespace-nowrap">
+                      {formatDate(expense.tanggal)}
+                    </td>
+                    <td className="px-6 py-4 text-gray-900 dark:text-white">
+                      {expense.keterangan}
+                    </td>
+                    <td className="px-6 py-4 text-right text-[#ec6d13] font-bold whitespace-nowrap">
+                      {formatIDR(expense.nominal)}
+                    </td>
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                      <button
+                        onClick={() => void handleDeleteExpense(expense._id)}
+                        disabled={deletingExpenseId === expense._id}
+                        className="inline-flex items-center justify-center p-2 rounded-lg border border-gray-200 dark:border-[#3e342b] text-gray-500 dark:text-[#8e7f72] hover:bg-gray-50 dark:hover:bg-[#231910] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                        aria-label="Hapus pengeluaran"
+                      >
+                        {deletingExpenseId === expense._id ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={14} />
+                        )}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
-        {expenses.length === 0 && (
+        {!loadingExpenses && expenses.length === 0 && (
           <div className="px-6 py-10 text-center text-sm text-gray-500 dark:text-[#8e7f72]">
             Belum ada data pengeluaran.
           </div>
@@ -308,6 +438,7 @@ export default function FinanceClient() {
         isOpen={isAddExpenseOpen}
         onClose={() => setIsAddExpenseOpen(false)}
         onSubmit={handleAddExpense}
+        isLoading={savingExpense}
       />
     </div>
   );
