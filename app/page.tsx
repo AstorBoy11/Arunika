@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import useSWR from "swr";
 import { Work_Sans } from "next/font/google";
 import {
   Coffee,
@@ -40,6 +41,40 @@ type ProductsApiResponse = {
   message?: string;
 };
 
+async function bestSellerFetcher(): Promise<LandingProduct[]> {
+  const response = await fetch("/api/products?badge=Best%20Seller", {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const json = (await response.json()) as ProductsApiResponse;
+  if (!json.success) {
+    return [];
+  }
+
+  if (json.data.length === 0) {
+    const fallbackResponse = await fetch("/api/products", {
+      cache: "no-store",
+    });
+
+    if (!fallbackResponse.ok) {
+      return [];
+    }
+
+    const fallbackJson = (await fallbackResponse.json()) as ProductsApiResponse;
+    if (!fallbackJson.success) {
+      return [];
+    }
+
+    return fallbackJson.data.slice(0, 3);
+  }
+
+  return json.data.slice(0, 3);
+}
+
 const formatRupiah = (value: number) =>
   new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -50,10 +85,17 @@ const formatRupiah = (value: number) =>
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [bestSellers, setBestSellers] = useState<LandingProduct[]>([]);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
+
+  const { data: bestSellers = [], isLoading: isLoadingProducts } = useSWR(
+    "landing-best-sellers",
+    bestSellerFetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 20_000,
+    }
+  );
 
   useEffect(() => {
     const handleScroll = () => {
@@ -61,58 +103,6 @@ export default function LandingPage() {
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const fetchBestSellers = async () => {
-      try {
-        setIsLoadingProducts(true);
-        const response = await fetch("/api/products?badge=Best%20Seller", {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          console.warn("Gagal fetch best seller, tampilkan kosong");
-          setBestSellers([]);
-          return;
-        }
-
-        const json = (await response.json()) as ProductsApiResponse;
-        if (!json.success) {
-          setBestSellers([]);
-          return;
-        }
-
-        if (json.data.length === 0) {
-          const fallbackResponse = await fetch("/api/products", {
-            cache: "no-store",
-          });
-
-          if (!fallbackResponse.ok) {
-            setBestSellers([]);
-            return;
-          }
-
-          const fallbackJson = (await fallbackResponse.json()) as ProductsApiResponse;
-          if (!fallbackJson.success) {
-            setBestSellers([]);
-            return;
-          }
-
-          setBestSellers(fallbackJson.data.slice(0, 3));
-          return;
-        }
-
-        setBestSellers(json.data.slice(0, 3));
-      } catch (error) {
-        console.warn("Error fetch best seller:", error);
-        setBestSellers([]);
-      } finally {
-        setIsLoadingProducts(false);
-      }
-    };
-
-    void fetchBestSellers();
   }, []);
 
   const navLinks = [
@@ -248,6 +238,7 @@ export default function LandingPage() {
             src="https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=2071&auto=format&fit=crop"
             alt="Coffee Hero"
             fill
+            sizes="100vw"
             className="object-cover"
             priority
           />
@@ -365,9 +356,22 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {isLoadingProducts ? (
-              <div className={`col-span-full text-sm ${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"}`}>
-                Memuat produk best seller...
-              </div>
+              [0, 1, 2].map((idx) => (
+                <div
+                  key={idx}
+                  className={`rounded-2xl overflow-hidden border ${isDark
+                    ? "bg-[#1a140e] border-[#2c241b]"
+                    : "bg-white border-[#e5ddd5]"
+                    }`}
+                >
+                  <div className={`aspect-[4/3] ${isDark ? "bg-[#2a211a]" : "bg-gray-200"} animate-pulse`} />
+                  <div className="p-6 space-y-3">
+                    <div className={`h-3 rounded ${isDark ? "bg-[#3e342b]" : "bg-gray-200"} animate-pulse`} />
+                    <div className={`h-6 rounded ${isDark ? "bg-[#3e342b]" : "bg-gray-200"} animate-pulse`} />
+                    <div className={`h-5 w-2/3 rounded ${isDark ? "bg-[#3e342b]" : "bg-gray-200"} animate-pulse`} />
+                  </div>
+                </div>
+              ))
             ) : (
               bestSellers.map((product) => (
               <div
@@ -382,6 +386,7 @@ export default function LandingPage() {
                     src={product.image}
                     alt={product.name}
                     fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                   <div className="absolute top-4 left-4">
@@ -426,6 +431,7 @@ export default function LandingPage() {
                   src="https://images.unsplash.com/photo-1447933601403-0c6688de566e?q=80&w=1000&auto=format&fit=crop"
                   alt="Arunika Coffee Story"
                   fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
@@ -473,6 +479,7 @@ export default function LandingPage() {
             src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=2000&auto=format&fit=crop"
             alt="CTA Background"
             fill
+            sizes="100vw"
             className="object-cover"
           />
           <div className="absolute inset-0 bg-black/60" />

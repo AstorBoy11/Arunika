@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import useSWR from "swr";
 import { Loader2, Plus, Trash2, TrendingDown, TrendingUp } from "lucide-react";
 import type { IExpense } from "@/lib/models";
+import { fetcher } from "@/lib/fetcher";
 
 type ExpenseItem = Pick<IExpense, "keterangan" | "nominal"> & {
   _id: string;
@@ -81,91 +83,45 @@ function formatDate(dateString: string) {
 }
 
 export default function FinanceClient() {
-  const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
-  const [loadingExpenses, setLoadingExpenses] = useState(true);
-  const [expenseError, setExpenseError] = useState("");
+  const [expenseActionError, setExpenseActionError] = useState("");
   const [savingExpense, setSavingExpense] = useState(false);
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
-  const [paidOrders, setPaidOrders] = useState<PaidOrder[]>([]);
-  const [loadingIncome, setLoadingIncome] = useState(true);
-  const [incomeError, setIncomeError] = useState("");
 
-  const fetchExpenses = useCallback(async () => {
-    setLoadingExpenses(true);
-    setExpenseError("");
+  const {
+    data: expensesData,
+    error: expensesFetchError,
+    isLoading: loadingExpenses,
+    mutate: mutateExpenses,
+  } = useSWR<ExpensesResponse>("/api/expenses", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 10_000,
+  });
 
-    try {
-      const response = await fetch("/api/expenses", {
-        cache: "no-store",
-      });
-      const result: ExpensesResponse = (await response.json()) as ExpensesResponse;
+  const {
+    data: ordersData,
+    error: incomeFetchError,
+    isLoading: loadingIncome,
+  } = useSWR<OrdersResponse>("/api/orders?paymentStatus=paid", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 10_000,
+  });
 
-      if (!response.ok || !result.success) {
-        setExpenseError(result.message ?? "Gagal memuat data pengeluaran.");
-        setExpenses([]);
-        return;
-      }
-
-      const normalized = (result.data ?? []).map((item) => ({
+  const expenses: ExpenseItem[] = useMemo(
+    () =>
+      (expensesData?.data ?? []).map((item) => ({
         _id: item._id,
         keterangan: item.keterangan,
         nominal: item.nominal,
         tanggal: normalizeTanggal(item.tanggal),
-      }));
+      })),
+    [expensesData?.data]
+  );
 
-      setExpenses(normalized);
-    } catch {
-      setExpenseError("Terjadi kesalahan jaringan saat memuat pengeluaran.");
-      setExpenses([]);
-    } finally {
-      setLoadingExpenses(false);
-    }
-  }, []);
-  useEffect(() => {
-    let isCancelled = false;
+  const paidOrders = useMemo(() => ordersData?.data ?? [], [ordersData?.data]);
 
-    const fetchPaidOrders = async () => {
-      setLoadingIncome(true);
-      setIncomeError("");
-
-      try {
-        const response = await fetch("/api/orders?paymentStatus=paid");
-        const result: OrdersResponse = (await response.json()) as OrdersResponse;
-
-        if (!response.ok || !result.success) {
-          if (!isCancelled) {
-            setIncomeError(result.message ?? "Gagal memuat data pendapatan.");
-            setPaidOrders([]);
-          }
-          return;
-        }
-
-        if (!isCancelled) {
-          setPaidOrders(result.data ?? []);
-        }
-      } catch {
-        if (!isCancelled) {
-          setIncomeError("Terjadi kesalahan jaringan saat memuat pendapatan.");
-          setPaidOrders([]);
-        }
-      } finally {
-        if (!isCancelled) {
-          setLoadingIncome(false);
-        }
-      }
-    };
-
-    void fetchPaidOrders();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    void fetchExpenses();
-  }, [fetchExpenses]);
+  const incomeError = incomeFetchError instanceof Error ? incomeFetchError.message : "";
+  const expenseError = expenseActionError || (expensesFetchError instanceof Error ? expensesFetchError.message : "");
 
   const totalPengeluaran = useMemo(
     () => expenses.reduce((acc, item) => acc + item.nominal, 0),
@@ -193,7 +149,7 @@ export default function FinanceClient() {
 
   const handleAddExpense = async (payload: NewExpensePayload): Promise<boolean> => {
     setSavingExpense(true);
-    setExpenseError("");
+    setExpenseActionError("");
 
     try {
       const response = await fetch("/api/expenses", {
@@ -207,15 +163,15 @@ export default function FinanceClient() {
       const result: ExpenseResponse = (await response.json()) as ExpenseResponse;
 
       if (!response.ok || !result.success) {
-        setExpenseError(result.message ?? "Gagal menyimpan pengeluaran.");
+        setExpenseActionError(result.message ?? "Gagal menyimpan pengeluaran.");
         return false;
       }
 
       setIsAddExpenseOpen(false);
-      await fetchExpenses();
+      await mutateExpenses();
       return true;
     } catch {
-      setExpenseError("Terjadi kesalahan jaringan saat menyimpan pengeluaran.");
+      setExpenseActionError("Terjadi kesalahan jaringan saat menyimpan pengeluaran.");
       return false;
     } finally {
       setSavingExpense(false);
@@ -229,7 +185,7 @@ export default function FinanceClient() {
     }
 
     setDeletingExpenseId(expenseId);
-    setExpenseError("");
+    setExpenseActionError("");
 
     try {
       const response = await fetch(`/api/expenses/${expenseId}`, {
@@ -242,13 +198,13 @@ export default function FinanceClient() {
       };
 
       if (!response.ok || !result.success) {
-        setExpenseError(result.message ?? "Gagal menghapus pengeluaran.");
+        setExpenseActionError(result.message ?? "Gagal menghapus pengeluaran.");
         return;
       }
 
-      await fetchExpenses();
+      await mutateExpenses();
     } catch {
-      setExpenseError("Terjadi kesalahan jaringan saat menghapus pengeluaran.");
+      setExpenseActionError("Terjadi kesalahan jaringan saat menghapus pengeluaran.");
     } finally {
       setDeletingExpenseId(null);
     }
@@ -264,7 +220,11 @@ export default function FinanceClient() {
                 Total Pemasukan
               </p>
               <h3 className="mt-2 text-2xl font-black text-gray-900 dark:text-white">
-                {loadingIncome ? "..." : formatIDR(totalPemasukan)}
+                {loadingIncome ? (
+                  <span className="inline-block h-8 w-28 rounded-lg bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                ) : (
+                  formatIDR(totalPemasukan)
+                )}
               </h3>
             </div>
             <div className="p-2.5 rounded-xl bg-[#0bda16]/10 border border-[#0bda16]/20">
@@ -280,7 +240,11 @@ export default function FinanceClient() {
                 Total Pengeluaran
               </p>
               <h3 className="mt-2 text-2xl font-black text-gray-900 dark:text-white">
-                {formatIDR(totalPengeluaran)}
+                {loadingExpenses ? (
+                  <span className="inline-block h-8 w-28 rounded-lg bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                ) : (
+                  formatIDR(totalPengeluaran)
+                )}
               </h3>
             </div>
             <div className="p-2.5 rounded-xl bg-[#ec6d13]/10 border border-[#ec6d13]/20">
@@ -311,9 +275,13 @@ export default function FinanceClient() {
         </div>
 
         {loadingIncome ? (
-          <div className="px-6 py-8 text-sm text-gray-500 dark:text-[#8e7f72] flex items-center gap-2">
-            <Loader2 size={16} className="animate-spin text-[#ec6d13]" />
-            Memuat pendapatan order...
+          <div className="px-6 py-6 space-y-3">
+            {[0, 1, 2].map((row) => (
+              <div key={row} className="grid grid-cols-2 gap-4">
+                <div className="h-5 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                <div className="h-5 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+              </div>
+            ))}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -383,11 +351,17 @@ export default function FinanceClient() {
                 <tr>
                   <td
                     colSpan={4}
-                    className="px-6 py-8 text-sm text-gray-500 dark:text-[#8e7f72]"
+                    className="px-6 py-5"
                   >
-                    <div className="flex items-center gap-2">
-                      <Loader2 size={16} className="animate-spin text-[#ec6d13]" />
-                      Memuat data pengeluaran...
+                    <div className="space-y-3">
+                      {[0, 1, 2].map((row) => (
+                        <div key={row} className="grid grid-cols-4 gap-4">
+                          <div className="h-5 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                          <div className="h-5 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                          <div className="h-5 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                          <div className="h-5 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                        </div>
+                      ))}
                     </div>
                   </td>
                 </tr>

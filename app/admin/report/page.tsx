@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import AdminHeader from "@/components/admin-header";
+import useSWR from "swr";
 import {
   Calendar,
   Download,
@@ -12,6 +13,7 @@ import {
   ChevronRight,
   ChevronUp
 } from "lucide-react";
+import { fetcher } from "@/lib/fetcher";
 
 type ReportOrderItem = {
   _id: string;
@@ -85,83 +87,75 @@ function escapeCsvCell(value: string | number) {
 }
 
 export default function AdminReports() {
-  const [orders, setOrders] = useState<ReportOrderItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [period, setPeriod] = useState<"thisMonth" | "last30">("thisMonth");
+  const [paymentFilter, setPaymentFilter] = useState<"all" | "cash" | "qris">("all");
 
-  useEffect(() => {
-    let cancelled = false;
+  const { data, error: fetchError, isLoading: loading } = useSWR<OrdersResponse>(
+    "/api/orders?paymentStatus=paid",
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 15_000,
+    }
+  );
 
-    const fetchReportData = async () => {
-      setLoading(true);
-      setError("");
-
-      try {
-        const response = await fetch("/api/orders?paymentStatus=paid", {
-          cache: "no-store",
-        });
-        const result = (await response.json()) as OrdersResponse;
-
-        if (!response.ok || !result.success) {
-          if (!cancelled) {
-            setError(result.message ?? "Gagal memuat laporan penjualan.");
-            setOrders([]);
-          }
-          return;
-        }
-
-        if (!cancelled) {
-          setOrders(result.data ?? []);
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Terjadi kesalahan jaringan saat memuat laporan penjualan.");
-          setOrders([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void fetchReportData();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const orders = data?.data ?? [];
+  const error = fetchError instanceof Error ? fetchError.message : "";
 
   const currentMonthLabel = useMemo(() => {
     const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), 1);
-    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const start =
+      period === "thisMonth"
+        ? new Date(now.getFullYear(), now.getMonth(), 1)
+        : new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
+    const end =
+      period === "thisMonth"
+        ? new Date(now.getFullYear(), now.getMonth() + 1, 0)
+        : now;
     const formatter = new Intl.DateTimeFormat("id-ID", {
       day: "numeric",
       month: "short",
     });
     return `${formatter.format(start)} - ${formatter.format(end)}`;
-  }, []);
+  }, [period]);
 
   const currentMonthOrders = useMemo(() => {
     const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), 1);
-    const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const start =
+      period === "thisMonth"
+        ? new Date(now.getFullYear(), now.getMonth(), 1)
+        : new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
+    const end =
+      period === "thisMonth"
+        ? new Date(now.getFullYear(), now.getMonth() + 1, 1)
+        : new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
     return orders.filter((order) => {
       const createdAt = new Date(order.createdAt);
-      return createdAt >= start && createdAt < end;
+      const matchPeriod = createdAt >= start && createdAt < end;
+      const matchPayment =
+        paymentFilter === "all" ? true : order.paymentMethod === paymentFilter;
+      return matchPeriod && matchPayment;
     });
-  }, [orders]);
+  }, [orders, paymentFilter, period]);
 
   const previousMonthOrders = useMemo(() => {
     const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const end = new Date(now.getFullYear(), now.getMonth(), 1);
+    const start =
+      period === "thisMonth"
+        ? new Date(now.getFullYear(), now.getMonth() - 1, 1)
+        : new Date(now.getFullYear(), now.getMonth(), now.getDate() - 59);
+    const end =
+      period === "thisMonth"
+        ? new Date(now.getFullYear(), now.getMonth(), 1)
+        : new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
     return orders.filter((order) => {
       const createdAt = new Date(order.createdAt);
-      return createdAt >= start && createdAt < end;
+      const matchPeriod = createdAt >= start && createdAt < end;
+      const matchPayment =
+        paymentFilter === "all" ? true : order.paymentMethod === paymentFilter;
+      return matchPeriod && matchPayment;
     });
-  }, [orders]);
+  }, [orders, paymentFilter, period]);
 
   const totalRevenue = useMemo(
     () => currentMonthOrders.reduce((acc, order) => acc + order.total, 0),
@@ -187,6 +181,20 @@ export default function AdminReports() {
     () => [...currentMonthOrders].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)),
     [currentMonthOrders]
   );
+
+  const comparisonLabel = period === "thisMonth" ? "vs last month" : "vs previous 30 days";
+
+  const cyclePaymentFilter = () => {
+    setPaymentFilter((prev) => {
+      if (prev === "all") {
+        return "cash";
+      }
+      if (prev === "cash") {
+        return "qris";
+      }
+      return "all";
+    });
+  };
 
   const handleExport = () => {
     const header = [
@@ -245,7 +253,10 @@ export default function AdminReports() {
         <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 mb-8 mt-6">
           <div className="flex flex-col md:flex-row items-center gap-3 w-full xl:w-auto">
             {/* Tombol Kalender */}
-            <button className="w-full md:w-auto flex items-center justify-between gap-2 h-10 px-4 rounded-xl bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] hover:border-[#ec6d13]/50 transition-all shadow-sm dark:shadow-none">
+            <button
+              onClick={() => setPeriod((prev) => (prev === "thisMonth" ? "last30" : "thisMonth"))}
+              className="w-full md:w-auto flex items-center justify-between gap-2 h-10 px-4 rounded-xl bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] hover:border-[#ec6d13]/50 transition-all shadow-sm dark:shadow-none"
+            >
               <div className="flex items-center gap-2">
                 <Calendar size={18} />
                 <span className="text-sm font-medium">{currentMonthLabel}</span>
@@ -275,13 +286,19 @@ export default function AdminReports() {
             </div>
             <div className="flex flex-col gap-1 relative z-10">
               <p className="text-gray-500 dark:text-[#b9a89d] text-sm font-medium uppercase tracking-wider">Total Revenue</p>
-              <h3 className="text-gray-900 dark:text-white text-3xl font-black tracking-tight">{loading ? "..." : formatIDR(totalRevenue)}</h3>
+              <h3 className="text-gray-900 dark:text-white text-3xl font-black tracking-tight">
+                {loading ? (
+                  <span className="inline-block h-9 w-36 rounded-lg bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                ) : (
+                  formatIDR(totalRevenue)
+                )}
+              </h3>
               <div className="flex items-center gap-2 mt-2">
                 <div className="px-2 py-0.5 rounded-full bg-[#0bda16]/10 border border-[#0bda16]/20 flex items-center gap-1">
                   <TrendingUp size={14} className="text-[#0bda16]" />
                   <span className="text-[#0bda16] text-xs font-bold">{`${revenueChange >= 0 ? "+" : ""}${revenueChange.toFixed(1)}%`}</span>
                 </div>
-                <span className="text-gray-500 dark:text-[#6d5f55] text-xs">vs last month</span>
+                <span className="text-gray-500 dark:text-[#6d5f55] text-xs">{comparisonLabel}</span>
               </div>
             </div>
           </div>
@@ -293,13 +310,19 @@ export default function AdminReports() {
             </div>
             <div className="flex flex-col gap-1 relative z-10">
               <p className="text-gray-500 dark:text-[#b9a89d] text-sm font-medium uppercase tracking-wider">Total Orders This Month</p>
-              <h3 className="text-gray-900 dark:text-white text-3xl font-black tracking-tight">{loading ? "..." : currentMonthOrders.length}</h3>
+              <h3 className="text-gray-900 dark:text-white text-3xl font-black tracking-tight">
+                {loading ? (
+                  <span className="inline-block h-9 w-16 rounded-lg bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                ) : (
+                  currentMonthOrders.length
+                )}
+              </h3>
               <div className="flex items-center gap-2 mt-2">
                 <div className="px-2 py-0.5 rounded-full bg-[#0bda16]/10 border border-[#0bda16]/20 flex items-center gap-1">
                   <TrendingUp size={14} className="text-[#0bda16]" />
                   <span className="text-[#0bda16] text-xs font-bold">{`${ordersChange >= 0 ? "+" : ""}${ordersChange.toFixed(1)}%`}</span>
                 </div>
-                <span className="text-gray-500 dark:text-[#6d5f55] text-xs">vs last month</span>
+                <span className="text-gray-500 dark:text-[#6d5f55] text-xs">{comparisonLabel}</span>
               </div>
             </div>
           </div>
@@ -316,7 +339,11 @@ export default function AdminReports() {
                 <h3 className="text-gray-900 dark:text-white text-lg font-bold">Detailed Sales Report</h3>
                 <p className="text-gray-500 dark:text-[#8e7f72] text-sm">Recent transactions and itemized breakdowns.</p>
               </div>
-              <button className="p-2 text-gray-400 dark:text-[#b9a89d] hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors">
+              <button
+                onClick={cyclePaymentFilter}
+                title={`Filter pembayaran: ${paymentFilter}`}
+                className="p-2 text-gray-400 dark:text-[#b9a89d] hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+              >
                 <Filter size={20} />
               </button>
             </div>
@@ -335,7 +362,21 @@ export default function AdminReports() {
                 </div>
 
                 {/* Baris Data (Loop) */}
-                {tableRows.map((item, idx) => (
+                {loading && (
+                  <div className="px-6 py-5 space-y-3">
+                    {[0, 1, 2].map((row) => (
+                      <div key={row} className="grid grid-cols-12 gap-4">
+                        <div className="col-span-3 h-5 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                        <div className="col-span-3 h-5 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                        <div className="col-span-2 h-5 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                        <div className="col-span-3 h-5 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                        <div className="col-span-1 h-5 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {!loading && tableRows.map((item, idx) => (
                   <details key={item._id} className="group border-b border-gray-200 dark:border-[#3e342b] last:border-0 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-200">
                     <summary className="px-6 py-4 grid grid-cols-12 gap-4 items-center cursor-pointer list-none">
                       <div className="col-span-3 flex items-center gap-3">

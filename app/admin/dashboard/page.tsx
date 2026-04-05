@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import AdminHeader from "@/components/admin-header";
 import { useTheme } from "@/context/ThemeContext";
+import useSWR from "swr";
 import {
   Download,
   DollarSign,
@@ -13,6 +14,7 @@ import {
   Droplets,
   Croissant,
 } from "lucide-react";
+import { fetcher } from "@/lib/fetcher";
 
 type PaymentStatus = "pending" | "paid";
 type OrderStatus = "processing" | "shipped" | "delivered" | "cancelled";
@@ -94,69 +96,54 @@ export default function AdminDashboard() {
   // isDark is retained only for SVG inline attributes that cannot use CSS classes
   const isDark = mounted && theme === "dark";
 
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [paidOrders, setPaidOrders] = useState<Order[]>([]);
-  const [lowStockProducts, setLowStockProducts] = useState<Product[]>([]);
-  const [isDataLoading, setIsDataLoading] = useState(true);
+  const {
+    data: ordersData,
+    error: ordersError,
+    isLoading: ordersLoading,
+  } = useSWR<ApiResponse<Order[]>>(mounted ? "/api/orders" : null, fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 10_000,
+  });
 
-  useEffect(() => {
-    if (!mounted) return;
+  const {
+    data: paidOrdersData,
+    error: paidOrdersError,
+    isLoading: paidOrdersLoading,
+  } = useSWR<ApiResponse<Order[]>>(
+    mounted ? "/api/orders?paymentStatus=paid" : null,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 10_000,
+    }
+  );
 
-    let cancelled = false;
+  const {
+    data: productsData,
+    error: productsError,
+    isLoading: productsLoading,
+  } = useSWR<ApiResponse<Product[]>>(mounted ? "/api/products" : null, fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 10_000,
+  });
 
-    const fetchDashboardData = async () => {
-      setIsDataLoading(true);
+  const orders = ordersData?.data ?? [];
+  const paidOrders = paidOrdersData?.data ?? [];
+  const isDataLoading = ordersLoading || paidOrdersLoading || productsLoading;
 
-      try {
-        const [ordersRes, paidOrdersRes, productsRes] = await Promise.all([
-          fetch("/api/orders"),
-          fetch("/api/orders?paymentStatus=paid"),
-          fetch("/api/products"),
-        ]);
+  const dashboardError =
+    (ordersError instanceof Error ? ordersError.message : "") ||
+    (paidOrdersError instanceof Error ? paidOrdersError.message : "") ||
+    (productsError instanceof Error ? productsError.message : "");
 
-        const [ordersJson, paidOrdersJson, productsJson] = (await Promise.all([
-          ordersRes.json(),
-          paidOrdersRes.json(),
-          productsRes.json(),
-        ])) as [
-          ApiResponse<Order[]>,
-          ApiResponse<Order[]>,
-          ApiResponse<Product[]>,
-        ];
-
-        if (!cancelled) {
-          setOrders(ordersJson.success ? (ordersJson.data ?? []) : []);
-          setPaidOrders(
-            paidOrdersJson.success ? (paidOrdersJson.data ?? []) : [],
-          );
-
-          const lowStock = (
-            productsJson.success ? (productsJson.data ?? []) : []
-          )
-            .filter((product) => product.stock <= 10)
-            .sort((a, b) => a.stock - b.stock)
-            .slice(0, 5);
-          setLowStockProducts(lowStock);
-        }
-      } catch {
-        if (!cancelled) {
-          setOrders([]);
-          setPaidOrders([]);
-          setLowStockProducts([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsDataLoading(false);
-        }
-      }
-    };
-
-    void fetchDashboardData();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [mounted]);
+  const lowStockProducts = useMemo(
+    () =>
+      (productsData?.data ?? [])
+        .filter((product) => product.stock <= 10)
+        .sort((a, b) => a.stock - b.stock)
+        .slice(0, 5),
+    [productsData?.data]
+  );
 
   const totalRevenue = useMemo(
     () => paidOrders.reduce((sum, order) => sum + order.total, 0),
@@ -199,6 +186,12 @@ export default function AdminDashboard() {
       </AdminHeader>
 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-6 md:space-y-8 pb-20 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        {dashboardError && (
+          <div className="rounded-lg border px-3 py-2.5 text-xs bg-[#fff4ee] border-[#f2c1ab] text-[#a64822] dark:bg-[#3a1c14]/40 dark:border-[#7a3422] dark:text-[#f2b8a0]">
+            {dashboardError}
+          </div>
+        )}
+
         {/* Stats Row */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Revenue */}
@@ -216,7 +209,11 @@ export default function AdminDashboard() {
                 Total Revenue
               </p>
               <h3 className="text-[#1a140e] dark:text-[#fcfaf8] text-3xl font-bold tracking-tight">
-                {isDataLoading ? "---" : formatRupiah(totalRevenue)}
+                {isDataLoading ? (
+                  <span className="inline-block h-9 w-36 rounded-lg bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                ) : (
+                  formatRupiah(totalRevenue)
+                )}
               </h3>
             </div>
           </div>
@@ -236,7 +233,11 @@ export default function AdminDashboard() {
                 Total Orders
               </p>
               <h3 className="text-[#1a140e] dark:text-[#fcfaf8] text-3xl font-bold tracking-tight">
-                {isDataLoading ? "---" : `${orders.length} Orders`}
+                {isDataLoading ? (
+                  <span className="inline-block h-9 w-24 rounded-lg bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                ) : (
+                  `${orders.length} Orders`
+                )}
               </h3>
             </div>
           </div>
@@ -271,17 +272,17 @@ export default function AdminDashboard() {
                           className="group border-b transition-colors border-[#e5ddd5] dark:border-[#3e342b]/50 hover:bg-[#f5f0eb] dark:hover:bg-[#3e342b]/30"
                         >
                           <td className="py-3 font-medium text-[#1a140e] dark:text-[#fcfaf8]">
-                            ---
+                            <span className="inline-block h-4 w-20 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
                           </td>
                           <td className="py-3 text-[#8b7355] dark:text-[#b9a89d]">
-                            ---
+                            <span className="inline-block h-4 w-32 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
                           </td>
                           <td className="py-3 text-right font-bold text-[#1a140e] dark:text-[#fcfaf8]">
-                            ---
+                            <span className="inline-block h-4 w-16 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
                           </td>
                           <td className="py-3 text-right">
                             <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border text-gray-400 bg-gray-500/10 border-gray-500/20">
-                              ---
+                              <span className="inline-block h-3 w-8 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
                             </span>
                           </td>
                         </tr>
@@ -332,8 +333,12 @@ export default function AdminDashboard() {
           </div>
           <div className="flex flex-wrap gap-4">
             {isDataLoading ? (
-              <div className="text-xs text-[#8b7355] dark:text-[#b9a89d]">
-                ---
+              <div className="flex items-center gap-3 p-3 rounded-lg border min-w-[200px] bg-[#f5f0eb] border-[#e5ddd5] dark:bg-[#3e342b]/40 dark:border-[#3e342b]">
+                <div className="size-10 rounded-md bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                <div className="space-y-2">
+                  <div className="h-3 w-24 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                  <div className="h-3 w-16 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                </div>
               </div>
             ) : lowStockProducts.length === 0 ? (
               <div className="text-xs text-[#8b7355] dark:text-[#b9a89d]">
