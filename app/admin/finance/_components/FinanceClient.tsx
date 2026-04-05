@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import useSWR from "swr";
-import { Loader2, Plus, Trash2, TrendingDown, TrendingUp } from "lucide-react";
+import { CalendarDays, Loader2, Plus, Trash2, TrendingDown, TrendingUp } from "lucide-react";
 import type { IExpense } from "@/lib/models";
 import { fetcher } from "@/lib/fetcher";
 
@@ -82,11 +82,30 @@ function formatDate(dateString: string) {
   }).format(date);
 }
 
+function isWithinDateRange(dateValue: string, startDate: string, endDate: string): boolean {
+  const target = new Date(dateValue);
+  if (Number.isNaN(target.getTime())) {
+    return false;
+  }
+
+  const targetKey = target.toISOString().slice(0, 10);
+  if (startDate && targetKey < startDate) {
+    return false;
+  }
+  if (endDate && targetKey > endDate) {
+    return false;
+  }
+
+  return true;
+}
+
 export default function FinanceClient() {
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [expenseActionError, setExpenseActionError] = useState("");
   const [savingExpense, setSavingExpense] = useState(false);
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
 
   const {
     data: expensesData,
@@ -120,23 +139,39 @@ export default function FinanceClient() {
 
   const paidOrders = useMemo(() => ordersData?.data ?? [], [ordersData?.data]);
 
+  const filteredExpenses = useMemo(
+    () =>
+      expenses.filter((expense) =>
+        isWithinDateRange(expense.tanggal, filterStartDate, filterEndDate)
+      ),
+    [expenses, filterEndDate, filterStartDate]
+  );
+
+  const filteredPaidOrders = useMemo(
+    () =>
+      paidOrders.filter((order) =>
+        isWithinDateRange(order.createdAt, filterStartDate, filterEndDate)
+      ),
+    [filterEndDate, filterStartDate, paidOrders]
+  );
+
   const incomeError = incomeFetchError instanceof Error ? incomeFetchError.message : "";
   const expenseError = expenseActionError || (expensesFetchError instanceof Error ? expensesFetchError.message : "");
 
   const totalPengeluaran = useMemo(
-    () => expenses.reduce((acc, item) => acc + item.nominal, 0),
-    [expenses]
+    () => filteredExpenses.reduce((acc, item) => acc + item.nominal, 0),
+    [filteredExpenses]
   );
 
   const totalPemasukan = useMemo(
-    () => paidOrders.reduce((acc, order) => acc + order.total, 0),
-    [paidOrders]
+    () => filteredPaidOrders.reduce((acc, order) => acc + order.total, 0),
+    [filteredPaidOrders]
   );
 
   const incomeByDate = useMemo(() => {
     const grouped = new Map<string, number>();
 
-    for (const order of paidOrders) {
+    for (const order of filteredPaidOrders) {
       const dateKey = new Date(order.createdAt).toISOString().split("T")[0];
       const current = grouped.get(dateKey) ?? 0;
       grouped.set(dateKey, current + order.total);
@@ -145,7 +180,7 @@ export default function FinanceClient() {
     return Array.from(grouped.entries())
       .map(([tanggal, total]) => ({ tanggal, total }))
       .sort((a, b) => (a.tanggal < b.tanggal ? 1 : -1));
-  }, [paidOrders]);
+  }, [filteredPaidOrders]);
 
   const handleAddExpense = async (payload: NewExpensePayload): Promise<boolean> => {
     setSavingExpense(true);
@@ -266,6 +301,55 @@ export default function FinanceClient() {
         </div>
       )}
 
+      <div className="mt-6 bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-2xl p-4 sm:p-5 shadow-sm dark:shadow-none">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-4">
+          <div className="flex-1">
+            <label className="text-xs uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] font-semibold">
+              Dari Tanggal
+            </label>
+            <div className="mt-1.5 relative">
+              <CalendarDays
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#8e7f72]"
+              />
+              <input
+                type="date"
+                value={filterStartDate}
+                onChange={(event) => setFilterStartDate(event.target.value)}
+                className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg pl-10 pr-3 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all"
+              />
+            </div>
+          </div>
+          <div className="flex-1">
+            <label className="text-xs uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] font-semibold">
+              Sampai Tanggal
+            </label>
+            <div className="mt-1.5 relative">
+              <CalendarDays
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#8e7f72]"
+              />
+              <input
+                type="date"
+                value={filterEndDate}
+                onChange={(event) => setFilterEndDate(event.target.value)}
+                className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg pl-10 pr-3 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all"
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setFilterStartDate("");
+              setFilterEndDate("");
+            }}
+            className="h-11 px-4 rounded-lg border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] text-sm font-medium hover:bg-gray-50 dark:hover:bg-[#231910] transition-colors"
+          >
+            Reset Filter
+          </button>
+        </div>
+      </div>
+
       <div className="mt-6 bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-2xl shadow-sm dark:shadow-none overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-[#3e342b]">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">Riwayat Pendapatan Order</h3>
@@ -313,7 +397,7 @@ export default function FinanceClient() {
 
         {!loadingIncome && incomeByDate.length === 0 && (
           <div className="px-6 py-10 text-center text-sm text-gray-500 dark:text-[#8e7f72]">
-            Belum ada order paid untuk ditampilkan.
+            Belum ada data pendapatan pada rentang tanggal ini.
           </div>
         )}
       </div>
@@ -366,7 +450,7 @@ export default function FinanceClient() {
                   </td>
                 </tr>
               ) : (
-                expenses.map((expense) => (
+                filteredExpenses.map((expense) => (
                   <tr
                     key={expense._id}
                     className="border-b border-gray-200 dark:border-[#3e342b] last:border-0"
@@ -401,9 +485,9 @@ export default function FinanceClient() {
           </table>
         </div>
 
-        {!loadingExpenses && expenses.length === 0 && (
+        {!loadingExpenses && filteredExpenses.length === 0 && (
           <div className="px-6 py-10 text-center text-sm text-gray-500 dark:text-[#8e7f72]">
-            Belum ada data pengeluaran.
+            Belum ada data pengeluaran pada rentang tanggal ini.
           </div>
         )}
       </div>
