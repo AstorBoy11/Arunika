@@ -7,13 +7,13 @@ import type { IAddress, IUser } from "@/lib/models";
 type AddressSubdoc = IAddress & { toObject: () => IAddress };
 
 const createAddressSchema = z.object({
-  label: z.string().min(1),
+  label: z.string().min(1).optional(),
   type: z.enum(["home", "office"]),
   recipient: z.string().min(2),
   street: z.string().min(5),
   city: z.string().min(2),
   province: z.string().min(2),
-  postalCode: z.string(),
+  postalCode: z.string().min(3),
   phone: z.string().min(8),
   isDefault: z.boolean().optional().default(false),
 });
@@ -96,8 +96,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       user.addresses = user.addresses.map((addr: AddressSubdoc) => ({ ...addr.toObject(), isDefault: false }));
     }
 
+    const normalizedLabel = parsed.data.label?.trim() || (parsed.data.type === "home" ? "Rumah" : "Kantor");
+
     user.addresses.push({
       ...parsed.data,
+      label: normalizedLabel,
       id: nextId,
       isDefault: nextIsDefault,
     });

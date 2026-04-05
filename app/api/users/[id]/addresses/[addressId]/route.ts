@@ -13,7 +13,7 @@ const updateAddressSchema = z.object({
   street: z.string().min(5).optional(),
   city: z.string().min(2).optional(),
   province: z.string().min(2).optional(),
-  postalCode: z.string().optional(),
+  postalCode: z.string().min(3).optional(),
   phone: z.string().min(8).optional(),
   isDefault: z.boolean().optional(),
 });

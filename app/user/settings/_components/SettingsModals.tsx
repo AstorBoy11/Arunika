@@ -313,6 +313,8 @@ export default function SettingsModals({
                     type="text"
                     value={addPostalCode}
                     onChange={(event) => setAddPostalCode(event.target.value)}
+                    required
+                    minLength={3}
                     placeholder="00000"
                     className={inputCls(isDark)}
                   />
@@ -497,6 +499,8 @@ export default function SettingsModals({
                     type="text"
                     value={editPostalCode}
                     onChange={(event) => setEditPostalCode(event.target.value)}
+                    required
+                    minLength={3}
                     className={inputCls(isDark)}
                   />
                 </div>

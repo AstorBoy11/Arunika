@@ -5,7 +5,6 @@ import { Home, Building2, X } from "lucide-react";
 
 type AddressData = {
   id: number;
-  label: string;
   type: "home" | "office";
   recipient: string;
   phone: string;
@@ -42,7 +41,6 @@ export default function EditAddressModal({
   onClose,
   onSave,
 }: Props) {
-  const [label, setLabel] = useState(initialData.label);
   const [type, setType] = useState<"home" | "office">(initialData.type);
   const [recipient, setRecipient] = useState(initialData.recipient);
   const [phone, setPhone] = useState(initialData.phone);
@@ -52,7 +50,6 @@ export default function EditAddressModal({
   const [isDefault, setIsDefault] = useState(initialData.isDefault);
 
   useEffect(() => {
-    setLabel(initialData.label);
     setType(initialData.type);
     setRecipient(initialData.recipient);
     setPhone(initialData.phone);
@@ -65,7 +62,6 @@ export default function EditAddressModal({
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     onSave(initialData.id, {
-      label: label || "Alamat",
       type,
       recipient,
       phone,
@@ -128,17 +124,6 @@ export default function EditAddressModal({
           </div>
 
           <div>
-            <label className={labelCls(isDark)}>Label Alamat</label>
-            <input
-              type="text"
-              value={label}
-              onChange={(event) => setLabel(event.target.value)}
-              placeholder="Contoh: Rumah, Apartemen"
-              className={inputCls(isDark)}
-            />
-          </div>
-
-          <div>
             <label className={labelCls(isDark)}>Nama Penerima</label>
             <input
               type="text"
@@ -196,6 +181,8 @@ export default function EditAddressModal({
                 type="text"
                 value={postalCode}
                 onChange={(event) => setPostalCode(event.target.value)}
+                required
+                minLength={3}
                 placeholder="00000"
                 className={inputCls(isDark)}
               />

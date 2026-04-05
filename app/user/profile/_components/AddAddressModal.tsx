@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Home, Building2, X } from "lucide-react";
 
 interface AddressData {
-  label: string;
   type: "home" | "office";
   recipient: string;
   phone: string;
@@ -33,7 +32,6 @@ const labelCls = (isDark: boolean) =>
   `block text-sm font-medium mb-2 ${isDark ? "text-white" : "text-[#1a140e]"}`;
 
 export default function AddAddressModal({ isDark, isLoading = false, errorMessage = null, onClose, onSave }: Props) {
-  const [label, setLabel] = useState("");
   const [type, setType] = useState<"home" | "office">("home");
   const [recipient, setRecipient] = useState("");
   const [phone, setPhone] = useState("");
@@ -44,7 +42,7 @@ export default function AddAddressModal({ isDark, isLoading = false, errorMessag
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ label: label || "Alamat Baru", type, recipient, phone, street, city, postalCode, isDefault });
+    onSave({ type, recipient, phone, street, city, postalCode, isDefault });
   };
 
   return (
@@ -119,17 +117,6 @@ export default function AddAddressModal({ isDark, isLoading = false, errorMessag
           </div>
 
           <div>
-            <label className={labelCls(isDark)}>Label Alamat</label>
-            <input
-              type="text"
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              placeholder="Contoh: Rumah, Apartemen"
-              className={inputCls(isDark)}
-            />
-          </div>
-
-          <div>
             <label className={labelCls(isDark)}>Nama Penerima</label>
             <input
               type="text"
@@ -187,6 +174,8 @@ export default function AddAddressModal({ isDark, isLoading = false, errorMessag
                 type="text"
                 value={postalCode}
                 onChange={(e) => setPostalCode(e.target.value)}
+                required
+                minLength={3}
                 placeholder="00000"
                 className={inputCls(isDark)}
               />

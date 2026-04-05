@@ -82,7 +82,6 @@ export default function UserProfile() {
   };
 
   const handleSaveAddress = async (data: {
-    label: string;
     type: "home" | "office";
     recipient: string;
     phone: string;
@@ -94,7 +93,7 @@ export default function UserProfile() {
     if (!user) return;
 
     const updated = await addAddress(user._id, {
-      label: data.label || "Alamat Baru",
+      label: data.type === "home" ? "Rumah" : "Kantor",
       type: data.type,
       recipient: data.recipient,
       phone: data.phone,
@@ -112,7 +111,6 @@ export default function UserProfile() {
   const handleEditAddress = async (
     id: number,
     data: {
-      label: string;
       type: "home" | "office";
       recipient: string;
       phone: string;
@@ -125,7 +123,6 @@ export default function UserProfile() {
     if (!user) return;
 
     const updated = await updateAddress(user._id, id, {
-      label: data.label,
       type: data.type,
       recipient: data.recipient,
       phone: data.phone,
@@ -527,7 +524,6 @@ export default function UserProfile() {
           isDark={isDark}
           initialData={{
             id: selectedAddress.id,
-            label: selectedAddress.label,
             type: selectedAddress.type,
             recipient: selectedAddress.recipient,
             phone: selectedAddress.phone,
