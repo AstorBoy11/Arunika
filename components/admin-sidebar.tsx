@@ -10,6 +10,7 @@ import { fetcher } from "@/lib/fetcher";
 import { useAdminAvatar } from "@/lib/hooks/useAdminAvatar";
 import {
     LayoutDashboard,
+    ClipboardList,
     BarChart3,
     Package,
     Settings,
@@ -57,6 +58,7 @@ export function useAdminSidebar() {
 
 const adminNavItems = [
     { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+    { name: "Orders", href: "/admin/orders", icon: ClipboardList },
     { name: "Reports", href: "/admin/report", icon: BarChart3 },
     { name: "Finance", href: "/admin/finance", icon: ChartCandlestick },
     { name: "Inventory", href: "/admin/inventory", icon: Package },
