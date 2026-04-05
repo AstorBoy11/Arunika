@@ -176,7 +176,7 @@ export default function AdminSidebar() {
                         </div>
                     </Link>
 
-                    <button className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-transparent border text-sm font-bold transition-all border-[#e5ddd5] hover:bg-[#f5f0eb] hover:text-[#1a140e] text-[#8b7355] dark:border-[#3e342b] dark:hover:bg-[#231910] dark:hover:text-white dark:text-[#b9a89d]">
+                    <button className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-transparent border text-sm font-bold transition-all border-[#e5ddd5] hover:bg-red-500 hover:text-white text-[#8b7355] dark:border-[#3e342b] dark:hover:bg-red-500 dark:hover:text-white dark:text-[#b9a89d]">
                         <LogOut size={18} />
                         <span>Log Out</span>
                     </button>

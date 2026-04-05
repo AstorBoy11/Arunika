@@ -9,3 +9,6 @@ export type { IOrder, IOrderItem } from "./Order";
 
 export { default as Expense } from "./Expense";
 export type { IExpense } from "./Expense";
+
+export { default as ProductCategory } from "./ProductCategory";
+export type { IProductCategory } from "./ProductCategory";

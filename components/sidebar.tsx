@@ -175,8 +175,8 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
           </Link>
 
           <button className={`w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-transparent border text-sm font-bold transition-all ${isDark
-            ? "border-[#3e342b] hover:bg-[#231910] hover:text-white text-[#b9a89d]"
-            : "border-[#e5ddd5] hover:bg-[#f5f0eb] hover:text-[#1a140e] text-[#8b7355]"
+            ? "border-[#3e342b] hover:bg-red-500 hover:text-white text-[#b9a89d]"
+            : "border-[#e5ddd5] hover:bg-red-500 hover:text-white text-[#8b7355]"
             }`}>
             <LogOut size={18} />
             <span>Log Out</span>
