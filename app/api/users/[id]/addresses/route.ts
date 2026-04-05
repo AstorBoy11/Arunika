@@ -71,9 +71,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const parsed = createAddressSchema.safeParse(body);
 
     if (!parsed.success) {
+      const issues = parsed.error.issues
+        .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+        .join(", ");
       const response: ApiResponse<null> = {
         success: false,
-        message: "Validation error",
+        message: issues || "Validation error",
       };
       return NextResponse.json(response, { status: 400 });
     }

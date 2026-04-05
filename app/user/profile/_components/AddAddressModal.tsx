@@ -136,6 +136,7 @@ export default function AddAddressModal({ isDark, isLoading = false, errorMessag
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
               required
+              minLength={2}
               placeholder="Nama lengkap penerima"
               className={inputCls(isDark)}
             />
@@ -147,6 +148,8 @@ export default function AddAddressModal({ isDark, isLoading = false, errorMessag
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              required
+              minLength={8}
               placeholder="08xx-xxxx-xxxx"
               className={inputCls(isDark)}
             />
@@ -159,6 +162,7 @@ export default function AddAddressModal({ isDark, isLoading = false, errorMessag
               value={street}
               onChange={(e) => setStreet(e.target.value)}
               required
+              minLength={5}
               placeholder="Jalan, nomor rumah, RT/RW, kelurahan, kecamatan"
               className={`${inputCls(isDark)} resize-none`}
             />
@@ -171,6 +175,8 @@ export default function AddAddressModal({ isDark, isLoading = false, errorMessag
                 type="text"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
+                required
+                minLength={2}
                 placeholder="Nama kota"
                 className={inputCls(isDark)}
               />

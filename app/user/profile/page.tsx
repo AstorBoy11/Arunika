@@ -227,7 +227,7 @@ export default function UserProfile() {
       </div>
 
       {/* ── CONTENT GRID ───────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* LEFT: Personal Info */}
         <div className="lg:col-span-1 flex flex-col gap-6">
           <h3
@@ -309,7 +309,7 @@ export default function UserProfile() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
             {addresses.map((addr) => (
               <div
                 key={addr.id}
