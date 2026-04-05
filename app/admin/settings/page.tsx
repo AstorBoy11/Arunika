@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AdminHeader from "@/components/admin-header";
 import {
   Save,
@@ -15,9 +15,94 @@ import {
 } from "lucide-react";
 
 export default function AdminSettings() {
+  const [storeName, setStoreName] = useState("Coffee Connect Downtown");
+  const [weekdaysOpen, setWeekdaysOpen] = useState("06:00");
+  const [weekdaysClose, setWeekdaysClose] = useState("20:00");
+  const [weekendsOpen, setWeekendsOpen] = useState("07:00");
+  const [weekendsClose, setWeekendsClose] = useState("22:00");
   const [isStoreOpen, setIsStoreOpen] = useState(true);
   const [openTime, setOpenTime] = useState("08:00");
   const [closeTime, setCloseTime] = useState("22:00");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackType, setFeedbackType] = useState<"success" | "error" | "">("");
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("arunika-admin-settings");
+    if (!stored) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(stored) as {
+        storeName?: string;
+        weekdaysOpen?: string;
+        weekdaysClose?: string;
+        weekendsOpen?: string;
+        weekendsClose?: string;
+        isStoreOpen?: boolean;
+        openTime?: string;
+        closeTime?: string;
+      };
+
+      setStoreName(parsed.storeName ?? "Coffee Connect Downtown");
+      setWeekdaysOpen(parsed.weekdaysOpen ?? "06:00");
+      setWeekdaysClose(parsed.weekdaysClose ?? "20:00");
+      setWeekendsOpen(parsed.weekendsOpen ?? "07:00");
+      setWeekendsClose(parsed.weekendsClose ?? "22:00");
+      setIsStoreOpen(parsed.isStoreOpen ?? true);
+      setOpenTime(parsed.openTime ?? "08:00");
+      setCloseTime(parsed.closeTime ?? "22:00");
+    } catch {
+      setFeedbackType("error");
+      setFeedbackMessage("Gagal membaca pengaturan tersimpan.");
+    }
+  }, []);
+
+  const saveSettings = () => {
+    const payload = {
+      storeName,
+      weekdaysOpen,
+      weekdaysClose,
+      weekendsOpen,
+      weekendsClose,
+      isStoreOpen,
+      openTime,
+      closeTime,
+    };
+
+    window.localStorage.setItem("arunika-admin-settings", JSON.stringify(payload));
+    setFeedbackType("success");
+    setFeedbackMessage("Pengaturan berhasil disimpan.");
+  };
+
+  const handlePasswordUpdate = () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setFeedbackType("error");
+      setFeedbackMessage("Lengkapi semua field password terlebih dahulu.");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setFeedbackType("error");
+      setFeedbackMessage("Password baru minimal 8 karakter.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setFeedbackType("error");
+      setFeedbackMessage("Konfirmasi password baru tidak cocok.");
+      return;
+    }
+
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setFeedbackType("success");
+    setFeedbackMessage("Password berhasil diperbarui.");
+  };
 
   const cardClass =
     "bg-white dark:bg-[#1a140e] rounded-xl border border-gray-200 dark:border-[#3e342b] p-6 shadow-sm dark:shadow-none transition-colors";
@@ -33,6 +118,18 @@ export default function AdminSettings() {
       {/* 2. MAIN CONTENT */}
       <div className="flex-1 overflow-y-auto p-8 pt-6 custom-scrollbar">
         <div className="max-w-4xl mx-auto space-y-6 pb-12">
+
+          {feedbackMessage && (
+            <div
+              className={`rounded-lg border px-3 py-2.5 text-xs ${
+                feedbackType === "success"
+                  ? "bg-[#eefaf0] border-[#bde6c4] text-[#1f7a34] dark:bg-[#17331e] dark:border-[#2d6a3a] dark:text-[#97e0aa]"
+                  : "bg-[#fff4ee] border-[#f2c1ab] text-[#a64822] dark:bg-[#3a1c14]/40 dark:border-[#7a3422] dark:text-[#f2b8a0]"
+              }`}
+            >
+              {feedbackMessage}
+            </div>
+          )}
 
           {/* SECTION 1: STORE PROFILE */}
           <section className={cardClass}>
@@ -63,7 +160,8 @@ export default function AdminSettings() {
                     <input
                       className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all placeholder-gray-400"
                       type="text"
-                      defaultValue="Coffee Connect Downtown"
+                      value={storeName}
+                      onChange={(e) => setStoreName(e.target.value)}
                     />
                   </div>
                 </div>
@@ -86,13 +184,13 @@ export default function AdminSettings() {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <div className="space-y-1 w-full sm:flex-1">
                     <label className="text-xs text-gray-500 dark:text-[#8e7f72]">Buka</label>
-                    <input className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-3 py-2 text-gray-900 dark:text-[#EAE0D5] text-sm focus:border-[#ec6d13] outline-none" type="time" defaultValue="06:00" />
+                    <input className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-3 py-2 text-gray-900 dark:text-[#EAE0D5] text-sm focus:border-[#ec6d13] outline-none" type="time" value={weekdaysOpen} onChange={(e) => setWeekdaysOpen(e.target.value)} />
                   </div>
                   {/* Sembunyikan tanda strip (-) di mobile agar layout vertikal lebih rapi */}
                   <span className="hidden sm:block text-gray-400 dark:text-[#8e7f72] mt-5">-</span>
                   <div className="space-y-1 w-full sm:flex-1">
                     <label className="text-xs text-gray-500 dark:text-[#8e7f72]">Tutup</label>
-                    <input className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-3 py-2 text-gray-900 dark:text-[#EAE0D5] text-sm focus:border-[#ec6d13] outline-none" type="time" defaultValue="20:00" />
+                    <input className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-3 py-2 text-gray-900 dark:text-[#EAE0D5] text-sm focus:border-[#ec6d13] outline-none" type="time" value={weekdaysClose} onChange={(e) => setWeekdaysClose(e.target.value)} />
                   </div>
                 </div>
               </div>
@@ -104,12 +202,12 @@ export default function AdminSettings() {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <div className="space-y-1 w-full sm:flex-1">
                     <label className="text-xs text-gray-500 dark:text-[#8e7f72]">Buka</label>
-                    <input className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-3 py-2 text-gray-900 dark:text-[#EAE0D5] text-sm focus:border-[#ec6d13] outline-none" type="time" defaultValue="07:00" />
+                    <input className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-3 py-2 text-gray-900 dark:text-[#EAE0D5] text-sm focus:border-[#ec6d13] outline-none" type="time" value={weekendsOpen} onChange={(e) => setWeekendsOpen(e.target.value)} />
                   </div>
                   <span className="hidden sm:block text-gray-400 dark:text-[#8e7f72] mt-5">-</span>
                   <div className="space-y-1 w-full sm:flex-1">
                     <label className="text-xs text-gray-500 dark:text-[#8e7f72]">Tutup</label>
-                    <input className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-3 py-2 text-gray-900 dark:text-[#EAE0D5] text-sm focus:border-[#ec6d13] outline-none" type="time" defaultValue="22:00" />
+                    <input className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-3 py-2 text-gray-900 dark:text-[#EAE0D5] text-sm focus:border-[#ec6d13] outline-none" type="time" value={weekendsClose} onChange={(e) => setWeekendsClose(e.target.value)} />
                   </div>
                 </div>
               </div>
@@ -188,7 +286,7 @@ export default function AdminSettings() {
 
               {/* Save Button */}
               <div className="pt-2 flex justify-end">
-                <button className="flex items-center gap-2 bg-[#ec6d13] hover:bg-[#d65c0b] text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md shadow-[#ec6d13]/20 transition-all active:scale-95">
+                <button onClick={saveSettings} className="flex items-center gap-2 bg-[#ec6d13] hover:bg-[#d65c0b] text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md shadow-[#ec6d13]/20 transition-all active:scale-95">
                   <Save size={16} />
                   <span>Simpan Perubahan</span>
                 </button>
@@ -218,6 +316,8 @@ export default function AdminSettings() {
                       className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg pl-10 pr-4 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all placeholder-gray-400"
                       placeholder="••••••••"
                       type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
                     />
                   </div>
                 </div>
@@ -225,16 +325,16 @@ export default function AdminSettings() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-gray-500 dark:text-[#8e7f72] uppercase tracking-wider">Password Baru</label>
-                    <input className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all" type="password" />
+                    <input className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-gray-500 dark:text-[#8e7f72] uppercase tracking-wider">Konfirmasi Password Baru</label>
-                    <input className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all" type="password" />
+                    <input className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                   </div>
                 </div>
 
                 <div className="pt-2 flex justify-end">
-                  <button className="bg-gray-200 dark:bg-[#3e342b] hover:bg-gray-300 dark:hover:bg-[#4a3f35] text-gray-700 dark:text-[#EAE0D5] px-5 py-2 rounded-lg text-sm font-medium transition-colors">
+                  <button onClick={handlePasswordUpdate} className="bg-gray-200 dark:bg-[#3e342b] hover:bg-gray-300 dark:hover:bg-[#4a3f35] text-gray-700 dark:text-[#EAE0D5] px-5 py-2 rounded-lg text-sm font-medium transition-colors">
                     Update Password
                   </button>
                 </div>
@@ -243,7 +343,7 @@ export default function AdminSettings() {
           </section>
           
           <div className="flex w-full justify-end">
-            <button className="flex items-center gap-2 bg-[#ec6d13] hover:bg-[#d65c0b] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-[#ec6d13]/20 transition-all active:scale-95">
+            <button onClick={saveSettings} className="flex items-center gap-2 bg-[#ec6d13] hover:bg-[#d65c0b] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-[#ec6d13]/20 transition-all active:scale-95">
               <Save size={20} />
               <span>Simpan Perubahan</span>
             </button>

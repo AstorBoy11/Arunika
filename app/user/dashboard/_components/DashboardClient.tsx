@@ -3,11 +3,13 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import useSWR from "swr";
 import { Heart, ShoppingCart, ChevronDown, Star } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useTheme } from "@/context/ThemeContext";
 import type { IProduct } from "@/lib/models";
 import type { Product } from "./ProductQuickViewModal";
+import { fetcher } from "@/lib/fetcher";
 
 // ─── Lazy-load modal: its JS is only downloaded when the user first clicks a product ───
 const ProductQuickViewModal = dynamic(
@@ -73,10 +75,6 @@ export default function DashboardClient() {
 
   const [products, setProducts] = useState<DashboardProduct[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [productsLoading, setProductsLoading] = useState(true);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [productsError, setProductsError] = useState<string | null>(null);
-  const [categoriesError, setCategoriesError] = useState<string | null>(null);
 
   // ── Sort state ──
   const [sortOption, setSortOption] = useState<SortOption>("default");
@@ -93,73 +91,48 @@ export default function DashboardClient() {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setProductsLoading(true);
-        setProductsError(null);
+  const productsEndpoint = useMemo(() => {
+    const params = new URLSearchParams();
+    if (selectedCategory !== "all") {
+      params.set("category", selectedCategory);
+    }
+    if (searchKeyword.trim()) {
+      params.set("search", searchKeyword.trim());
+    }
 
-        const params = new URLSearchParams();
-        if (selectedCategory !== "all") {
-          params.set("category", selectedCategory);
-        }
-        if (searchKeyword.trim()) {
-          params.set("search", searchKeyword.trim());
-        }
+    return params.toString() ? `/api/products?${params.toString()}` : "/api/products";
+  }, [searchKeyword, selectedCategory]);
 
-        const endpoint = params.toString() ? `/api/products?${params.toString()}` : "/api/products";
-        const response = await fetch(endpoint, { cache: "no-store" });
+  const {
+    data: productsResponse,
+    error: productsSWRerror,
+    isLoading: productsLoading,
+  } = useSWR<ProductsApiResponse>(productsEndpoint, fetcher, {
+    refreshInterval: 15_000,
+    revalidateOnFocus: true,
+    dedupingInterval: 8_000,
+  });
 
-        if (!response.ok) {
-          throw new Error("Gagal memuat produk");
-        }
-
-        const json = (await response.json()) as ProductsApiResponse;
-        if (!json.success) {
-          throw new Error(json.message || "Gagal memuat produk");
-        }
-
-        setProducts(json.data);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Gagal memuat produk";
-        setProductsError(message);
-        setProducts([]);
-      } finally {
-        setProductsLoading(false);
-      }
-    };
-
-    void fetchProducts();
-  }, [selectedCategory, searchKeyword]);
+  const {
+    data: categoriesResponse,
+    error: categoriesSWRerror,
+    isLoading: categoriesLoading,
+  } = useSWR<CategoriesApiResponse>("/api/products/categories", fetcher, {
+    refreshInterval: 30_000,
+    revalidateOnFocus: true,
+    dedupingInterval: 15_000,
+  });
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setCategoriesLoading(true);
-        setCategoriesError(null);
+    setProducts(productsResponse?.data ?? []);
+  }, [productsResponse?.data]);
 
-        const response = await fetch("/api/products/categories", { cache: "no-store" });
-        if (!response.ok) {
-          throw new Error("Gagal memuat kategori");
-        }
+  useEffect(() => {
+    setCategories(categoriesResponse?.data ?? []);
+  }, [categoriesResponse?.data]);
 
-        const json = (await response.json()) as CategoriesApiResponse;
-        if (!json.success) {
-          throw new Error(json.message || "Gagal memuat kategori");
-        }
-
-        setCategories(json.data);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Gagal memuat kategori";
-        setCategoriesError(message);
-        setCategories([]);
-      } finally {
-        setCategoriesLoading(false);
-      }
-    };
-
-    void fetchCategories();
-  }, []);
+  const productsError = productsSWRerror instanceof Error ? productsSWRerror.message : null;
+  const categoriesError = categoriesSWRerror instanceof Error ? categoriesSWRerror.message : null;
 
   // ── Quick View state ──
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);

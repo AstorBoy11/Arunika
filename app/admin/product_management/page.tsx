@@ -136,7 +136,7 @@ export default function AdminProducts() {
     setErrorMessage("");
 
     try {
-      const response = await fetch("/api/products");
+      const response = await fetch("/api/products", { cache: "no-store" });
       const result: ApiResponse<ProductApi[]> = (await response.json()) as ApiResponse<ProductApi[]>;
 
       if (!response.ok || !result.success) {
@@ -171,7 +171,7 @@ export default function AdminProducts() {
 
   const fetchCategories = async (): Promise<void> => {
     try {
-      const response = await fetch("/api/products/categories");
+      const response = await fetch("/api/products/categories", { cache: "no-store" });
       const result: ApiResponse<string[]> = (await response.json()) as ApiResponse<string[]>;
 
       if (!response.ok || !result.success) {
@@ -195,7 +195,9 @@ export default function AdminProducts() {
   };
 
   const getProductsByCategory = async (categoryName: string): Promise<ProductApi[]> => {
-    const response = await fetch(`/api/products?category=${encodeURIComponent(categoryName)}`);
+    const response = await fetch(`/api/products?category=${encodeURIComponent(categoryName)}`, {
+      cache: "no-store",
+    });
     const result: ApiResponse<ProductApi[]> = (await response.json()) as ApiResponse<ProductApi[]>;
 
     if (!response.ok || !result.success) {
