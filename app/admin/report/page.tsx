@@ -4,14 +4,13 @@ import { useMemo, useState } from "react";
 import AdminHeader from "@/components/admin-header";
 import useSWR from "swr";
 import {
-  Calendar,
+  CalendarDays,
   Download,
   DollarSign,
   TrendingUp,
   FileText,
   Filter,
   ChevronRight,
-  ChevronUp
 } from "lucide-react";
 import { fetcher } from "@/lib/fetcher";
 
@@ -86,8 +85,46 @@ function escapeCsvCell(value: string | number) {
   return raw;
 }
 
+function toDateInputValue(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function getCurrentMonthRange() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  return {
+    start: toDateInputValue(start),
+    end: toDateInputValue(end),
+  };
+}
+
+function toRangeBounds(startDate: string, endDate: string): { start: Date; end: Date } | null {
+  if (!startDate || !endDate) {
+    return null;
+  }
+
+  const start = new Date(`${startDate}T00:00:00.000Z`);
+  const end = new Date(`${endDate}T23:59:59.999Z`);
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return null;
+  }
+
+  if (start.getTime() <= end.getTime()) {
+    return { start, end };
+  }
+
+  return {
+    start: new Date(`${endDate}T00:00:00.000Z`),
+    end: new Date(`${startDate}T23:59:59.999Z`),
+  };
+}
+
 export default function AdminReports() {
-  const [period, setPeriod] = useState<"thisMonth" | "last30">("thisMonth");
+  const defaultDateRange = useMemo(() => getCurrentMonthRange(), []);
+  const [filterStartDate, setFilterStartDate] = useState(defaultDateRange.start);
+  const [filterEndDate, setFilterEndDate] = useState(defaultDateRange.end);
   const [paymentFilter, setPaymentFilter] = useState<"all" | "cash" | "qris">("all");
 
   const { data, error: fetchError, isLoading: loading } = useSWR<OrdersResponse>(
@@ -102,60 +139,54 @@ export default function AdminReports() {
   const orders = data?.data ?? [];
   const error = fetchError instanceof Error ? fetchError.message : "";
 
-  const currentMonthLabel = useMemo(() => {
-    const now = new Date();
-    const start =
-      period === "thisMonth"
-        ? new Date(now.getFullYear(), now.getMonth(), 1)
-        : new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
-    const end =
-      period === "thisMonth"
-        ? new Date(now.getFullYear(), now.getMonth() + 1, 0)
-        : now;
-    const formatter = new Intl.DateTimeFormat("id-ID", {
-      day: "numeric",
-      month: "short",
-    });
-    return `${formatter.format(start)} - ${formatter.format(end)}`;
-  }, [period]);
+  const selectedRange = useMemo(
+    () => toRangeBounds(filterStartDate, filterEndDate),
+    [filterEndDate, filterStartDate]
+  );
 
   const currentMonthOrders = useMemo(() => {
-    const now = new Date();
-    const start =
-      period === "thisMonth"
-        ? new Date(now.getFullYear(), now.getMonth(), 1)
-        : new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
-    const end =
-      period === "thisMonth"
-        ? new Date(now.getFullYear(), now.getMonth() + 1, 1)
-        : new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    if (!selectedRange) {
+      return [];
+    }
     return orders.filter((order) => {
       const createdAt = new Date(order.createdAt);
-      const matchPeriod = createdAt >= start && createdAt < end;
+      const matchPeriod = createdAt >= selectedRange.start && createdAt <= selectedRange.end;
       const matchPayment =
         paymentFilter === "all" ? true : order.paymentMethod === paymentFilter;
       return matchPeriod && matchPayment;
     });
-  }, [orders, paymentFilter, period]);
+  }, [orders, paymentFilter, selectedRange]);
 
   const previousMonthOrders = useMemo(() => {
-    const now = new Date();
-    const start =
-      period === "thisMonth"
-        ? new Date(now.getFullYear(), now.getMonth() - 1, 1)
-        : new Date(now.getFullYear(), now.getMonth(), now.getDate() - 59);
-    const end =
-      period === "thisMonth"
-        ? new Date(now.getFullYear(), now.getMonth(), 1)
-        : new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
+    if (!selectedRange) {
+      return [];
+    }
+
+    const startDay = new Date(selectedRange.start);
+    startDay.setUTCHours(0, 0, 0, 0);
+
+    const endDay = new Date(selectedRange.end);
+    endDay.setUTCHours(0, 0, 0, 0);
+
+    const dayMs = 24 * 60 * 60 * 1000;
+    const dayCount = Math.max(1, Math.floor((endDay.getTime() - startDay.getTime()) / dayMs) + 1);
+
+    const previousEnd = new Date(startDay);
+    previousEnd.setUTCDate(previousEnd.getUTCDate() - 1);
+    previousEnd.setUTCHours(23, 59, 59, 999);
+
+    const previousStart = new Date(previousEnd);
+    previousStart.setUTCDate(previousStart.getUTCDate() - (dayCount - 1));
+    previousStart.setUTCHours(0, 0, 0, 0);
+
     return orders.filter((order) => {
       const createdAt = new Date(order.createdAt);
-      const matchPeriod = createdAt >= start && createdAt < end;
+      const matchPeriod = createdAt >= previousStart && createdAt <= previousEnd;
       const matchPayment =
         paymentFilter === "all" ? true : order.paymentMethod === paymentFilter;
       return matchPeriod && matchPayment;
     });
-  }, [orders, paymentFilter, period]);
+  }, [orders, paymentFilter, selectedRange]);
 
   const totalRevenue = useMemo(
     () => currentMonthOrders.reduce((acc, order) => acc + order.total, 0),
@@ -182,7 +213,7 @@ export default function AdminReports() {
     [currentMonthOrders]
   );
 
-  const comparisonLabel = period === "thisMonth" ? "vs last month" : "vs previous 30 days";
+  const comparisonLabel = "vs previous period";
 
   const cyclePaymentFilter = () => {
     setPaymentFilter((prev) => {
@@ -252,20 +283,40 @@ export default function AdminReports() {
         {/* --- SECTION 1: FILTER & CONTROLS --- */}
         <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 mb-8 mt-6">
           <div className="flex flex-col md:flex-row items-center gap-3 w-full xl:w-auto">
-            {/* Tombol Kalender */}
-            <button
-              onClick={() => setPeriod((prev) => (prev === "thisMonth" ? "last30" : "thisMonth"))}
-              className="w-full md:w-auto flex items-center justify-between gap-2 h-10 px-4 rounded-xl bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] hover:border-[#ec6d13]/50 transition-all shadow-sm dark:shadow-none"
-            >
-              <div className="flex items-center gap-2">
-                <Calendar size={18} />
-                <span className="text-sm font-medium">{currentMonthLabel}</span>
+            <div className="w-full md:w-auto flex items-center gap-3">
+              <div className="relative w-full md:w-auto">
+                <CalendarDays size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#8e7f72]" />
+                <input
+                  type="date"
+                  value={filterStartDate}
+                  onChange={(event) => setFilterStartDate(event.target.value)}
+                  className="w-full md:w-auto h-10 pl-10 pr-3 rounded-xl bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] text-sm hover:border-[#ec6d13]/50 transition-all shadow-sm dark:shadow-none"
+                />
               </div>
-              <ChevronUp size={16} className="text-gray-400 dark:text-[#b9a89d]" />
-            </button>
+
+              <div className="relative w-full md:w-auto">
+                <CalendarDays size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#8e7f72]" />
+                <input
+                  type="date"
+                  value={filterEndDate}
+                  onChange={(event) => setFilterEndDate(event.target.value)}
+                  className="w-full md:w-auto h-10 pl-10 pr-3 rounded-xl bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] text-sm hover:border-[#ec6d13]/50 transition-all shadow-sm dark:shadow-none"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-3 w-full xl:w-auto">
+            <button
+              onClick={() => {
+                setFilterStartDate(defaultDateRange.start);
+                setFilterEndDate(defaultDateRange.end);
+              }}
+              className="w-full md:w-auto flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] hover:border-[#ec6d13]/50 transition-all shadow-sm dark:shadow-none"
+            >
+              <span className="text-sm font-medium">Reset</span>
+            </button>
+
             <button
               onClick={handleExport}
               className="w-full md:w-auto flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-[#ec6d13] hover:bg-[#d65c0b] text-white shadow-lg shadow-[#ec6d13]/20 transition-all"
