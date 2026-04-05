@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import AdminHeader from "@/components/admin-header";
+import Image from "next/image";
+import { saveAdminAvatar, useAdminAvatar } from "@/lib/hooks/useAdminAvatar";
 import {
   Save,
   Store,
@@ -15,6 +17,7 @@ import {
 } from "lucide-react";
 
 export default function AdminSettings() {
+  const avatarSrc = useAdminAvatar();
   const [storeName, setStoreName] = useState("Coffee Connect Downtown");
   const [weekdaysOpen, setWeekdaysOpen] = useState("06:00");
   const [weekdaysClose, setWeekdaysClose] = useState("20:00");
@@ -76,6 +79,49 @@ export default function AdminSettings() {
     window.localStorage.setItem("arunika-admin-settings", JSON.stringify(payload));
     setFeedbackType("success");
     setFeedbackMessage("Pengaturan berhasil disimpan.");
+  };
+
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      setFeedbackType("error");
+      setFeedbackMessage("Format gambar harus JPG atau PNG.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setFeedbackType("error");
+      setFeedbackMessage("Ukuran gambar maksimal 2MB.");
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      if (!result) {
+        setFeedbackType("error");
+        setFeedbackMessage("Gagal membaca file gambar.");
+        return;
+      }
+
+      saveAdminAvatar(result);
+      setFeedbackType("success");
+      setFeedbackMessage("Foto profil admin berhasil diperbarui.");
+    };
+
+    reader.onerror = () => {
+      setFeedbackType("error");
+      setFeedbackMessage("Terjadi kesalahan saat upload gambar.");
+    };
+
+    reader.readAsDataURL(file);
+    event.target.value = "";
   };
 
   const handlePasswordUpdate = () => {
@@ -143,12 +189,33 @@ export default function AdminSettings() {
               <div className="flex flex-col items-center gap-3 shrink-0">
                 <div className="relative group cursor-pointer">
                   <div className="size-32 rounded-full bg-gray-50 dark:bg-[#231910] border-2 border-dashed border-gray-300 dark:border-[#3e342b] flex items-center justify-center overflow-hidden group-hover:border-[#ec6d13] transition-colors">
-                    <UploadCloud className="text-gray-400 dark:text-[#8e7f72] group-hover:text-[#ec6d13] transition-colors" size={32} />
+                    <Image
+                      src={avatarSrc}
+                      alt="Admin Avatar"
+                      fill
+                      className="object-cover"
+                    />
                   </div>
-                  <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <label className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                     <span className="text-xs font-bold text-white uppercase">Upload</span>
-                  </div>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
+                <label className="inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-md border border-gray-300 dark:border-[#3e342b] text-gray-700 dark:text-[#b9a89d] hover:bg-gray-100 dark:hover:bg-[#2a221b] cursor-pointer transition-colors">
+                  <UploadCloud size={14} />
+                  Upload Foto
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
+                </label>
                 <p className="text-xs text-gray-500 dark:text-[#8e7f72]">PNG atau JPG, maks 2MB</p>
               </div>
 

@@ -8,6 +8,7 @@ import { useAdminSidebar } from "./admin-sidebar";
 import { useTheme } from "@/context/ThemeContext";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
+import { useAdminAvatar } from "@/lib/hooks/useAdminAvatar";
 
 type UserData = {
     _id: string;
@@ -30,6 +31,7 @@ interface AdminHeaderProps {
 export default function AdminHeader({ children, title, subtitle }: AdminHeaderProps) {
     const { setIsOpen } = useAdminSidebar();
     const { toggleTheme, mounted } = useTheme();
+    const avatarSrc = useAdminAvatar();
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const { data } = useSWR<ApiResponse<UserData[]>>(
@@ -105,7 +107,7 @@ export default function AdminHeader({ children, title, subtitle }: AdminHeaderPr
                         className="relative w-10 h-10 rounded-full border-2 overflow-hidden transition-all hover:scale-105 border-[#e5ddd5] dark:border-[#3e342b]"
                     >
                         <Image
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFFMEAlbc-oz-npHCx5oeKvtQICJCT0H7fLZGCSfBAKnMVgfKcoA_wOD8v8eg-CW0POamYx3vS-5_FUTC_iqNTpUpvTt2LcW2dloqUpgnmoNeZwtdmCz4BtiHJTCficyXbqHzbiKhGy5VXgmBWEc2ZqribfeQJfXbIyTYRNy86Vl8ftlh-t0fcPkhpdUKfLRnirHh9oM2bvJKX4h4SnkfXDGi2s8aY0Z8H2IheZ-FD-CZ72gzAvW8Gs052PzZt6-jDPn2WVrsNRE1g"
+                            src={avatarSrc}
                             alt="Admin Profile"
                             fill
                             className="object-cover"

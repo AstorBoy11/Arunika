@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import ThemeAwareLogo from "@/components/theme-aware-logo";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
+import { useAdminAvatar } from "@/lib/hooks/useAdminAvatar";
 import {
     LayoutDashboard,
     BarChart3,
@@ -67,6 +68,7 @@ export default function AdminSidebar() {
     const { isOpen, setIsOpen } = useAdminSidebar();
     const pathname = usePathname();
     const { mounted } = useTheme();
+    const avatarSrc = useAdminAvatar();
     const { data } = useSWR<ApiResponse<UserData[]>>(
         "/api/users",
         fetcher<ApiResponse<UserData[]>>,
@@ -155,7 +157,7 @@ export default function AdminSidebar() {
                         <div className="flex items-center gap-3 p-2 rounded-xl mb-3 transition-colors border border-transparent bg-[#f5f0eb] hover:bg-[#ebe3db] hover:border-[#e5ddd5] dark:bg-[#231910] dark:hover:bg-[#2a221b] dark:hover:border-[#3e342b]">
                             <div className="relative h-10 w-10 rounded-full overflow-hidden border border-[#e5ddd5] dark:border-[#3e342b]">
                                 <Image
-                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2GmZQePWPY04wHlVPH7g2QechnIQhqr-oZQY35eO03gOTMRZT0T5GiSUL_P2shWFbkumDQ5nZG9meggW2Ue_5QoK3xIQeiSO6WSq-Vq_UI5-GJnkbAA7mTvlFrsRPvs4ZPqcE-2oI6EGqR0oJe33z1XydzPgbdW-aHPkOeOvJV1xacWdkSfHJu7pRSGJ_8x0tOmrDi6G00Gq7LOwFzNPHhmHf5oydaiE-D6ueg-TdCHj9yQm37IUtDqXdlP-eeKsK6igXmU_1mfFC"
+                                    src={avatarSrc}
                                     alt="User Profile"
                                     fill
                                     className="object-cover"

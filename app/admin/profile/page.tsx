@@ -5,6 +5,7 @@ import AdminHeader from "@/components/admin-header";
 import Image from "next/image";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
+import { useAdminAvatar } from "@/lib/hooks/useAdminAvatar";
 import { 
   Camera, 
   Upload, 
@@ -45,6 +46,7 @@ type ApiResponse<T> = {
 };
 
 export default function AdminProfile() {
+  const avatarSrc = useAdminAvatar();
   const [formName, setFormName] = useState("");
   const [formPhone, setFormPhone] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -172,7 +174,7 @@ export default function AdminProfile() {
               <div className="relative group cursor-pointer mb-4">
                 <div className="relative size-32 rounded-full border-4 border-gray-100 dark:border-[#3e342b] shadow-xl overflow-hidden">
                   <Image 
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPm2FuOkpZbQ74djdMD59KmT18_KcjZ5d6FmHcRNABFvPDkQKaVcDb3Q02KLzqFCsg6halyhJv0TcgllVCpNqJ_34kTpDIsdGXqpco8cQjKBq2iO_QrxymGiNyb0p3si8ru0hC-n5hKUrB6jvT_uE39rBhAIMfMtYSQS1Y-OUalputwF5qPM3avyJ2WNouN_negs2tm0r3uRF2JMP83BlB3bc2yo1ntZ86uO7PwU5QEB4ObrjLa4JtOegY14MNIii6-rBGlzw8lkgX" 
+                    src={avatarSrc}
                     alt="Profile" 
                     fill 
                     className="object-cover"
