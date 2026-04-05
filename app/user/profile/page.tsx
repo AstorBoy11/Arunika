@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 
@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/lib/hooks/useUser";
+import { saveUserAvatar, useUserAvatar } from "@/lib/hooks/useUserAvatar";
 import type { IAddress } from "@/lib/models";
 
 // ─── Types & Dummy Data ───────────────────────────────────────────────────────
@@ -50,6 +51,8 @@ const labelCls = (isDark: boolean) =>
 export default function UserProfile() {
   const { theme, mounted } = useTheme();
   const { user, loading, actionLoading, error, updateProfile, addAddress, updateAddress, deleteAddress } = useUser();
+  const avatarSrc = useUserAvatar();
+  const [avatarMessage, setAvatarMessage] = useState<string | null>(null);
   const isDark = mounted && theme === "dark";
 
   // ── Modal visibility ──
@@ -100,6 +103,43 @@ export default function UserProfile() {
 
   const addresses: IAddress[] = user?.addresses || [];
 
+  const handleAvatarUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      setAvatarMessage("Format gambar harus JPG atau PNG.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarMessage("Ukuran gambar maksimal 2MB.");
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      if (!result) {
+        setAvatarMessage("Gagal membaca file gambar.");
+        return;
+      }
+
+      saveUserAvatar(result);
+      setAvatarMessage("Foto profil berhasil diperbarui.");
+    };
+    reader.onerror = () => {
+      setAvatarMessage("Terjadi kesalahan saat upload gambar.");
+    };
+
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
+
   if (loading) {
     return (
       <div className={`max-w-300 mx-auto w-full py-10 text-sm ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
@@ -122,6 +162,10 @@ export default function UserProfile() {
         <div className="text-sm text-red-500">{error}</div>
       )}
 
+      {avatarMessage && (
+        <div className="text-sm text-[#ec6d13]">{avatarMessage}</div>
+      )}
+
       {/* ── HEADER ─────────────────────────────────────────────────────── */}
       <div
         className={`flex flex-col md:flex-row items-start md:items-end justify-between gap-6 pb-6 border-b ${
@@ -137,16 +181,22 @@ export default function UserProfile() {
               }`}
             >
               <Image
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2GmZQePWPY04wHlVPH7g2QechnIQhqr-oZQY35eO03gOTMRZT0T5GiSUL_P2shWFbkumDQ5nZG9meggW2Ue_5QoK3xIQeiSO6WSq-Vq_UI5-GJnkbAA7mTvlFrsRPvs4ZPqcE-2oI6EGqR0oJe33z1XydzPgbdW-aHPkOeOvJV1xacWdkSfHJu7pRSGJ_8x0tOmrDi6G00Gq7LOwFzNPHhmHf5oydaiE-D6ueg-TdCHj9yQm37IUtDqXdlP-eeKsK6igXmU_1mfFC"
+                src={avatarSrc}
                 alt="Profile Picture"
                 fill
                 className="object-cover"
                 priority
               />
             </div>
-            <button className="absolute bottom-1 right-1 p-2 bg-[#ec6d13] rounded-full text-white shadow-lg hover:bg-[#d65c0b] transition-colors z-10">
+            <label className="absolute bottom-1 right-1 p-2 bg-[#ec6d13] rounded-full text-white shadow-lg hover:bg-[#d65c0b] transition-colors z-10 cursor-pointer">
               <Pencil size={16} />
-            </button>
+              <input
+                type="file"
+                accept="image/png,image/jpeg"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
+            </label>
           </div>
 
           {/* Name & Email */}

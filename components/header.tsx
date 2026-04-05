@@ -4,14 +4,17 @@ import { useState, useRef, useEffect } from "react";
 import { Search, Menu, User, Moon, Sun, LogOut } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useSidebar } from "./sidebar";
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/lib/hooks/useUser";
+import { useUserAvatar } from "@/lib/hooks/useUserAvatar";
 
 export default function Header() {
   const { setIsOpen } = useSidebar();
   const { theme, toggleTheme } = useTheme();
   const { user } = useUser();
+  const avatarSrc = useUserAvatar();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -112,9 +115,13 @@ export default function Header() {
               : "bg-[#f5f0eb] border-[#e5ddd5] hover:border-[#ec6d13]"
             }`}
         >
-          <div className="w-full h-full bg-[#ec6d13] flex items-center justify-center text-white font-bold text-sm">
-            {(user?.name?.charAt(0) || "A").toUpperCase()}
-          </div>
+          <Image
+            src={avatarSrc}
+            alt="User Profile"
+            width={36}
+            height={36}
+            className="h-full w-full object-cover"
+          />
         </button>
 
         {/* Dropdown Menu */}
