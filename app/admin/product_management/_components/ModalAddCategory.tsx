@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 
-type Category = { id: number; name: string; description: string };
+type Category = { id: string; name: string; description: string };
 
 interface Props {
   onClose: () => void;
-  onSubmit: (data: Omit<Category, "id">) => void;
+  onSubmit: (data: Omit<Category, "id">) => void | Promise<void>;
 }
 
 const inputClass =

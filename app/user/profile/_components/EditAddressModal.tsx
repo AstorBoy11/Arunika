@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Home, Building2, X } from "lucide-react";
 
-interface AddressData {
+type AddressData = {
+  id: number;
   type: "home" | "office";
   recipient: string;
   phone: string;
@@ -11,14 +12,15 @@ interface AddressData {
   city: string;
   postalCode: string;
   isDefault: boolean;
-}
+};
 
 interface Props {
   isDark: boolean;
+  initialData: AddressData;
   isLoading?: boolean;
   errorMessage?: string | null;
   onClose: () => void;
-  onSave: (data: AddressData) => void;
+  onSave: (id: number, data: Omit<AddressData, "id">) => void;
 }
 
 const inputCls = (isDark: boolean) =>
@@ -31,86 +33,91 @@ const inputCls = (isDark: boolean) =>
 const labelCls = (isDark: boolean) =>
   `block text-sm font-medium mb-2 ${isDark ? "text-white" : "text-[#1a140e]"}`;
 
-export default function AddAddressModal({ isDark, isLoading = false, errorMessage = null, onClose, onSave }: Props) {
-  const [type, setType] = useState<"home" | "office">("home");
-  const [recipient, setRecipient] = useState("");
-  const [phone, setPhone] = useState("");
-  const [street, setStreet] = useState("");
-  const [city, setCity] = useState("");
-  const [postalCode, setPostalCode] = useState("");
-  const [isDefault, setIsDefault] = useState(false);
+export default function EditAddressModal({
+  isDark,
+  initialData,
+  isLoading = false,
+  errorMessage = null,
+  onClose,
+  onSave,
+}: Props) {
+  const [type, setType] = useState<"home" | "office">(initialData.type);
+  const [recipient, setRecipient] = useState(initialData.recipient);
+  const [phone, setPhone] = useState(initialData.phone);
+  const [street, setStreet] = useState(initialData.street);
+  const [city, setCity] = useState(initialData.city);
+  const [postalCode, setPostalCode] = useState(initialData.postalCode);
+  const [isDefault, setIsDefault] = useState(initialData.isDefault);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave({ type, recipient, phone, street, city, postalCode, isDefault });
+  useEffect(() => {
+    setType(initialData.type);
+    setRecipient(initialData.recipient);
+    setPhone(initialData.phone);
+    setStreet(initialData.street);
+    setCity(initialData.city);
+    setPostalCode(initialData.postalCode);
+    setIsDefault(initialData.isDefault);
+  }, [initialData]);
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    onSave(initialData.id, {
+      type,
+      recipient,
+      phone,
+      street,
+      city,
+      postalCode,
+      isDefault,
+    });
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Panel */}
       <div
         className={`relative w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-2xl border shadow-2xl p-6 animate-in zoom-in-95 duration-200 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
-          isDark
-            ? "bg-[#1a140e] border-[#3e342b]"
-            : "bg-white border-[#e5ddd5]"
+          isDark ? "bg-[#1a140e] border-[#3e342b]" : "bg-white border-[#e5ddd5]"
         }`}
       >
         <button
           onClick={onClose}
           className={`absolute top-4 right-4 p-2 rounded-lg transition-colors ${
-            isDark
-              ? "hover:bg-[#2a221b] text-[#b9a89d]"
-              : "hover:bg-[#f5f0eb] text-[#8b7355]"
+            isDark ? "hover:bg-[#2a221b] text-[#b9a89d]" : "hover:bg-[#f5f0eb] text-[#8b7355]"
           }`}
         >
           <X size={20} />
         </button>
 
         <div className="mb-6">
-          <h3
-            className={`text-xl font-bold ${
-              isDark ? "text-white" : "text-[#1a140e]"
-            }`}
-          >
-            Tambah Alamat Baru
-          </h3>
-          <p
-            className={`text-sm mt-1 ${
-              isDark ? "text-[#b9a89d]" : "text-[#8b7355]"
-            }`}
-          >
-            Isi detail alamat pengiriman baru.
+          <h3 className={`text-xl font-bold ${isDark ? "text-white" : "text-[#1a140e]"}`}>Edit Alamat</h3>
+          <p className={`text-sm mt-1 ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
+            Perbarui detail alamat pengiriman.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {errorMessage && <p className="text-sm text-red-500">{errorMessage}</p>}
 
-          {/* Address type */}
           <div>
             <label className={labelCls(isDark)}>Jenis Alamat</label>
             <div className="flex gap-3">
-              {(["home", "office"] as const).map((t) => (
+              {(["home", "office"] as const).map((itemType) => (
                 <button
-                  key={t}
+                  key={itemType}
                   type="button"
-                  onClick={() => setType(t)}
+                  onClick={() => setType(itemType)}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-medium transition-all ${
-                    type === t
+                    type === itemType
                       ? "bg-[#ec6d13]/10 border-[#ec6d13] text-[#ec6d13]"
                       : isDark
-                      ? "border-[#3e342b] text-[#b9a89d] hover:border-[#ec6d13]"
-                      : "border-[#e5ddd5] text-[#8b7355] hover:border-[#ec6d13]"
+                        ? "border-[#3e342b] text-[#b9a89d] hover:border-[#ec6d13]"
+                        : "border-[#e5ddd5] text-[#8b7355] hover:border-[#ec6d13]"
                   }`}
                 >
-                  {t === "home" ? <Home size={18} /> : <Building2 size={18} />}
-                  {t === "home" ? "Rumah" : "Kantor"}
+                  {itemType === "home" ? <Home size={18} /> : <Building2 size={18} />}
+                  {itemType === "home" ? "Rumah" : "Kantor"}
                 </button>
               ))}
             </div>
@@ -121,7 +128,7 @@ export default function AddAddressModal({ isDark, isLoading = false, errorMessag
             <input
               type="text"
               value={recipient}
-              onChange={(e) => setRecipient(e.target.value)}
+              onChange={(event) => setRecipient(event.target.value)}
               required
               minLength={2}
               placeholder="Nama lengkap penerima"
@@ -134,7 +141,7 @@ export default function AddAddressModal({ isDark, isLoading = false, errorMessag
             <input
               type="tel"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(event) => setPhone(event.target.value)}
               required
               minLength={8}
               placeholder="08xx-xxxx-xxxx"
@@ -147,7 +154,7 @@ export default function AddAddressModal({ isDark, isLoading = false, errorMessag
             <textarea
               rows={3}
               value={street}
-              onChange={(e) => setStreet(e.target.value)}
+              onChange={(event) => setStreet(event.target.value)}
               required
               minLength={5}
               placeholder="Jalan, nomor rumah, RT/RW, kelurahan, kecamatan"
@@ -161,7 +168,7 @@ export default function AddAddressModal({ isDark, isLoading = false, errorMessag
               <input
                 type="text"
                 value={city}
-                onChange={(e) => setCity(e.target.value)}
+                onChange={(event) => setCity(event.target.value)}
                 required
                 minLength={2}
                 placeholder="Nama kota"
@@ -173,7 +180,7 @@ export default function AddAddressModal({ isDark, isLoading = false, errorMessag
               <input
                 type="text"
                 value={postalCode}
-                onChange={(e) => setPostalCode(e.target.value)}
+                onChange={(event) => setPostalCode(event.target.value)}
                 required
                 minLength={3}
                 placeholder="00000"
@@ -186,7 +193,7 @@ export default function AddAddressModal({ isDark, isLoading = false, errorMessag
             <input
               type="checkbox"
               checked={isDefault}
-              onChange={(e) => setIsDefault(e.target.checked)}
+              onChange={(event) => setIsDefault(event.target.checked)}
               className="w-5 h-5 rounded border-2 text-[#ec6d13] focus:ring-[#ec6d13]"
             />
             <span className={`text-sm ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
@@ -212,7 +219,7 @@ export default function AddAddressModal({ isDark, isLoading = false, errorMessag
               disabled={isLoading}
               className="flex-1 py-3 rounded-xl bg-[#ec6d13] hover:bg-[#d65c0b] text-white font-bold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Menyimpan..." : "Simpan Alamat"}
+              {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
             </button>
           </div>
         </form>

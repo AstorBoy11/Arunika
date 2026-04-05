@@ -271,6 +271,10 @@ export default function SettingsModals({
                       if (label === "Nama Penerima") setAddRecipient(event.target.value);
                       if (label === "Nomor Telepon") setAddPhone(event.target.value);
                     }}
+                    required={label !== "Label Alamat"}
+                    minLength={
+                      label === "Nama Penerima" ? 2 : label === "Nomor Telepon" ? 8 : undefined
+                    }
                     placeholder={placeholder}
                     className={inputCls(isDark)}
                   />
@@ -283,6 +287,8 @@ export default function SettingsModals({
                   rows={3}
                   value={addStreet}
                   onChange={(event) => setAddStreet(event.target.value)}
+                  required
+                  minLength={5}
                   placeholder="Jalan, nomor rumah, RT/RW, kelurahan, kecamatan"
                   className={`${inputCls(isDark)} resize-none`}
                 />
@@ -295,6 +301,8 @@ export default function SettingsModals({
                     type="text"
                     value={addCity}
                     onChange={(event) => setAddCity(event.target.value)}
+                    required
+                    minLength={2}
                     placeholder="Nama kota"
                     className={inputCls(isDark)}
                   />
@@ -305,6 +313,8 @@ export default function SettingsModals({
                     type="text"
                     value={addPostalCode}
                     onChange={(event) => setAddPostalCode(event.target.value)}
+                    required
+                    minLength={3}
                     placeholder="00000"
                     className={inputCls(isDark)}
                   />
@@ -450,6 +460,10 @@ export default function SettingsModals({
                       if (label === "Nama Penerima") setEditRecipient(event.target.value);
                       if (label === "Nomor Telepon") setEditPhone(event.target.value);
                     }}
+                    required={label !== "Label Alamat"}
+                    minLength={
+                      label === "Nama Penerima" ? 2 : label === "Nomor Telepon" ? 8 : undefined
+                    }
                     className={inputCls(isDark)}
                   />
                 </div>
@@ -461,6 +475,8 @@ export default function SettingsModals({
                   rows={3}
                   value={editStreet}
                   onChange={(event) => setEditStreet(event.target.value)}
+                  required
+                  minLength={5}
                   className={`${inputCls(isDark)} resize-none`}
                 />
               </div>
@@ -472,6 +488,8 @@ export default function SettingsModals({
                     type="text"
                     value={editCity}
                     onChange={(event) => setEditCity(event.target.value)}
+                    required
+                    minLength={2}
                     className={inputCls(isDark)}
                   />
                 </div>
@@ -481,6 +499,8 @@ export default function SettingsModals({
                     type="text"
                     value={editPostalCode}
                     onChange={(event) => setEditPostalCode(event.target.value)}
+                    required
+                    minLength={3}
                     className={inputCls(isDark)}
                   />
                 </div>

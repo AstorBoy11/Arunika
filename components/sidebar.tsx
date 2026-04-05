@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/lib/hooks/useUser";
+import { useUserAvatar } from "@/lib/hooks/useUserAvatar";
 
 // --- CONTEXT SETUP ---
 export const SidebarContext = createContext<{
@@ -45,6 +46,7 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
   const pathname = usePathname();
   const { theme } = useTheme();
   const { user } = useUser();
+  const avatarSrc = useUserAvatar();
 
   const isDark = theme === "dark";
 
@@ -158,7 +160,7 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
               <div className={`relative h-10 w-10 rounded-full overflow-hidden border ${isDark ? "border-[#3e342b]" : "border-[#e5ddd5]"
                 }`}>
                 <Image
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2GmZQePWPY04wHlVPH7g2QechnIQhqr-oZQY35eO03gOTMRZT0T5GiSUL_P2shWFbkumDQ5nZG9meggW2Ue_5QoK3xIQeiSO6WSq-Vq_UI5-GJnkbAA7mTvlFrsRPvs4ZPqcE-2oI6EGqR0oJe33z1XydzPgbdW-aHPkOeOvJV1xacWdkSfHJu7pRSGJ_8x0tOmrDi6G00Gq7LOwFzNPHhmHf5oydaiE-D6ueg-TdCHj9yQm37IUtDqXdlP-eeKsK6igXmU_1mfFC"
+                  src={avatarSrc}
                   alt="User Profile"
                   fill
                   className="object-cover"
@@ -173,8 +175,8 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
           </Link>
 
           <button className={`w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-transparent border text-sm font-bold transition-all ${isDark
-            ? "border-[#3e342b] hover:bg-[#231910] hover:text-white text-[#b9a89d]"
-            : "border-[#e5ddd5] hover:bg-[#f5f0eb] hover:text-[#1a140e] text-[#8b7355]"
+            ? "border-[#3e342b] hover:bg-red-500 hover:text-white text-[#b9a89d]"
+            : "border-[#e5ddd5] hover:bg-red-500 hover:text-white text-[#8b7355]"
             }`}>
             <LogOut size={18} />
             <span>Log Out</span>

@@ -1,20 +1,38 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { Loader2, Plus, TrendingDown, TrendingUp } from "lucide-react";
+import useSWR from "swr";
+import { CalendarDays, Loader2, Plus, Trash2, TrendingDown, TrendingUp } from "lucide-react";
+import type { IExpense } from "@/lib/models";
+import { fetcher } from "@/lib/fetcher";
 
-type ExpenseItem = {
-  id: number;
+type ExpenseItem = Pick<IExpense, "keterangan" | "nominal"> & {
+  _id: string;
   tanggal: string;
-  keterangan: string;
-  nominal: number;
 };
 
 type NewExpensePayload = {
   nominal: number;
   keterangan: string;
   tanggal: string;
+};
+
+type ExpenseApiItem = Pick<IExpense, "keterangan" | "nominal"> & {
+  _id: string;
+  tanggal: string | Date;
+};
+
+type ExpensesResponse = {
+  success: boolean;
+  data?: ExpenseApiItem[];
+  message?: string;
+};
+
+type ExpenseResponse = {
+  success: boolean;
+  data?: ExpenseApiItem;
+  message?: string;
 };
 
 type PaidOrder = {
@@ -34,26 +52,18 @@ const ModalAddExpense = dynamic(() => import("./ModalAddExpense"), {
   loading: () => null,
 });
 
-const INITIAL_EXPENSES: ExpenseItem[] = [
-  {
-    id: 1,
-    tanggal: "2026-03-26",
-    keterangan: "Pembelian biji kopi bulanan",
-    nominal: 2350000,
-  },
-  {
-    id: 2,
-    tanggal: "2026-03-27",
-    keterangan: "Perawatan mesin espresso",
-    nominal: 850000,
-  },
-  {
-    id: 3,
-    tanggal: "2026-03-29",
-    keterangan: "Biaya listrik dan internet",
-    nominal: 1250000,
-  },
-];
+function normalizeTanggal(value: string | Date): string {
+  if (value instanceof Date) {
+    return value.toISOString().split("T")[0];
+  }
+
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toISOString().split("T")[0];
+  }
+
+  return value;
+}
 
 function formatIDR(value: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -72,68 +82,96 @@ function formatDate(dateString: string) {
   }).format(date);
 }
 
+function isWithinDateRange(dateValue: string, startDate: string, endDate: string): boolean {
+  const target = new Date(dateValue);
+  if (Number.isNaN(target.getTime())) {
+    return false;
+  }
+
+  const targetKey = target.toISOString().slice(0, 10);
+  if (startDate && targetKey < startDate) {
+    return false;
+  }
+  if (endDate && targetKey > endDate) {
+    return false;
+  }
+
+  return true;
+}
+
 export default function FinanceClient() {
-  const [expenses, setExpenses] = useState<ExpenseItem[]>(INITIAL_EXPENSES);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
-  const [paidOrders, setPaidOrders] = useState<PaidOrder[]>([]);
-  const [loadingIncome, setLoadingIncome] = useState(true);
-  const [incomeError, setIncomeError] = useState("");
+  const [expenseActionError, setExpenseActionError] = useState("");
+  const [savingExpense, setSavingExpense] = useState(false);
+  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
 
-  useEffect(() => {
-    let isCancelled = false;
+  const {
+    data: expensesData,
+    error: expensesFetchError,
+    isLoading: loadingExpenses,
+    mutate: mutateExpenses,
+  } = useSWR<ExpensesResponse>("/api/expenses", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 10_000,
+  });
 
-    const fetchPaidOrders = async () => {
-      setLoadingIncome(true);
-      setIncomeError("");
+  const {
+    data: ordersData,
+    error: incomeFetchError,
+    isLoading: loadingIncome,
+  } = useSWR<OrdersResponse>("/api/orders?paymentStatus=paid", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 10_000,
+  });
 
-      try {
-        const response = await fetch("/api/orders?paymentStatus=paid");
-        const result: OrdersResponse = (await response.json()) as OrdersResponse;
+  const expenses: ExpenseItem[] = useMemo(
+    () =>
+      (expensesData?.data ?? []).map((item) => ({
+        _id: item._id,
+        keterangan: item.keterangan,
+        nominal: item.nominal,
+        tanggal: normalizeTanggal(item.tanggal),
+      })),
+    [expensesData?.data]
+  );
 
-        if (!response.ok || !result.success) {
-          if (!isCancelled) {
-            setIncomeError(result.message ?? "Gagal memuat data pendapatan.");
-            setPaidOrders([]);
-          }
-          return;
-        }
+  const paidOrders = useMemo(() => ordersData?.data ?? [], [ordersData?.data]);
 
-        if (!isCancelled) {
-          setPaidOrders(result.data ?? []);
-        }
-      } catch {
-        if (!isCancelled) {
-          setIncomeError("Terjadi kesalahan jaringan saat memuat pendapatan.");
-          setPaidOrders([]);
-        }
-      } finally {
-        if (!isCancelled) {
-          setLoadingIncome(false);
-        }
-      }
-    };
+  const filteredExpenses = useMemo(
+    () =>
+      expenses.filter((expense) =>
+        isWithinDateRange(expense.tanggal, filterStartDate, filterEndDate)
+      ),
+    [expenses, filterEndDate, filterStartDate]
+  );
 
-    void fetchPaidOrders();
+  const filteredPaidOrders = useMemo(
+    () =>
+      paidOrders.filter((order) =>
+        isWithinDateRange(order.createdAt, filterStartDate, filterEndDate)
+      ),
+    [filterEndDate, filterStartDate, paidOrders]
+  );
 
-    return () => {
-      isCancelled = true;
-    };
-  }, []);
+  const incomeError = incomeFetchError instanceof Error ? incomeFetchError.message : "";
+  const expenseError = expenseActionError || (expensesFetchError instanceof Error ? expensesFetchError.message : "");
 
   const totalPengeluaran = useMemo(
-    () => expenses.reduce((acc, item) => acc + item.nominal, 0),
-    [expenses]
+    () => filteredExpenses.reduce((acc, item) => acc + item.nominal, 0),
+    [filteredExpenses]
   );
 
   const totalPemasukan = useMemo(
-    () => paidOrders.reduce((acc, order) => acc + order.total, 0),
-    [paidOrders]
+    () => filteredPaidOrders.reduce((acc, order) => acc + order.total, 0),
+    [filteredPaidOrders]
   );
 
   const incomeByDate = useMemo(() => {
     const grouped = new Map<string, number>();
 
-    for (const order of paidOrders) {
+    for (const order of filteredPaidOrders) {
       const dateKey = new Date(order.createdAt).toISOString().split("T")[0];
       const current = grouped.get(dateKey) ?? 0;
       grouped.set(dateKey, current + order.total);
@@ -142,21 +180,69 @@ export default function FinanceClient() {
     return Array.from(grouped.entries())
       .map(([tanggal, total]) => ({ tanggal, total }))
       .sort((a, b) => (a.tanggal < b.tanggal ? 1 : -1));
-  }, [paidOrders]);
+  }, [filteredPaidOrders]);
 
-  const handleAddExpense = (payload: NewExpensePayload) => {
-    setExpenses((prev) => {
-      const nextId = prev.length > 0 ? Math.max(...prev.map((item) => item.id)) + 1 : 1;
-      return [
-        {
-          id: nextId,
-          nominal: payload.nominal,
-          keterangan: payload.keterangan,
-          tanggal: payload.tanggal,
+  const handleAddExpense = async (payload: NewExpensePayload): Promise<boolean> => {
+    setSavingExpense(true);
+    setExpenseActionError("");
+
+    try {
+      const response = await fetch("/api/expenses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        ...prev,
-      ];
-    });
+        body: JSON.stringify(payload),
+      });
+
+      const result: ExpenseResponse = (await response.json()) as ExpenseResponse;
+
+      if (!response.ok || !result.success) {
+        setExpenseActionError(result.message ?? "Gagal menyimpan pengeluaran.");
+        return false;
+      }
+
+      setIsAddExpenseOpen(false);
+      await mutateExpenses();
+      return true;
+    } catch {
+      setExpenseActionError("Terjadi kesalahan jaringan saat menyimpan pengeluaran.");
+      return false;
+    } finally {
+      setSavingExpense(false);
+    }
+  };
+
+  const handleDeleteExpense = async (expenseId: string) => {
+    const confirmed = window.confirm("Hapus pengeluaran ini?");
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingExpenseId(expenseId);
+    setExpenseActionError("");
+
+    try {
+      const response = await fetch(`/api/expenses/${expenseId}`, {
+        method: "DELETE",
+      });
+
+      const result: { success: boolean; message?: string } = (await response.json()) as {
+        success: boolean;
+        message?: string;
+      };
+
+      if (!response.ok || !result.success) {
+        setExpenseActionError(result.message ?? "Gagal menghapus pengeluaran.");
+        return;
+      }
+
+      await mutateExpenses();
+    } catch {
+      setExpenseActionError("Terjadi kesalahan jaringan saat menghapus pengeluaran.");
+    } finally {
+      setDeletingExpenseId(null);
+    }
   };
 
   return (
@@ -169,7 +255,11 @@ export default function FinanceClient() {
                 Total Pemasukan
               </p>
               <h3 className="mt-2 text-2xl font-black text-gray-900 dark:text-white">
-                {loadingIncome ? "..." : formatIDR(totalPemasukan)}
+                {loadingIncome ? (
+                  <span className="inline-block h-8 w-28 rounded-lg bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                ) : (
+                  formatIDR(totalPemasukan)
+                )}
               </h3>
             </div>
             <div className="p-2.5 rounded-xl bg-[#0bda16]/10 border border-[#0bda16]/20">
@@ -185,7 +275,11 @@ export default function FinanceClient() {
                 Total Pengeluaran
               </p>
               <h3 className="mt-2 text-2xl font-black text-gray-900 dark:text-white">
-                {formatIDR(totalPengeluaran)}
+                {loadingExpenses ? (
+                  <span className="inline-block h-8 w-28 rounded-lg bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                ) : (
+                  formatIDR(totalPengeluaran)
+                )}
               </h3>
             </div>
             <div className="p-2.5 rounded-xl bg-[#ec6d13]/10 border border-[#ec6d13]/20">
@@ -201,6 +295,61 @@ export default function FinanceClient() {
         </div>
       )}
 
+      {expenseError && (
+        <div className="mt-6 rounded-lg border px-3 py-2.5 text-xs bg-[#fff4ee] border-[#f2c1ab] text-[#a64822] dark:bg-[#3a1c14]/40 dark:border-[#7a3422] dark:text-[#f2b8a0]">
+          {expenseError}
+        </div>
+      )}
+
+      <div className="mt-6 bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-2xl p-4 sm:p-5 shadow-sm dark:shadow-none">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-4">
+          <div className="flex-1">
+            <label className="text-xs uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] font-semibold">
+              Dari Tanggal
+            </label>
+            <div className="mt-1.5 relative">
+              <CalendarDays
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#8e7f72]"
+              />
+              <input
+                type="date"
+                value={filterStartDate}
+                onChange={(event) => setFilterStartDate(event.target.value)}
+                className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg pl-10 pr-3 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all"
+              />
+            </div>
+          </div>
+          <div className="flex-1">
+            <label className="text-xs uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] font-semibold">
+              Sampai Tanggal
+            </label>
+            <div className="mt-1.5 relative">
+              <CalendarDays
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#8e7f72]"
+              />
+              <input
+                type="date"
+                value={filterEndDate}
+                onChange={(event) => setFilterEndDate(event.target.value)}
+                className="w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg pl-10 pr-3 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all"
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setFilterStartDate("");
+              setFilterEndDate("");
+            }}
+            className="h-11 px-4 rounded-lg border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] text-sm font-medium hover:bg-gray-50 dark:hover:bg-[#231910] transition-colors"
+          >
+            Reset Filter
+          </button>
+        </div>
+      </div>
+
       <div className="mt-6 bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-2xl shadow-sm dark:shadow-none overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-[#3e342b]">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">Riwayat Pendapatan Order</h3>
@@ -210,9 +359,13 @@ export default function FinanceClient() {
         </div>
 
         {loadingIncome ? (
-          <div className="px-6 py-8 text-sm text-gray-500 dark:text-[#8e7f72] flex items-center gap-2">
-            <Loader2 size={16} className="animate-spin text-[#ec6d13]" />
-            Memuat pendapatan order...
+          <div className="px-6 py-6 space-y-3">
+            {[0, 1, 2].map((row) => (
+              <div key={row} className="grid grid-cols-2 gap-4">
+                <div className="h-5 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                <div className="h-5 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+              </div>
+            ))}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -244,7 +397,7 @@ export default function FinanceClient() {
 
         {!loadingIncome && incomeByDate.length === 0 && (
           <div className="px-6 py-10 text-center text-sm text-gray-500 dark:text-[#8e7f72]">
-            Belum ada order paid untuk ditampilkan.
+            Belum ada data pendapatan pada rentang tanggal ini.
           </div>
         )}
       </div>
@@ -274,32 +427,67 @@ export default function FinanceClient() {
                 <th className="text-left px-6 py-3 font-semibold text-gray-500 dark:text-[#8e7f72]">Tanggal</th>
                 <th className="text-left px-6 py-3 font-semibold text-gray-500 dark:text-[#8e7f72]">Keterangan</th>
                 <th className="text-right px-6 py-3 font-semibold text-gray-500 dark:text-[#8e7f72]">Nominal</th>
+                <th className="text-right px-6 py-3 font-semibold text-gray-500 dark:text-[#8e7f72]">Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {expenses.map((expense) => (
-                <tr
-                  key={expense.id}
-                  className="border-b border-gray-200 dark:border-[#3e342b] last:border-0"
-                >
-                  <td className="px-6 py-4 text-gray-700 dark:text-[#EAE0D5] whitespace-nowrap">
-                    {formatDate(expense.tanggal)}
-                  </td>
-                  <td className="px-6 py-4 text-gray-900 dark:text-white">
-                    {expense.keterangan}
-                  </td>
-                  <td className="px-6 py-4 text-right text-[#ec6d13] font-bold whitespace-nowrap">
-                    {formatIDR(expense.nominal)}
+              {loadingExpenses ? (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-6 py-5"
+                  >
+                    <div className="space-y-3">
+                      {[0, 1, 2].map((row) => (
+                        <div key={row} className="grid grid-cols-4 gap-4">
+                          <div className="h-5 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                          <div className="h-5 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                          <div className="h-5 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                          <div className="h-5 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
+                        </div>
+                      ))}
+                    </div>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredExpenses.map((expense) => (
+                  <tr
+                    key={expense._id}
+                    className="border-b border-gray-200 dark:border-[#3e342b] last:border-0"
+                  >
+                    <td className="px-6 py-4 text-gray-700 dark:text-[#EAE0D5] whitespace-nowrap">
+                      {formatDate(expense.tanggal)}
+                    </td>
+                    <td className="px-6 py-4 text-gray-900 dark:text-white">
+                      {expense.keterangan}
+                    </td>
+                    <td className="px-6 py-4 text-right text-[#ec6d13] font-bold whitespace-nowrap">
+                      {formatIDR(expense.nominal)}
+                    </td>
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                      <button
+                        onClick={() => void handleDeleteExpense(expense._id)}
+                        disabled={deletingExpenseId === expense._id}
+                        className="inline-flex items-center justify-center p-2 rounded-lg border border-gray-200 dark:border-[#3e342b] text-gray-500 dark:text-[#8e7f72] hover:bg-gray-50 dark:hover:bg-[#231910] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                        aria-label="Hapus pengeluaran"
+                      >
+                        {deletingExpenseId === expense._id ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={14} />
+                        )}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
-        {expenses.length === 0 && (
+        {!loadingExpenses && filteredExpenses.length === 0 && (
           <div className="px-6 py-10 text-center text-sm text-gray-500 dark:text-[#8e7f72]">
-            Belum ada data pengeluaran.
+            Belum ada data pengeluaran pada rentang tanggal ini.
           </div>
         )}
       </div>
@@ -308,6 +496,7 @@ export default function FinanceClient() {
         isOpen={isAddExpenseOpen}
         onClose={() => setIsAddExpenseOpen(false)}
         onSubmit={handleAddExpense}
+        isLoading={savingExpense}
       />
     </div>
   );

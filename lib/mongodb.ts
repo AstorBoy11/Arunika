@@ -16,8 +16,17 @@ if (!cached) {
   cached = global.mongooseConnection = { conn: null, promise: null };
 }
 
+function isSrvDnsError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return error.message.includes("querySrv") || error.message.includes("ECONNREFUSED");
+}
+
 async function connectDB() {
   const MONGODB_URI = process.env.MONGODB_URI!;
+  const MONGODB_URI_FALLBACK = process.env.MONGODB_URI_FALLBACK;
   if (!MONGODB_URI) {
     throw new Error("Tolong masukkan MONGODB_URI di dalam file .env (Periksa .env.example sebagai referensi).");
   }
@@ -32,10 +41,22 @@ async function connectDB() {
     };
 
     console.log("⏳ Menghubungkan ke MongoDB Atlas...");
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
-      console.log("✅ Berhasil terhubung ke MongoDB Atlas!");
-      return mongooseInstance;
-    });
+    cached.promise = (async () => {
+      try {
+        const mongooseInstance = await mongoose.connect(MONGODB_URI, opts);
+        console.log("✅ Berhasil terhubung ke MongoDB Atlas!");
+        return mongooseInstance;
+      } catch (primaryError: unknown) {
+        if (MONGODB_URI_FALLBACK && isSrvDnsError(primaryError)) {
+          console.warn("⚠️ Koneksi SRV gagal, mencoba fallback non-SRV...");
+          const mongooseInstance = await mongoose.connect(MONGODB_URI_FALLBACK, opts);
+          console.log("✅ Berhasil terhubung ke MongoDB Atlas (fallback non-SRV)!");
+          return mongooseInstance;
+        }
+
+        throw primaryError;
+      }
+    })();
   }
 
   try {

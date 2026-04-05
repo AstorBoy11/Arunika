@@ -4,7 +4,17 @@ import { ThemeProvider as NextThemesProvider, useTheme as useNextTheme } from "n
 import { ReactNode, useEffect, useState } from "react";
 
 export function ThemeProvider({ children, ...props }: React.ComponentProps<typeof NextThemesProvider>) {
-    return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+    return (
+        <NextThemesProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+            {...props}
+        >
+            {children}
+        </NextThemesProvider>
+    );
 }
 
 export function useTheme() {
@@ -22,12 +32,30 @@ export function useTheme() {
         setTheme(current === "dark" ? "light" : "dark");
     };
 
+    const setThemeMode = (mode: "light" | "dark" | "system") => {
+        setTheme(mode);
+    };
+
     // Avoid hydration mismatch
     if (!mounted) {
-        return { theme: "light", toggleTheme, mounted: false };
+        return {
+            theme: "light",
+            themeMode: "system",
+            toggleTheme,
+            setTheme,
+            setThemeMode,
+            mounted: false,
+        };
     }
 
     // Return resolvedTheme as 'theme' so consuming components (AdminHeader) 
     // checking (theme === 'dark') work correctly with system preferences.
-    return { theme: resolvedTheme, toggleTheme, setTheme, mounted: true };
+    return {
+        theme: resolvedTheme,
+        themeMode: (theme ?? "system") as "light" | "dark" | "system",
+        toggleTheme,
+        setTheme,
+        setThemeMode,
+        mounted: true,
+    };
 }

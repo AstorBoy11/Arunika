@@ -26,7 +26,7 @@ export async function GET(req: Request) {
 
     const query: {
       category?: string;
-      badge?: string;
+      badge?: { $regex: string; $options: string };
       name?: { $regex: string; $options: string };
     } = {};
 
@@ -34,7 +34,8 @@ export async function GET(req: Request) {
       query.category = category;
     }
     if (badge) {
-      query.badge = badge;
+      const escapedBadge = badge.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      query.badge = { $regex: escapedBadge, $options: "i" };
     }
     if (search) {
       query.name = { $regex: search, $options: "i" };

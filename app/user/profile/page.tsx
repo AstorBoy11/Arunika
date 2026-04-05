@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 
@@ -13,6 +13,10 @@ const EditProfileModal = dynamic(
 );
 const AddAddressModal = dynamic(
   () => import("./_components/AddAddressModal"),
+  { ssr: false }
+);
+const EditAddressModal = dynamic(
+  () => import("./_components/EditAddressModal"),
   { ssr: false }
 );
 import {
@@ -29,6 +33,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/lib/hooks/useUser";
+import { saveUserAvatar, useUserAvatar } from "@/lib/hooks/useUserAvatar";
 import type { IAddress } from "@/lib/models";
 
 // ─── Types & Dummy Data ───────────────────────────────────────────────────────
@@ -50,11 +55,17 @@ const labelCls = (isDark: boolean) =>
 export default function UserProfile() {
   const { theme, mounted } = useTheme();
   const { user, loading, actionLoading, error, updateProfile, addAddress, updateAddress, deleteAddress } = useUser();
+  const avatarSrc = useUserAvatar();
+  const [avatarMessage, setAvatarMessage] = useState<string | null>(null);
   const isDark = mounted && theme === "dark";
 
   // ── Modal visibility ──
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showAddAddress, setShowAddAddress] = useState(false);
+  const [showEditAddress, setShowEditAddress] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<IAddress | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [addressToDelete, setAddressToDelete] = useState<IAddress | null>(null);
 
   // Form state now lives inside each modal component; the page just holds the
   // visibility flag and the save callbacks.
@@ -71,7 +82,6 @@ export default function UserProfile() {
   };
 
   const handleSaveAddress = async (data: {
-    label: string;
     type: "home" | "office";
     recipient: string;
     phone: string;
@@ -83,7 +93,7 @@ export default function UserProfile() {
     if (!user) return;
 
     const updated = await addAddress(user._id, {
-      label: data.label || "Alamat Baru",
+      label: data.type === "home" ? "Rumah" : "Kantor",
       type: data.type,
       recipient: data.recipient,
       phone: data.phone,
@@ -98,7 +108,88 @@ export default function UserProfile() {
     setShowAddAddress(false);
   };
 
+  const handleEditAddress = async (
+    id: number,
+    data: {
+      type: "home" | "office";
+      recipient: string;
+      phone: string;
+      street: string;
+      city: string;
+      postalCode: string;
+      isDefault: boolean;
+    }
+  ) => {
+    if (!user) return;
+
+    const updated = await updateAddress(user._id, id, {
+      type: data.type,
+      recipient: data.recipient,
+      phone: data.phone,
+      street: data.street,
+      city: data.city,
+      province: data.city,
+      postalCode: data.postalCode,
+      isDefault: data.isDefault,
+    });
+
+    if (!updated) return;
+    setShowEditAddress(false);
+    setSelectedAddress(null);
+  };
+
+  const handleDeleteAddress = async () => {
+    if (!user || !addressToDelete) {
+      return;
+    }
+
+    const updated = await deleteAddress(user._id, addressToDelete.id);
+    if (!updated) {
+      return;
+    }
+
+    setShowDeleteConfirm(false);
+    setAddressToDelete(null);
+  };
+
   const addresses: IAddress[] = user?.addresses || [];
+
+  const handleAvatarUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      setAvatarMessage("Format gambar harus JPG atau PNG.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarMessage("Ukuran gambar maksimal 2MB.");
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      if (!result) {
+        setAvatarMessage("Gagal membaca file gambar.");
+        return;
+      }
+
+      saveUserAvatar(result);
+      setAvatarMessage("Foto profil berhasil diperbarui.");
+    };
+    reader.onerror = () => {
+      setAvatarMessage("Terjadi kesalahan saat upload gambar.");
+    };
+
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
 
   if (loading) {
     return (
@@ -122,6 +213,10 @@ export default function UserProfile() {
         <div className="text-sm text-red-500">{error}</div>
       )}
 
+      {avatarMessage && (
+        <div className="text-sm text-[#ec6d13]">{avatarMessage}</div>
+      )}
+
       {/* ── HEADER ─────────────────────────────────────────────────────── */}
       <div
         className={`flex flex-col md:flex-row items-start md:items-end justify-between gap-6 pb-6 border-b ${
@@ -137,16 +232,22 @@ export default function UserProfile() {
               }`}
             >
               <Image
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2GmZQePWPY04wHlVPH7g2QechnIQhqr-oZQY35eO03gOTMRZT0T5GiSUL_P2shWFbkumDQ5nZG9meggW2Ue_5QoK3xIQeiSO6WSq-Vq_UI5-GJnkbAA7mTvlFrsRPvs4ZPqcE-2oI6EGqR0oJe33z1XydzPgbdW-aHPkOeOvJV1xacWdkSfHJu7pRSGJ_8x0tOmrDi6G00Gq7LOwFzNPHhmHf5oydaiE-D6ueg-TdCHj9yQm37IUtDqXdlP-eeKsK6igXmU_1mfFC"
+                src={avatarSrc}
                 alt="Profile Picture"
                 fill
                 className="object-cover"
                 priority
               />
             </div>
-            <button className="absolute bottom-1 right-1 p-2 bg-[#ec6d13] rounded-full text-white shadow-lg hover:bg-[#d65c0b] transition-colors z-10">
+            <label className="absolute bottom-1 right-1 p-2 bg-[#ec6d13] rounded-full text-white shadow-lg hover:bg-[#d65c0b] transition-colors z-10 cursor-pointer">
               <Pencil size={16} />
-            </button>
+              <input
+                type="file"
+                accept="image/png,image/jpeg"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
+            </label>
           </div>
 
           {/* Name & Email */}
@@ -177,7 +278,7 @@ export default function UserProfile() {
       </div>
 
       {/* ── CONTENT GRID ───────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* LEFT: Personal Info */}
         <div className="lg:col-span-1 flex flex-col gap-6">
           <h3
@@ -259,7 +360,7 @@ export default function UserProfile() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
             {addresses.map((addr) => (
               <div
                 key={addr.id}
@@ -295,30 +396,21 @@ export default function UserProfile() {
                       <Building2 size={22} />
                     )}
                   </div>
-                  <div>
-                    <h4
-                      className={`font-bold ${
-                        isDark ? "text-white" : "text-[#1a140e]"
-                      }`}
-                    >
-                      {addr.label}
-                    </h4>
-                    <span
-                      className={`text-[10px] font-bold uppercase tracking-wider ${
-                        addr.isDefault
-                          ? "text-[#ec6d13]"
-                          : isDark
-                            ? "text-[#b9a89d]"
-                            : "text-[#8b7355]"
-                      }`}
-                    >
-                      {addr.isDefault
-                        ? "Utama"
-                        : addr.type === "home"
-                          ? "Rumah"
-                          : "Kantor"}
-                    </span>
-                  </div>
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-wider ${
+                      addr.isDefault
+                        ? "text-[#ec6d13]"
+                        : isDark
+                          ? "text-[#b9a89d]"
+                          : "text-[#8b7355]"
+                    }`}
+                  >
+                    {addr.isDefault
+                      ? "Utama"
+                      : addr.type === "home"
+                        ? "Rumah"
+                        : "Kantor"}
+                  </span>
                 </div>
 
                 <p
@@ -326,17 +418,30 @@ export default function UserProfile() {
                     isDark ? "text-[#b9a89d]" : "text-[#8b7355]"
                   }`}
                 >
-                  {addr.recipient}
+                  <span className="font-semibold">Nama Penerima:</span> {addr.recipient}
+                </p>
+                <p
+                  className={`text-sm leading-relaxed mb-2 ${
+                    isDark ? "text-[#b9a89d]" : "text-[#8b7355]"
+                  }`}
+                >
+                  <span className="font-semibold">Nomor Telepon:</span> {addr.phone}
+                </p>
+                <p
+                  className={`text-sm leading-relaxed mb-2 ${
+                    isDark ? "text-[#b9a89d]" : "text-[#8b7355]"
+                  }`}
+                >
+                  <span className="font-semibold">Alamat Lengkap:</span> {addr.street}
                 </p>
                 <p
                   className={`text-sm leading-relaxed mb-4 ${
                     isDark ? "text-[#b9a89d]" : "text-[#8b7355]"
                   }`}
                 >
-                  {addr.street}
-                  <br />
+                  <span className="font-semibold">Kota dan Kode Pos:</span>{" "}
                   {addr.city}
-                  {addr.postalCode && `, ${addr.postalCode}`}
+                  {addr.postalCode ? `, ${addr.postalCode}` : ""}
                 </p>
 
                 <div
@@ -344,6 +449,18 @@ export default function UserProfile() {
                     isDark ? "border-[#3e342b]/50" : "border-[#e5ddd5]"
                   }`}
                 >
+                  <button
+                    disabled={actionLoading}
+                    onClick={() => {
+                      setSelectedAddress(addr);
+                      setShowEditAddress(true);
+                    }}
+                    className={`text-xs font-bold hover:text-[#ec6d13] transition-colors ${
+                      isDark ? "text-[#b9a89d]" : "text-[#8b7355]"
+                    }`}
+                  >
+                    Edit
+                  </button>
                   {!addr.isDefault && (
                     <button
                       disabled={actionLoading}
@@ -357,7 +474,10 @@ export default function UserProfile() {
                   )}
                   <button
                     disabled={actionLoading}
-                    onClick={() => void deleteAddress(user._id, addr.id)}
+                    onClick={() => {
+                      setAddressToDelete(addr);
+                      setShowDeleteConfirm(true);
+                    }}
                     className={`text-xs font-bold hover:text-red-500 transition-colors ${
                       isDark ? "text-[#b9a89d]" : "text-[#8b7355]"
                     }`}
@@ -397,6 +517,83 @@ export default function UserProfile() {
           onClose={() => setShowAddAddress(false)}
           onSave={handleSaveAddress}
         />
+      )}
+
+      {showEditAddress && selectedAddress && (
+        <EditAddressModal
+          isDark={isDark}
+          initialData={{
+            id: selectedAddress.id,
+            type: selectedAddress.type,
+            recipient: selectedAddress.recipient,
+            phone: selectedAddress.phone,
+            street: selectedAddress.street,
+            city: selectedAddress.city,
+            postalCode: selectedAddress.postalCode || "",
+            isDefault: selectedAddress.isDefault,
+          }}
+          isLoading={actionLoading}
+          errorMessage={error}
+          onClose={() => {
+            setShowEditAddress(false);
+            setSelectedAddress(null);
+          }}
+          onSave={handleEditAddress}
+        />
+      )}
+
+      {showDeleteConfirm && addressToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => {
+              setShowDeleteConfirm(false);
+              setAddressToDelete(null);
+            }}
+          />
+
+          <div
+            className={`relative w-full max-w-md rounded-2xl border shadow-2xl p-6 ${
+              isDark ? "bg-[#1a140e] border-[#3e342b]" : "bg-white border-[#e5ddd5]"
+            }`}
+          >
+            <h3 className={`text-xl font-bold ${isDark ? "text-white" : "text-[#1a140e]"}`}>
+              Konfirmasi Hapus Alamat
+            </h3>
+            <p className={`text-sm mt-2 ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
+              Apakah kamu yakin ingin menghapus alamat ini?
+            </p>
+            <p className={`text-sm mt-2 ${isDark ? "text-[#b9a89d]" : "text-[#8b7355]"}`}>
+              <span className="font-semibold">{addressToDelete.recipient}</span> - {addressToDelete.street}
+            </p>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                disabled={actionLoading}
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setAddressToDelete(null);
+                }}
+                className={`flex-1 py-3 rounded-xl border font-medium text-sm transition-all ${
+                  isDark
+                    ? "border-[#3e342b] text-[#b9a89d] hover:bg-[#2a221b]"
+                    : "border-[#e5ddd5] text-[#8b7355] hover:bg-[#f5f0eb]"
+                } disabled:opacity-60 disabled:cursor-not-allowed`}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={actionLoading}
+                onClick={() => void handleDeleteAddress()}
+                className="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {actionLoading ? "Menghapus..." : "Ya, Hapus"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

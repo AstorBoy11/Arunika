@@ -1,5 +1,6 @@
 // Server Component — no "use client" needed for the static header.
 // All interactivity lives in DashboardClient (below).
+import { Suspense } from "react";
 import { Coffee } from "lucide-react";
 import DashboardClient from "./_components/DashboardClient";
 
@@ -28,7 +29,15 @@ export default function UserDashboard() {
       </div>
 
       {/* Filters + sort + product grid + quick-view modal (all client-side) */}
-      <DashboardClient />
+      <Suspense
+        fallback={
+          <div className="rounded-2xl border border-[#e5ddd5] dark:border-[#3e342b] p-4 text-sm text-[#8b7355] dark:text-[#b9a89d]">
+            Memuat dashboard...
+          </div>
+        }
+      >
+        <DashboardClient />
+      </Suspense>
     </div>
   );
 }

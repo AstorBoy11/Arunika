@@ -6,7 +6,13 @@ import AdminHeader from "@/components/admin-header";
 import Image from "next/image";
 import { Plus, Search, Edit, ChevronLeft, ChevronRight, Tag, Pencil, Trash2 } from "lucide-react";
 
-type Category = { id: number; name: string; description: string };
+type Category = { id: string; name: string; description: string };
+
+type CategoryApi = {
+  _id: string;
+  name: string;
+  description?: string;
+};
 
 type ProductApi = {
   _id: string;
@@ -43,13 +49,13 @@ type ApiResponse<T> = {
   message?: string;
 };
 
-type AddCatProps = { onClose: () => void; onSubmit: (data: Omit<Category, "id">) => void };
+type AddCatProps = { onClose: () => void; onSubmit: (data: Omit<Category, "id">) => void | Promise<void> };
 type EditCatProps = {
   category: Category;
   affectedCount: number;
   isLoading?: boolean;
   onClose: () => void;
-  onSubmit: (data: Category) => void;
+  onSubmit: (data: Category) => void | Promise<void>;
 };
 type DeleteCatProps = {
   category: Category;
@@ -113,7 +119,6 @@ export default function AdminProducts() {
 
   const [products, setProducts] = useState<ProductView[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [customCategories, setCustomCategories] = useState<Category[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isOperationLoading, setIsOperationLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -136,7 +141,7 @@ export default function AdminProducts() {
     setErrorMessage("");
 
     try {
-      const response = await fetch("/api/products");
+      const response = await fetch("/api/products", { cache: "no-store" });
       const result: ApiResponse<ProductApi[]> = (await response.json()) as ApiResponse<ProductApi[]>;
 
       if (!response.ok || !result.success) {
@@ -171,20 +176,20 @@ export default function AdminProducts() {
 
   const fetchCategories = async (): Promise<void> => {
     try {
-      const response = await fetch("/api/products/categories");
-      const result: ApiResponse<string[]> = (await response.json()) as ApiResponse<string[]>;
+      const response = await fetch("/api/products/categories?withMeta=true", { cache: "no-store" });
+      const result: ApiResponse<CategoryApi[]> = (await response.json()) as ApiResponse<CategoryApi[]>;
 
       if (!response.ok || !result.success) {
         throw new Error(result.message ?? "Gagal memuat kategori");
       }
 
-      const baseCategories = (result.data ?? []).map((name, index) => ({
-        id: index + 1,
-        name,
-        description: defaultCategoryDescription(name),
+      const mappedCategories = (result.data ?? []).map((category) => ({
+        id: category._id,
+        name: category.name,
+        description: category.description?.trim() || defaultCategoryDescription(category.name),
       }));
 
-      setCategories(baseCategories);
+      setCategories(mappedCategories);
     } catch {
       setCategories([]);
     }
@@ -195,7 +200,9 @@ export default function AdminProducts() {
   };
 
   const getProductsByCategory = async (categoryName: string): Promise<ProductApi[]> => {
-    const response = await fetch(`/api/products?category=${encodeURIComponent(categoryName)}`);
+    const response = await fetch(`/api/products?category=${encodeURIComponent(categoryName)}`, {
+      cache: "no-store",
+    });
     const result: ApiResponse<ProductApi[]> = (await response.json()) as ApiResponse<ProductApi[]>;
 
     if (!response.ok || !result.success) {
@@ -229,13 +236,30 @@ export default function AdminProducts() {
     }
   };
 
-  const handleAddCat = (data: Omit<Category, "id">) => {
-    setCustomCategories((prev) => {
-      const exists = prev.some((category) => category.name.toLowerCase() === data.name.toLowerCase());
-      if (exists) return prev;
-      return [...prev, { ...data, id: Date.now() }];
-    });
-    setIsOpenAdd(false);
+  const handleAddCat = async (data: Omit<Category, "id">): Promise<void> => {
+    setIsOperationLoading(true);
+    setErrorMessage("");
+
+    try {
+      const response = await fetch("/api/products/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: data.name, description: data.description }),
+      });
+      const result: ApiResponse<CategoryApi> = (await response.json()) as ApiResponse<CategoryApi>;
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message ?? "Gagal menambah kategori");
+      }
+
+      setIsOpenAdd(false);
+      await fetchCategories();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Gagal menambah kategori";
+      setErrorMessage(message);
+    } finally {
+      setIsOperationLoading(false);
+    }
   };
 
   const handleEditCat = async (data: Category) => {
@@ -252,26 +276,16 @@ export default function AdminProducts() {
 
       if (!proceed) return;
 
-      await Promise.all(
-        affected.map(async (product) => {
-          const response = await fetch(`/api/products/${product._id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ category: data.name }),
-          });
+      const response = await fetch(`/api/products/categories/${selectedCat.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: data.name, description: data.description }),
+      });
+      const result: ApiResponse<CategoryApi> = (await response.json()) as ApiResponse<CategoryApi>;
 
-          const result: ApiResponse<ProductApi> = (await response.json()) as ApiResponse<ProductApi>;
-          if (!response.ok || !result.success) {
-            throw new Error(result.message ?? "Gagal rename kategori");
-          }
-        })
-      );
-
-      setCustomCategories((prev) =>
-        prev.map((category) =>
-          category.name === selectedCat.name ? { ...category, name: data.name, description: data.description } : category
-        )
-      );
+      if (!response.ok || !result.success) {
+        throw new Error(result.message ?? "Gagal mengubah kategori");
+      }
 
       setIsOpenEdit(false);
       setSelectedCat(null);
@@ -291,23 +305,14 @@ export default function AdminProducts() {
     setErrorMessage("");
 
     try {
-      const affected = await getProductsByCategory(selectedCat.name);
-      await Promise.all(
-        affected.map(async (product) => {
-          const response = await fetch(`/api/products/${product._id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ category: "Uncategorized" }),
-          });
+      const response = await fetch(`/api/products/categories/${selectedCat.id}`, {
+        method: "DELETE",
+      });
+      const result: ApiResponse<{ movedTo: string }> = (await response.json()) as ApiResponse<{ movedTo: string }>;
+      if (!response.ok || !result.success) {
+        throw new Error(result.message ?? "Gagal menghapus kategori");
+      }
 
-          const result: ApiResponse<ProductApi> = (await response.json()) as ApiResponse<ProductApi>;
-          if (!response.ok || !result.success) {
-            throw new Error(result.message ?? "Gagal menghapus kategori");
-          }
-        })
-      );
-
-      setCustomCategories((prev) => prev.filter((category) => category.name !== selectedCat.name));
       setIsOpenDelete(false);
       setSelectedCat(null);
       await refreshAll();
@@ -376,14 +381,7 @@ export default function AdminProducts() {
     }
   };
 
-  const allCategories = useMemo(() => {
-    const merged = [...categories, ...customCategories];
-    const deduplicated = merged.filter(
-      (category, index) =>
-        merged.findIndex((candidate) => candidate.name.toLowerCase() === category.name.toLowerCase()) === index
-    );
-    return deduplicated;
-  }, [categories, customCategories]);
+  const allCategories = useMemo(() => categories, [categories]);
 
   const categoryNames = useMemo(() => allCategories.map((category) => category.name), [allCategories]);
 

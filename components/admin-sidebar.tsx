@@ -5,8 +5,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import ThemeAwareLogo from "@/components/theme-aware-logo";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
+import { useAdminAvatar } from "@/lib/hooks/useAdminAvatar";
 import {
     LayoutDashboard,
+    ClipboardList,
     BarChart3,
     Package,
     Settings,
@@ -16,6 +20,18 @@ import {
     ChartCandlestick
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+
+type UserData = {
+    _id: string;
+    name: string;
+    email: string;
+};
+
+type ApiResponse<T> = {
+    success: boolean;
+    data?: T;
+    message?: string;
+};
 
 // --- CONTEXT SETUP ---
 export const AdminSidebarContext = createContext<{
@@ -42,6 +58,7 @@ export function useAdminSidebar() {
 
 const adminNavItems = [
     { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+    { name: "Orders", href: "/admin/orders", icon: ClipboardList },
     { name: "Reports", href: "/admin/report", icon: BarChart3 },
     { name: "Finance", href: "/admin/finance", icon: ChartCandlestick },
     { name: "Inventory", href: "/admin/inventory", icon: Package },
@@ -53,6 +70,16 @@ export default function AdminSidebar() {
     const { isOpen, setIsOpen } = useAdminSidebar();
     const pathname = usePathname();
     const { mounted } = useTheme();
+    const avatarSrc = useAdminAvatar();
+    const { data } = useSWR<ApiResponse<UserData[]>>(
+        "/api/users",
+        fetcher<ApiResponse<UserData[]>>,
+        {
+            revalidateOnFocus: true,
+        }
+    );
+
+    const adminUser = data?.data?.[0] ?? null;
 
     const handleNavClick = () => {
         setIsOpen(false);
@@ -132,7 +159,7 @@ export default function AdminSidebar() {
                         <div className="flex items-center gap-3 p-2 rounded-xl mb-3 transition-colors border border-transparent bg-[#f5f0eb] hover:bg-[#ebe3db] hover:border-[#e5ddd5] dark:bg-[#231910] dark:hover:bg-[#2a221b] dark:hover:border-[#3e342b]">
                             <div className="relative h-10 w-10 rounded-full overflow-hidden border border-[#e5ddd5] dark:border-[#3e342b]">
                                 <Image
-                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2GmZQePWPY04wHlVPH7g2QechnIQhqr-oZQY35eO03gOTMRZT0T5GiSUL_P2shWFbkumDQ5nZG9meggW2Ue_5QoK3xIQeiSO6WSq-Vq_UI5-GJnkbAA7mTvlFrsRPvs4ZPqcE-2oI6EGqR0oJe33z1XydzPgbdW-aHPkOeOvJV1xacWdkSfHJu7pRSGJ_8x0tOmrDi6G00Gq7LOwFzNPHhmHf5oydaiE-D6ueg-TdCHj9yQm37IUtDqXdlP-eeKsK6igXmU_1mfFC"
+                                    src={avatarSrc}
                                     alt="User Profile"
                                     fill
                                     className="object-cover"
@@ -140,13 +167,16 @@ export default function AdminSidebar() {
                             </div>
                             <div className="flex flex-col overflow-hidden">
                                 <p className="text-sm font-semibold truncate text-[#1a140e] dark:text-white">
-                                    Alex Morgan
+                                    {adminUser?.name ?? "Admin"}
+                                </p>
+                                <p className="text-xs truncate text-[#8b7355] dark:text-[#9a6c4c]">
+                                    {adminUser?.email ?? "admin@arunika.local"}
                                 </p>
                             </div>
                         </div>
                     </Link>
 
-                    <button className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-transparent border text-sm font-bold transition-all border-[#e5ddd5] hover:bg-[#f5f0eb] hover:text-[#1a140e] text-[#8b7355] dark:border-[#3e342b] dark:hover:bg-[#231910] dark:hover:text-white dark:text-[#b9a89d]">
+                    <button className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-transparent border text-sm font-bold transition-all border-[#e5ddd5] hover:bg-red-500 hover:text-white text-[#8b7355] dark:border-[#3e342b] dark:hover:bg-red-500 dark:hover:text-white dark:text-[#b9a89d]">
                         <LogOut size={18} />
                         <span>Log Out</span>
                     </button>

@@ -2,7 +2,7 @@
 
 import { AlertTriangle, X } from "lucide-react";
 
-type Category = { id: number; name: string; description: string };
+type Category = { id: string; name: string; description: string };
 
 interface Props {
   category: Category;

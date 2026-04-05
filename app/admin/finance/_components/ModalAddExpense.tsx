@@ -12,7 +12,8 @@ type AddExpensePayload = {
 interface ModalAddExpenseProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: AddExpensePayload) => void;
+  onSubmit: (data: AddExpensePayload) => Promise<boolean> | boolean;
+  isLoading: boolean;
 }
 
 const inputClass =
@@ -23,21 +24,25 @@ const labelClass =
 
 const todayDate = new Date().toISOString().slice(0, 10);
 
-export default function ModalAddExpense({ isOpen, onClose, onSubmit }: ModalAddExpenseProps) {
+export default function ModalAddExpense({ isOpen, onClose, onSubmit, isLoading }: ModalAddExpenseProps) {
   const [nominal, setNominal] = useState("");
   const [keterangan, setKeterangan] = useState("");
   const [tanggal, setTanggal] = useState(todayDate);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    onSubmit({
+    const isSuccess = await onSubmit({
       nominal: Number(nominal) || 0,
       keterangan,
       tanggal,
     });
+
+    if (!isSuccess) {
+      return;
+    }
 
     setNominal("");
     setKeterangan("");
@@ -90,6 +95,7 @@ export default function ModalAddExpense({ isOpen, onClose, onSubmit }: ModalAddE
                 placeholder="Contoh: 250000"
                 value={nominal}
                 onChange={(e) => setNominal(e.target.value)}
+                disabled={isLoading}
                 required
               />
             </div>
@@ -107,6 +113,7 @@ export default function ModalAddExpense({ isOpen, onClose, onSubmit }: ModalAddE
                 placeholder="Tulis detail pengeluaran..."
                 value={keterangan}
                 onChange={(e) => setKeterangan(e.target.value)}
+                disabled={isLoading}
                 required
               />
             </div>
@@ -124,6 +131,7 @@ export default function ModalAddExpense({ isOpen, onClose, onSubmit }: ModalAddE
                 className={`${inputClass} pl-10`}
                 value={tanggal}
                 onChange={(e) => setTanggal(e.target.value)}
+                disabled={isLoading}
                 required
               />
             </div>
@@ -133,15 +141,17 @@ export default function ModalAddExpense({ isOpen, onClose, onSubmit }: ModalAddE
             <button
               type="button"
               onClick={handleClose}
+              disabled={isLoading}
               className="flex-1 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#3e342b] text-gray-700 dark:text-[#EAE0D5] text-sm font-medium hover:bg-gray-50 dark:hover:bg-[#231910] transition-colors"
             >
               Batal
             </button>
             <button
               type="submit"
+              disabled={isLoading}
               className="flex-1 px-4 py-2.5 rounded-lg bg-[#ec6d13] hover:bg-[#d65c0b] text-white text-sm font-bold shadow-md shadow-[#ec6d13]/20 transition-all active:scale-95"
             >
-              Simpan
+              {isLoading ? "Menyimpan..." : "Simpan"}
             </button>
           </div>
         </form>

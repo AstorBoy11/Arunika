@@ -13,7 +13,7 @@ const updateAddressSchema = z.object({
   street: z.string().min(5).optional(),
   city: z.string().min(2).optional(),
   province: z.string().min(2).optional(),
-  postalCode: z.string().optional(),
+  postalCode: z.string().min(3).optional(),
   phone: z.string().min(8).optional(),
   isDefault: z.boolean().optional(),
 });
@@ -50,9 +50,12 @@ export async function PATCH(
     const parsed = updateAddressSchema.safeParse(body);
 
     if (!parsed.success) {
+      const issues = parsed.error.issues
+        .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+        .join(", ");
       const response: ApiResponse<null> = {
         success: false,
-        message: "Validation error",
+        message: issues || "Validation error",
       };
       return NextResponse.json(response, { status: 400 });
     }
