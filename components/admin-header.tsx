@@ -6,6 +6,20 @@ import Image from "next/image";
 import { Menu, Moon, Sun, LogOut, User } from "lucide-react";
 import { useAdminSidebar } from "./admin-sidebar";
 import { useTheme } from "@/context/ThemeContext";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
+
+type UserData = {
+    _id: string;
+    name: string;
+    email: string;
+};
+
+type ApiResponse<T> = {
+    success: boolean;
+    data?: T;
+    message?: string;
+};
 
 interface AdminHeaderProps {
     children?: React.ReactNode;
@@ -18,6 +32,15 @@ export default function AdminHeader({ children, title, subtitle }: AdminHeaderPr
     const { toggleTheme, mounted } = useTheme();
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const { data } = useSWR<ApiResponse<UserData[]>>(
+        "/api/users",
+        fetcher<ApiResponse<UserData[]>>,
+        {
+            revalidateOnFocus: true,
+        }
+    );
+
+    const adminUser = data?.data?.[0] ?? null;
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -95,10 +118,10 @@ export default function AdminHeader({ children, title, subtitle }: AdminHeaderPr
                             {/* Admin Info */}
                             <div className="px-4 py-3 border-b border-[#e5ddd5] dark:border-[#3e342b]">
                                 <p className="font-semibold text-sm text-[#1a140e] dark:text-white">
-                                    James Brewer
+                                    {adminUser?.name ?? "Admin"}
                                 </p>
                                 <p className="text-xs truncate text-[#8b7355] dark:text-[#9a6c4c]">
-                                    Owner & Manager
+                                    {adminUser?.email ?? "Owner & Manager"}
                                 </p>
                             </div>
 

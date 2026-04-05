@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import ThemeAwareLogo from "@/components/theme-aware-logo";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import {
     LayoutDashboard,
     BarChart3,
@@ -16,6 +18,18 @@ import {
     ChartCandlestick
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+
+type UserData = {
+    _id: string;
+    name: string;
+    email: string;
+};
+
+type ApiResponse<T> = {
+    success: boolean;
+    data?: T;
+    message?: string;
+};
 
 // --- CONTEXT SETUP ---
 export const AdminSidebarContext = createContext<{
@@ -53,6 +67,15 @@ export default function AdminSidebar() {
     const { isOpen, setIsOpen } = useAdminSidebar();
     const pathname = usePathname();
     const { mounted } = useTheme();
+    const { data } = useSWR<ApiResponse<UserData[]>>(
+        "/api/users",
+        fetcher<ApiResponse<UserData[]>>,
+        {
+            revalidateOnFocus: true,
+        }
+    );
+
+    const adminUser = data?.data?.[0] ?? null;
 
     const handleNavClick = () => {
         setIsOpen(false);
@@ -140,7 +163,10 @@ export default function AdminSidebar() {
                             </div>
                             <div className="flex flex-col overflow-hidden">
                                 <p className="text-sm font-semibold truncate text-[#1a140e] dark:text-white">
-                                    Alex Morgan
+                                    {adminUser?.name ?? "Admin"}
+                                </p>
+                                <p className="text-xs truncate text-[#8b7355] dark:text-[#9a6c4c]">
+                                    {adminUser?.email ?? "admin@arunika.local"}
                                 </p>
                             </div>
                         </div>
