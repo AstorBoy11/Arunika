@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, Menu, User, Moon, Sun, LogOut } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { signOut } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSidebar } from "./sidebar";
@@ -23,6 +24,12 @@ export default function Header() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isDark = theme === "dark";
+
+  const handleLogout = () => {
+    const confirmed = window.confirm("Yakin ingin logout?");
+    if (!confirmed) return;
+    void signOut({ callbackUrl: "/auth" });
+  };
 
   // Search bar hanya muncul di halaman dashboard (shop)
   const showSearch = pathname === "/user/dashboard";
@@ -178,7 +185,7 @@ export default function Header() {
               <button
                 onClick={() => {
                   setDropdownOpen(false);
-                  console.log("Logout clicked");
+                  handleLogout();
                 }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-red-400 hover:bg-red-500/10 transition-all"
               >

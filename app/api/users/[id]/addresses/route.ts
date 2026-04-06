@@ -29,7 +29,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     await connectDB();
     const { id } = await params;
 
-    const user = await User.findById(id);
+    const user = await User.findById(id).select("-passwordHash");
 
     if (!user) {
       const response: ApiResponse<null> = {
@@ -57,7 +57,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     await connectDB();
     const { id } = await params;
 
-    const user = await User.findById(id);
+    const user = await User.findById(id).select("-passwordHash");
 
     if (!user) {
       const response: ApiResponse<null> = {

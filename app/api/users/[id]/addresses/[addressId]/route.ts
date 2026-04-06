@@ -60,7 +60,7 @@ export async function PATCH(
       return NextResponse.json(response, { status: 400 });
     }
 
-    const user = await User.findById(id);
+    const user = await User.findById(id).select("-passwordHash");
     if (!user) {
       const response: ApiResponse<null> = {
         success: false,
@@ -127,7 +127,7 @@ export async function DELETE(
       return NextResponse.json(response, { status: 400 });
     }
 
-    const user = await User.findById(id);
+    const user = await User.findById(id).select("-passwordHash");
     if (!user) {
       const response: ApiResponse<null> = {
         success: false,

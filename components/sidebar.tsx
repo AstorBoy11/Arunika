@@ -4,6 +4,7 @@ import { useState, createContext, useContext } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import ThemeAwareLogo from "@/components/theme-aware-logo";
 import {
   ShoppingBag,
@@ -49,6 +50,12 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
   const avatarSrc = useUserAvatar();
 
   const isDark = theme === "dark";
+
+  const handleLogout = () => {
+    const confirmed = window.confirm("Yakin ingin logout?");
+    if (!confirmed) return;
+    void signOut({ callbackUrl: "/auth" });
+  };
 
   const navItems = [
     {
@@ -174,10 +181,15 @@ export default function Sidebar({ userRole = "USER" }: { userRole?: string }) {
             </div>
           </Link>
 
-          <button className={`w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-transparent border text-sm font-bold transition-all ${isDark
+          <button
+            onClick={() => {
+              handleLogout();
+            }}
+            className={`w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-transparent border text-sm font-bold transition-all ${isDark
             ? "border-[#3e342b] hover:bg-red-500 hover:text-white text-[#b9a89d]"
             : "border-[#e5ddd5] hover:bg-red-500 hover:text-white text-[#8b7355]"
-            }`}>
+            }`}
+          >
             <LogOut size={18} />
             <span>Log Out</span>
           </button>

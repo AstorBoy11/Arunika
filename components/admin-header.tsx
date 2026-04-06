@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { signOut } from "next-auth/react";
 import { Menu, Moon, Sun, LogOut, User } from "lucide-react";
 import { useAdminSidebar } from "./admin-sidebar";
 import { useTheme } from "@/context/ThemeContext";
@@ -43,6 +44,12 @@ export default function AdminHeader({ children, title, subtitle }: AdminHeaderPr
     );
 
     const adminUser = data?.data?.[0] ?? null;
+
+    const handleLogout = () => {
+        const confirmed = window.confirm("Yakin ingin logout?");
+        if (!confirmed) return;
+        void signOut({ callbackUrl: "/auth" });
+    };
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -170,7 +177,7 @@ export default function AdminHeader({ children, title, subtitle }: AdminHeaderPr
                                 <button
                                     onClick={() => {
                                         setDropdownOpen(false);
-                                        console.log("Logout clicked");
+                                        handleLogout();
                                     }}
                                     className="w-full flex items-center gap-3 px-4 py-2.5 text-red-400 hover:bg-red-500/10 transition-all"
                                 >

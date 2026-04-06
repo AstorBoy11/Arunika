@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { Work_Sans } from "next/font/google";
 import Link from "next/link";
-import Image from "next/image";
 import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, Coffee } from "lucide-react";
+import { getSession, signIn } from "next-auth/react";
 import { useTheme } from "@/context/ThemeContext";
 
 const workSans = Work_Sans({
@@ -13,11 +14,136 @@ const workSans = Work_Sans({
 });
 
 export default function Auth() {
+  const router = useRouter();
   const [variant, setVariant] = useState<"LOGIN" | "REGISTER">("REGISTER");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { theme } = useTheme();
   const isDark = theme === "dark";
+
+  const resetForm = () => {
+    setName("");
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setError("");
+    setIsSubmitting(false);
+  };
+
+  const handleLogin = async (loginEmail: string, loginPassword: string) => {
+    const result = await signIn("credentials", {
+      email: loginEmail,
+      password: loginPassword,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      if (
+        result.error.includes("Terlalu banyak percobaan login") ||
+        result.error === "Configuration"
+      ) {
+        setError("Terlalu banyak percobaan login. Coba lagi dalam 15 menit.");
+        return;
+      }
+
+      setError("Email atau password yang kamu masukkan salah.");
+      return;
+    }
+
+    const session = await getSession();
+    const role = session?.user?.role;
+    router.push(role === "admin" ? "/admin/dashboard" : "/user/dashboard");
+  };
+
+  const handleRegister = async (
+    registerName: string,
+    registerEmail: string,
+    registerPassword: string
+  ) => {
+    const response = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: registerName,
+        email: registerEmail,
+        password: registerPassword,
+      }),
+    });
+
+    const data = (await response.json()) as { success: boolean; message?: string };
+
+    if (!response.ok || !data.success) {
+      setError(data.message ?? "Registrasi gagal");
+      return;
+    }
+
+    const loginResult = await signIn("credentials", {
+      email: registerEmail,
+      password: registerPassword,
+      redirect: false,
+    });
+
+    if (loginResult?.error) {
+      setError("Registrasi berhasil, tetapi auto-login gagal. Silakan login manual.");
+      setVariant("LOGIN");
+      return;
+    }
+
+    router.push("/user/dashboard");
+  };
+
+  const onSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+
+    setError("");
+
+    if (!email.trim() || !password) {
+      setError("Email dan password wajib diisi");
+      return;
+    }
+
+    if (variant === "REGISTER") {
+      if (!name.trim()) {
+        setError("Nama lengkap wajib diisi");
+        return;
+      }
+
+      if (password.length < 8) {
+        setError("Password minimal 8 karakter");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setError("Konfirmasi password tidak sama");
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      if (variant === "LOGIN") {
+        await handleLogin(email.trim(), password);
+      } else {
+        await handleRegister(name.trim(), email.trim(), password);
+      }
+    } catch {
+      if (variant === "LOGIN") {
+        setError("Email atau password yang kamu masukkan salah.");
+      } else {
+        setError("Terjadi kesalahan. Silakan coba lagi.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div
@@ -63,7 +189,10 @@ export default function Auth() {
               : "bg-[#f5f0eb] border-[#e5ddd5]"
               }`}>
               <button
-                onClick={() => setVariant("LOGIN")}
+                onClick={() => {
+                  setVariant("LOGIN");
+                  resetForm();
+                }}
                 className={`font-medium py-2.5 rounded-md transition-all duration-200 focus:outline-none ${variant === "LOGIN"
                   ? "bg-[#ec6d13] text-white shadow-sm font-bold"
                   : isDark
@@ -74,7 +203,10 @@ export default function Auth() {
                 Login
               </button>
               <button
-                onClick={() => setVariant("REGISTER")}
+                onClick={() => {
+                  setVariant("REGISTER");
+                  resetForm();
+                }}
                 className={`font-medium py-2.5 rounded-md transition-all duration-200 focus:outline-none ${variant === "REGISTER"
                   ? "bg-[#ec6d13] text-white shadow-sm font-bold"
                   : isDark
@@ -101,7 +233,7 @@ export default function Auth() {
           <div className="px-8 pb-10">
             <form
               className="flex flex-col gap-5"
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={onSubmit}
             >
               {/* Full Name */}
               {variant === "REGISTER" && (
@@ -123,6 +255,8 @@ export default function Auth() {
                         }`}
                       placeholder="John Doe"
                       type="text"
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
                     />
                   </div>
                 </label>
@@ -147,6 +281,8 @@ export default function Auth() {
                       }`}
                     placeholder="you@example.com"
                     type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
                   />
                 </div>
               </label>
@@ -176,6 +312,8 @@ export default function Auth() {
                         : "Enter your password"
                     }
                     type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
                   />
                   <button
                     type="button"
@@ -186,6 +324,11 @@ export default function Auth() {
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
+                {variant === "REGISTER" && (
+                  <p className={`text-xs ${isDark ? "text-[#9a6c4c]" : "text-[#8b7355]"}`}>
+                    Min. 8 karakter, mengandung huruf kapital dan angka
+                  </p>
+                )}
               </label>
 
               {/* Confirm Password - Only for Register */}
@@ -208,6 +351,8 @@ export default function Auth() {
                         }`}
                       placeholder="Confirm your password"
                       type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(event) => setConfirmPassword(event.target.value)}
                     />
                     <button
                       type="button"
@@ -221,14 +366,24 @@ export default function Auth() {
                 </label>
               )}
 
+              {error && (
+                <p className="text-sm text-red-500">{error}</p>
+              )}
+
               {/* Submit Button */}
-              <Link href="/user/dashboard">
-                <button className="mt-2 flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-[#ec6d13] hover:bg-[#d65c0b] active:scale-95 text-white text-base font-bold leading-normal tracking-[0.015em] shadow-md transition-all duration-200">
-                  <span className="truncate">
-                    {variant === "REGISTER" ? "Sign Up" : "Sign In"}
-                  </span>
-                </button>
-              </Link>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="mt-2 flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-[#ec6d13] hover:bg-[#d65c0b] active:scale-95 text-white text-base font-bold leading-normal tracking-[0.015em] shadow-md transition-all duration-200 disabled:opacity-60"
+              >
+                <span className="truncate">
+                  {isSubmitting
+                    ? "Memproses..."
+                    : variant === "REGISTER"
+                    ? "Sign Up"
+                    : "Sign In"}
+                </span>
+              </button>
             </form>
           </div>
         </div>

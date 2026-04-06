@@ -1,0 +1,57 @@
+{
+  "randomEmail": "user23084@example.com",
+  "unauthAdmin": {
+    "status": 307,
+    "location": "/auth"
+  },
+  "register": {
+    "status": 201,
+    "body": {
+      "success": true,
+      "message": "Registrasi berhasil"
+    }
+  },
+  "adminLogin": {
+    "status": 302,
+    "body": ""
+  },
+  "adminSession": {
+    "user": {
+      "name": "Arunika Admin",
+      "email": "admin@arunika.local",
+      "id": "69d21160d08c4857c6fa828c",
+      "role": "admin"
+    },
+    "expires": "2026-05-05T07:47:27.988Z"
+  },
+  "authAdmin": {
+    "status": 200,
+    "location": null
+  },
+  "logout": {
+    "status": 302,
+    "body": ""
+  },
+  "sessionAfterLogout": null,
+  "userLogin": {
+    "status": 302,
+    "body": ""
+  },
+  "userSession": {
+    "user": {
+      "name": "Test User",
+      "email": "user23084@example.com",
+      "id": "69d2138fed4c74b479b718ee",
+      "role": "user"
+    },
+    "expires": "2026-05-05T07:47:28.406Z"
+  },
+  "userToAdmin": {
+    "status": 307,
+    "location": "/user/dashboard"
+  },
+  "userDashboard": {
+    "status": 200,
+    "location": null
+  }
+}

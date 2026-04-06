@@ -4,6 +4,7 @@ import { useState, createContext, useContext } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import ThemeAwareLogo from "@/components/theme-aware-logo";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
@@ -80,6 +81,12 @@ export default function AdminSidebar() {
     );
 
     const adminUser = data?.data?.[0] ?? null;
+
+    const handleLogout = () => {
+        const confirmed = window.confirm("Yakin ingin logout?");
+        if (!confirmed) return;
+        void signOut({ callbackUrl: "/auth" });
+    };
 
     const handleNavClick = () => {
         setIsOpen(false);
@@ -176,7 +183,12 @@ export default function AdminSidebar() {
                         </div>
                     </Link>
 
-                    <button className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-transparent border text-sm font-bold transition-all border-[#e5ddd5] hover:bg-red-500 hover:text-white text-[#8b7355] dark:border-[#3e342b] dark:hover:bg-red-500 dark:hover:text-white dark:text-[#b9a89d]">
+                    <button
+                        onClick={() => {
+                            handleLogout();
+                        }}
+                        className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-transparent border text-sm font-bold transition-all border-[#e5ddd5] hover:bg-red-500 hover:text-white text-[#8b7355] dark:border-[#3e342b] dark:hover:bg-red-500 dark:hover:text-white dark:text-[#b9a89d]"
+                    >
                         <LogOut size={18} />
                         <span>Log Out</span>
                     </button>
