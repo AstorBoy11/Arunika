@@ -23,7 +23,7 @@ export async function GET() {
   try {
     await connectDB();
 
-    const users = await User.find({}).sort({ createdAt: -1 });
+    const users = await User.find({}).select("-passwordHash").sort({ createdAt: -1 });
 
     const response: ApiResponse<IUser[]> = {
       success: true,

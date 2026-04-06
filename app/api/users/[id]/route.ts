@@ -20,7 +20,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     await connectDB();
     const { id } = await params;
 
-    const user = await User.findById(id);
+    const user = await User.findById(id).select("-passwordHash");
 
     if (!user) {
       const response: ApiResponse<null> = {
@@ -74,7 +74,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const updatedUser = await User.findByIdAndUpdate(id, parsed.data, {
       new: true,
       runValidators: true,
-    });
+    }).select("-passwordHash");
 
     if (!updatedUser) {
       const response: ApiResponse<null> = {

@@ -1,0 +1,77 @@
+{
+  "weakRegister": {
+    "status": 400,
+    "body": {
+      "success": false,
+      "message": "Password harus mengandung huruf kapital"
+    }
+  },
+  "wrongPasswordAttempts": [
+    {
+      "attempt": 1,
+      "status": 302,
+      "location": "http://localhost:3004/auth?error=CredentialsSignin&code=credentials",
+      "body": ""
+    },
+    {
+      "attempt": 2,
+      "status": 302,
+      "location": "http://localhost:3004/auth?error=CredentialsSignin&code=credentials",
+      "body": ""
+    },
+    {
+      "attempt": 3,
+      "status": 302,
+      "location": "http://localhost:3004/auth?error=CredentialsSignin&code=credentials",
+      "body": ""
+    },
+    {
+      "attempt": 4,
+      "status": 302,
+      "location": "http://localhost:3004/auth?error=CredentialsSignin&code=credentials",
+      "body": ""
+    },
+    {
+      "attempt": 5,
+      "status": 302,
+      "location": "http://localhost:3004/auth?error=CredentialsSignin&code=credentials",
+      "body": ""
+    },
+    {
+      "attempt": 6,
+      "status": 302,
+      "location": "http://localhost:3004/api/auth/error?error=Configuration",
+      "body": ""
+    }
+  ],
+  "usersApiCheck": {
+    "status": 200,
+    "hasPasswordHash": false,
+    "sampleKeys": [
+      "_id",
+      "name",
+      "email",
+      "phone",
+      "role",
+      "addresses",
+      "createdAt",
+      "updatedAt",
+      "__v"
+    ]
+  },
+  "userDetailApiCheck": {
+    "status": 200,
+    "hasPasswordHash": false,
+    "sampleKeys": [
+      "_id",
+      "name",
+      "email",
+      "phone",
+      "role",
+      "addresses",
+      "createdAt",
+      "updatedAt",
+      "__v"
+    ]
+  }
+}

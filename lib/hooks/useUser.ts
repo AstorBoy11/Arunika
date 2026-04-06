@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useSession } from "next-auth/react";
 import type { IAddress, IUser } from "@/lib/models";
 
 type UserData = Pick<IUser, "name" | "email" | "phone" | "addresses"> & {
@@ -79,6 +80,7 @@ const parseStoredUser = (raw: string | null): UserData | null => {
 };
 
 export function UserProvider({ children }: { children: ReactNode }) {
+  const { data: session, status } = useSession();
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -255,34 +257,28 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const bootstrapUser = async () => {
+      if (status === "loading") {
+        setLoading(true);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
 
-        const stored = parseStoredUser(window.localStorage.getItem(STORAGE_KEY));
-        if (stored?._id) {
-          const refreshed = await fetchUser(stored._id);
-          if (refreshed) return;
-        }
+        const sessionUserId = session?.user?.id;
 
-        const usersResponse = await fetch("/api/users", { cache: "no-store" });
-        const usersJson = (await usersResponse.json()) as ApiResponse<UserData[]>;
-
-        if (!usersResponse.ok || !usersJson.success) {
-          throw new Error(usersJson.message || "Gagal memuat daftar user");
-        }
-
-        const firstUser = usersJson.data?.[0] ?? null;
-        if (!firstUser) {
-          handleApiError("Belum ada user di database. Tambahkan user terlebih dahulu.");
+        if (!sessionUserId) {
           persistUser(null);
           setUser(null);
           return;
         }
 
-        const normalized = normalizeUser(firstUser);
-        setUser(normalized);
-        persistUser(normalized);
+        const refreshed = await fetchUser(sessionUserId);
+        if (!refreshed) {
+          persistUser(null);
+          setUser(null);
+        }
       } catch (err) {
         const message = err instanceof Error ? err.message : "Gagal inisialisasi user";
         handleApiError(message);
@@ -292,7 +288,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     };
 
     void bootstrapUser();
-  }, [fetchUser, handleApiError, persistUser]);
+  }, [fetchUser, handleApiError, persistUser, session?.user?.id, status]);
 
   const clearError = useCallback(() => setError(null), []);
 
