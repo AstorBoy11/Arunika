@@ -10,9 +10,6 @@ import {
   TrendingUp,
   Coffee,
   Users,
-  Package,
-  Droplets,
-  Croissant,
 } from "lucide-react";
 import { fetcher } from "@/lib/fetcher";
 
@@ -34,12 +31,6 @@ type Order = {
   paymentStatus: PaymentStatus;
   orderStatus: OrderStatus;
   createdAt: string;
-};
-
-type Product = {
-  _id: string;
-  name: string;
-  stock: number;
 };
 
 type ApiResponse<T> = {
@@ -118,32 +109,13 @@ export default function AdminDashboard() {
     }
   );
 
-  const {
-    data: productsData,
-    error: productsError,
-    isLoading: productsLoading,
-  } = useSWR<ApiResponse<Product[]>>(mounted ? "/api/products" : null, fetcher, {
-    revalidateOnFocus: false,
-    dedupingInterval: 10_000,
-  });
-
   const orders = ordersData?.data ?? [];
   const paidOrders = paidOrdersData?.data ?? [];
-  const isDataLoading = ordersLoading || paidOrdersLoading || productsLoading;
+  const isDataLoading = ordersLoading || paidOrdersLoading;
 
   const dashboardError =
     (ordersError instanceof Error ? ordersError.message : "") ||
-    (paidOrdersError instanceof Error ? paidOrdersError.message : "") ||
-    (productsError instanceof Error ? productsError.message : "");
-
-  const lowStockProducts = useMemo(
-    () =>
-      (productsData?.data ?? [])
-        .filter((product) => product.stock <= 10)
-        .sort((a, b) => a.stock - b.stock)
-        .slice(0, 5),
-    [productsData?.data]
-  );
+    (paidOrdersError instanceof Error ? paidOrdersError.message : "");
 
   const totalRevenue = useMemo(
     () => paidOrders.reduce((sum, order) => sum + order.total, 0),
@@ -318,74 +290,6 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             </div>
-          </div>
-        </section>
-
-        {/* Inventory */}
-        <section className="bg-white dark:bg-[#1a140e] border-[#e5ddd5] dark:border-[#3e342b] rounded-xl border p-6 shadow-xl shadow-black/20">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-[#ec6d13]/10 rounded-lg text-[#ec6d13]">
-              <Package size={20} />
-            </div>
-            <h3 className="text-[#1a140e] dark:text-[#fcfaf8] text-lg font-bold">
-              Low Stock Alerts
-            </h3>
-          </div>
-          <div className="flex flex-wrap gap-4">
-            {isDataLoading ? (
-              <div className="flex items-center gap-3 p-3 rounded-lg border min-w-[200px] bg-[#f5f0eb] border-[#e5ddd5] dark:bg-[#3e342b]/40 dark:border-[#3e342b]">
-                <div className="size-10 rounded-md bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
-                <div className="space-y-2">
-                  <div className="h-3 w-24 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
-                  <div className="h-3 w-16 rounded bg-gray-200 dark:bg-[#3e342b] animate-pulse" />
-                </div>
-              </div>
-            ) : lowStockProducts.length === 0 ? (
-              <div className="text-xs text-[#8b7355] dark:text-[#b9a89d]">
-                Semua stok aman
-              </div>
-            ) : (
-              lowStockProducts.map((product, index) => {
-                const Icon =
-                  index % 3 === 0
-                    ? Coffee
-                    : index % 3 === 1
-                      ? Droplets
-                      : Croissant;
-                const isFirst = index === 0;
-
-                return (
-                  <div
-                    key={product._id}
-                    className={`flex items-center gap-3 p-3 rounded-lg border min-w-[200px] ${
-                      isFirst
-                        ? "bg-[#f5f0eb] border-[#ec6d13]/20 dark:bg-[#3e342b]/40 dark:border-[#ec6d13]/40"
-                        : "bg-[#f5f0eb] border-[#e5ddd5] dark:bg-[#3e342b]/40 dark:border-[#3e342b]"
-                    }`}
-                  >
-                    <div
-                      className={`size-10 rounded-md flex items-center justify-center ${
-                        isFirst
-                          ? "text-[#ec6d13] bg-white dark:bg-[#221810]"
-                          : "bg-white text-[#8b7355] dark:bg-[#221810] dark:text-[#9a6c4c]"
-                      }`}
-                    >
-                      <Icon size={20} />
-                    </div>
-                    <div>
-                      <p className="text-[#1a140e] dark:text-[#fcfaf8] text-sm font-medium">
-                        {product.name}
-                      </p>
-                      <p
-                        className={`text-xs ${isFirst ? "text-[#ec6d13] font-bold" : "text-[#8b7355] dark:text-[#b9a89d]"}`}
-                      >
-                        {product.stock} Remaining
-                      </p>
-                    </div>
-                  </div>
-                );
-              })
-            )}
           </div>
         </section>
       </div>

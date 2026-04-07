@@ -95,6 +95,11 @@ export default function ModalAddExpense({ isOpen, onClose, onSubmit, isLoading }
                 placeholder="Contoh: 250000"
                 value={nominal}
                 onChange={(e) => setNominal(e.target.value)}
+                onKeyDown={(e) => {
+                  if (["e", "E", "+", "-"].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
                 disabled={isLoading}
                 required
               />

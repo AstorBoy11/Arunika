@@ -12,7 +12,12 @@ const productSchema = z.object({
   longDescription: z.string().min(1),
   badge: z.string().optional(),
   rating: z.number().min(0).max(5).optional(),
-  image: z.string().url(),
+  image: z
+    .string()
+    .refine(
+      (value) => /^https?:\/\/.+/i.test(value) || /^data:image\/[a-zA-Z0-9.+-]+;base64,/.test(value),
+      "Image harus berupa URL atau Base64 image"
+    ),
   roast: z.string().optional(),
 });
 

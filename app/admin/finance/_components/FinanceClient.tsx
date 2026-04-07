@@ -301,7 +301,11 @@ export default function FinanceClient() {
         </div>
       )}
 
-      <div className="mt-6 bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-2xl p-4 sm:p-5 shadow-sm dark:shadow-none">
+      <div className="mt-6">
+        <p className="mb-2 text-xs uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] font-semibold">
+          Filter
+        </p>
+      <div className="bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-2xl p-4 sm:p-5 shadow-sm dark:shadow-none">
         <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-4">
           <div className="flex-1">
             <label className="text-xs uppercase tracking-wider text-gray-500 dark:text-[#8e7f72] font-semibold">
@@ -348,6 +352,7 @@ export default function FinanceClient() {
             Reset Filter
           </button>
         </div>
+      </div>
       </div>
 
       <div className="mt-6 bg-white dark:bg-[#1a140e] border border-gray-200 dark:border-[#3e342b] rounded-2xl shadow-sm dark:shadow-none overflow-hidden">

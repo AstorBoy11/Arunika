@@ -135,6 +135,7 @@ export default function AdminProducts() {
   const [isOpenAddProduct, setIsOpenAddProduct] = useState(false);
   const [isOpenEditProduct, setIsOpenEditProduct] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<EditProductModel | null>(null);
+  const [togglingProductId, setTogglingProductId] = useState<string | null>(null);
 
   const fetchProducts = async (): Promise<void> => {
     setIsLoadingProducts(true);
@@ -381,6 +382,34 @@ export default function AdminProducts() {
     }
   };
 
+  const handleToggleVisibility = async (product: ProductView): Promise<void> => {
+    if (togglingProductId === product.id) return;
+
+    setTogglingProductId(product.id);
+    setErrorMessage("");
+
+    try {
+      const targetStock = product.stock > 0 ? 0 : 1;
+      const response = await fetch(`/api/products/${product.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stock: targetStock }),
+      });
+
+      const result: ApiResponse<ProductApi> = (await response.json()) as ApiResponse<ProductApi>;
+      if (!response.ok || !result.success) {
+        throw new Error(result.message ?? "Gagal mengubah visibilitas produk");
+      }
+
+      await fetchProducts();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Gagal mengubah visibilitas produk";
+      setErrorMessage(message);
+    } finally {
+      setTogglingProductId(null);
+    }
+  };
+
   const allCategories = useMemo(() => categories, [categories]);
 
   const categoryNames = useMemo(() => allCategories.map((category) => category.name), [allCategories]);
@@ -545,25 +574,14 @@ export default function AdminProducts() {
                         </button>
 
                         {/* Toggle Switch */}
-                        <label className="relative inline-flex items-center cursor-pointer" title="Edit stok di form edit produk">
+                        <label className={`relative inline-flex items-center ${togglingProductId === product.id ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`} title="Toggle visibility produk">
                           <input
                             type="checkbox"
                             checked={product.visible}
                             onChange={() => {
-                              setSelectedProduct({
-                                id: product.id,
-                                name: product.name,
-                                category: product.category,
-                                price: product.rawPrice,
-                                stock: product.stock,
-                                shortDescription: product.shortDescription,
-                                longDescription: product.longDescription,
-                                image: product.image,
-                                roast: product.roast,
-                                badge: product.badge,
-                              });
-                              setIsOpenEditProduct(true);
+                              void handleToggleVisibility(product);
                             }}
+                            disabled={togglingProductId === product.id}
                             className="sr-only peer"
                           />
                           <div className="w-9 h-5 bg-gray-300 dark:bg-[#392f28] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white dark:after:bg-[#EAE0D5] after:border-gray-300 dark:after:border-[#5a4d42] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#ec6d13]"></div>
