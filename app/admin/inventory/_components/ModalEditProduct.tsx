@@ -15,24 +15,10 @@ interface Props {
 const inputClass =
   "w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all placeholder-gray-400 dark:placeholder-[#8e7f72]";
 
-const PRODUCT_NAMES = [
-  "Kopi Susu Aren",
-  "Americano",
-  "Cappuccino",
-  "Matcha Latte",
-  "Croissant",
-  "Kentang Goreng",
-  "Brownies",
-];
-
 const labelClass =
   "text-xs font-medium text-gray-500 dark:text-[#8e7f72] uppercase tracking-wider";
 
 export default function ModalEditProduct({ product, categories, isSubmitting, onClose, onSubmit }: Props) {
-  const productNameOptions = PRODUCT_NAMES.includes(product.name)
-    ? PRODUCT_NAMES
-    : [product.name, ...PRODUCT_NAMES];
-
   const [name, setName]         = useState(product.name);
   const [category, setCategory] = useState(product.category);
   const [stock, setStock]       = useState(product.stock.toString());
@@ -77,36 +63,30 @@ export default function ModalEditProduct({ product, categories, isSubmitting, on
           {/* Nama Produk */}
           <div className="space-y-1.5">
             <label className={labelClass}>Nama Produk</label>
-            <select
+            <input
               className={inputClass}
               value={name}
               onChange={(e) => setName(e.target.value)}
+              placeholder="Masukkan nama produk"
               required
-            >
-              {productNameOptions.map((productName) => (
-                <option key={productName} value={productName}>
-                  {productName}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* Kategori */}
           <div className="space-y-1.5">
             <label className={labelClass}>Kategori</label>
-            <select
+            <input
+              list="categories-list"
               className={inputClass}
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-            >
-              {categories.length === 0 ? (
-                <option value={category}>{category}</option>
-              ) : (
-                categories.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))
-              )}
-            </select>
+              placeholder="Masukkan kategori"
+            />
+            <datalist id="categories-list">
+              {categories.map((cat) => (
+                <option key={cat} value={cat} />
+              ))}
+            </datalist>
           </div>
 
           {/* Stok */}

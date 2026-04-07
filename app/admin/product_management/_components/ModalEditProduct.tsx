@@ -26,10 +26,18 @@ const inputClass =
   "w-full bg-white dark:bg-[#231910] border border-gray-200 dark:border-[#3e342b] rounded-lg px-4 py-2.5 text-gray-900 dark:text-[#EAE0D5] text-sm focus:ring-1 focus:ring-[#ec6d13] focus:border-[#ec6d13] outline-none transition-all placeholder-gray-400 dark:placeholder-[#8e7f72]";
 const labelClass = "text-xs font-medium text-gray-500 dark:text-[#8e7f72] uppercase tracking-wider";
 
+const toBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
 export default function ModalEditProduct({ product, onClose, onSubmit }: Props) {
   const [name, setName] = useState(product.name);
   const [category, setCategory] = useState(product.category);
-  const [price, setPrice] = useState(product.price);
+  const [priceInput, setPriceInput] = useState(product.price > 0 ? String(product.price) : "");
   const [stock, setStock] = useState(product.stock);
   const [shortDescription, setShortDescription] = useState(product.shortDescription);
   const [longDescription, setLongDescription] = useState(product.longDescription);
@@ -38,6 +46,29 @@ export default function ModalEditProduct({ product, onClose, onSubmit }: Props) 
   const [badge, setBadge] = useState(product.badge ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const val = event.target.value.replace(/[^0-9]/g, "");
+    setPriceInput(val);
+  };
+
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Ukuran gambar maksimal 2MB");
+      return;
+    }
+
+    try {
+      setError("");
+      const base64 = await toBase64(file);
+      setImage(base64);
+    } catch {
+      setError("Gagal memproses gambar");
+    }
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -49,7 +80,7 @@ export default function ModalEditProduct({ product, onClose, onSubmit }: Props) 
         id: product.id,
         name,
         category,
-        price,
+        price: Number(priceInput) || 0,
         stock,
         shortDescription,
         longDescription,
@@ -92,7 +123,7 @@ export default function ModalEditProduct({ product, onClose, onSubmit }: Props) 
 
             <div className="space-y-1.5">
               <label className={labelClass}>Harga</label>
-              <input type="number" className={inputClass} value={price} min={0} onChange={(event) => setPrice(Number(event.target.value))} required />
+              <input type="text" className={inputClass} value={priceInput} onChange={handlePriceChange} required />
             </div>
 
             <div className="space-y-1.5">
@@ -101,8 +132,13 @@ export default function ModalEditProduct({ product, onClose, onSubmit }: Props) 
             </div>
 
             <div className="space-y-1.5 md:col-span-2">
-              <label className={labelClass}>URL Gambar</label>
-              <input type="url" className={inputClass} value={image} onChange={(event) => setImage(event.target.value)} required />
+              <label className={labelClass}>Upload Gambar</label>
+              <input type="file" accept="image/*" className={inputClass} onChange={handleImageChange} />
+              {image && (
+                <div className="mt-2 rounded-lg border border-gray-200 dark:border-[#3e342b] overflow-hidden bg-gray-50 dark:bg-[#231910]">
+                  <img src={image} alt="Preview gambar produk" className="w-full h-48 object-cover" />
+                </div>
+              )}
             </div>
 
             <div className="space-y-1.5 md:col-span-2">

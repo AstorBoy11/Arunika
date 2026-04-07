@@ -790,10 +790,16 @@ export default function CartPage() {
   const shipping = 15000;
   const tax = Number((subtotal * 0.11).toFixed(2));
   const total = subtotal + shipping + tax;
-  const OPEN_HOUR = 8;
-  const CLOSE_HOUR = 22;
-  const currentHour = new Date().getHours();
-  const isStoreClosed = currentHour < OPEN_HOUR || currentHour >= CLOSE_HOUR;
+  const OPEN_HOUR = 7;
+  const CLOSE_HOUR = 2;
+  const isStoreClosed = () => {
+    const hour = new Date().getHours();
+    if (CLOSE_HOUR < OPEN_HOUR) {
+      return hour < OPEN_HOUR && hour >= CLOSE_HOUR;
+    }
+    return hour < OPEN_HOUR || hour >= CLOSE_HOUR;
+  };
+  const storeClosed = isStoreClosed();
 
   const checkoutAddresses: Address[] = (user?.addresses || [])
     .slice()
@@ -961,7 +967,7 @@ export default function CartPage() {
               <span className="text-[#ec6d13] font-black text-2xl">{formatRupiah(total)}</span>
             </div>
 
-            {isStoreClosed && (
+            {storeClosed && (
               <div
                 className={`mb-4 rounded-lg border px-3 py-2.5 text-xs ${
                   isDark
@@ -969,7 +975,7 @@ export default function CartPage() {
                     : "bg-[#fff4ee] border-[#f2c1ab] text-[#a64822]"
                 }`}
               >
-                Toko Tutup. Anda tidak dapat melakukan pesanan di luar jam operasional (08:00 - 22:00)
+                Toko Tutup. Pesanan hanya bisa masuk pukul 07:00 - 02:00
               </div>
             )}
 
@@ -1004,9 +1010,9 @@ export default function CartPage() {
 
             <button
               onClick={handleCheckoutOpen}
-              disabled={isStoreClosed}
+              disabled={storeClosed}
               className={`w-full py-4 text-white font-bold rounded-xl shadow-lg shadow-[#ec6d13]/20 transition-all flex items-center justify-center gap-2 mb-3 ${
-                isStoreClosed
+                storeClosed
                   ? "bg-[#ec6d13] opacity-50 cursor-not-allowed"
                   : "bg-[#ec6d13] hover:bg-[#d65c0b] hover:scale-[1.02]"
               }`}

@@ -28,7 +28,15 @@ const ProductSchema = new Schema<IProduct>(
     longDescription: { type: String, required: true, trim: true },
     badge: { type: String }, // optional, e.g., "Best Seller", "Baru"
     rating: { type: Number, default: 0, min: 0, max: 5 },
-    image: { type: String, required: true, match: /^https?:\/\/.+/ },
+    image: {
+      type: String,
+      required: true,
+      validate: {
+        validator(value: string) {
+          return /^https?:\/\/.+/i.test(value) || /^data:image\/[a-zA-Z0-9.+-]+;base64,/.test(value);
+        },
+      },
+    },
     roast: { type: String }, // optional, e.g., "Light Roast", "Espresso"
   },
   {

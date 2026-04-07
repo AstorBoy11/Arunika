@@ -5,9 +5,11 @@ import Header from "@/components/header";
 import Sidebar, { SidebarProvider } from "@/components/sidebar";
 import { useTheme } from "@/context/ThemeContext";
 import { UserProvider } from "@/lib/hooks/useUser";
+import { useIdleLogout } from "@/lib/hooks/useIdleLogout";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
+  useIdleLogout(30 * 60 * 1000);
 
   return (
     <div className={`flex h-screen overflow-hidden transition-colors duration-300 ${theme === "dark"
